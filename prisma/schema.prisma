@@ -1,0 +1,281 @@
+// =====================================================================
+// KAUSHAL DRISHTI — Prisma Schema (Phase 1)
+// Maharashtra Skill Intelligence & Policy Decision Platform
+// ---------------------------------------------------------------------
+// Adapted for SQLite: no native enums (String + app-level validation),
+// no native UUID (cuid), no PostGIS (Float lat/long, geospatial-ready
+// for future PostgreSQL/PostGIS migration without logical changes).
+// =====================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------
+// Core user / RBAC foundation
+// ---------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  // Stored as a demo-only plain marker in Phase 1. Replace with hashed
+  // credentials / OAuth2 subject when Keycloak is wired in a later phase.
+  passwordHash String   @map("password_hash")
+  // STATE_ADMIN | DISTRICT_PLANNER | TRAINING_PROVIDER | EMPLOYER |
+  // INSTITUTION | TRAINER | CANDIDATE | AUDITOR
+  role         String
+  isActive     Boolean  @default(true) @map("is_active")
+  lastLoginAt  DateTime? @map("last_login_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------
+// Geography
+// ---------------------------------------------------------------------
+
+model District {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  // ISO state code, e.g. MH for Maharashtra
+  stateCode String   @map("state_code")
+  latitude  Float?
+  longitude Float?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  employers    Employer[]
+  institutions Institution[]
+
+  @@index([stateCode])
+  @@map("districts")
+}
+
+// ---------------------------------------------------------------------
+// Economic / training taxonomy
+// ---------------------------------------------------------------------
+
+model Sector {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  employers  Employer[]  @relation("EmployerSector")
+  jobRoles   JobRole[]   @relation("JobRoleSector")
+  courses    Course[]    @relation("CourseSector")
+
+  @@map("sectors")
+}
+
+model Skill {
+  id             String   @id @default(cuid())
+  name           String
+  canonicalName  String   @unique @map("canonical_name")
+  description    String?
+  // e.g. "Technical", "Process", "Digital", "Safety", "Soft"
+  category       String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  roleSkills   RoleSkill[]
+  courseSkills  CourseSkill[]
+
+  @@index([category])
+  @@map("skills")
+}
+
+model JobRole {
+  id             String   @id @default(cuid())
+  title          String
+  canonicalTitle String   @unique @map("canonical_title")
+  description    String?
+  sectorId       String?  @map("sector_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  sector      Sector?       @relation("JobRoleSector", fields: [sectorId], references: [id])
+  roleSkills RoleSkill[]
+  employerRoles EmployerRole[]
+
+  @@map("job_roles")
+}
+
+model Qualification {
+  id                String   @id @default(cuid())
+  name              String
+  code              String   @unique
+  description       String?
+  // e.g. "Certificate", "Diploma", "Advanced Diploma", "Degree"
+  qualificationLevel String  @map("qualification_level")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  courses Course[]
+
+  @@map("qualifications")
+}
+
+// ---------------------------------------------------------------------
+// Training supply
+// ---------------------------------------------------------------------
+
+model Institution {
+  id              String   @id @default(cuid())
+  name            String
+  // e.g. "ITI", "Polytechnic", "Skill Centre", "Private Training Provider"
+  institutionType String   @map("institution_type")
+  districtId      String?  @map("district_id")
+  description     String?
+  address         String?
+  latitude        Float?
+  longitude       Float?
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  district          District?          @relation(fields: [districtId], references: [id])
+  courseInstitutions CourseInstitution[]
+
+  @@index([districtId])
+  @@map("institutions")
+}
+
+model Course {
+  id              String   @id @default(cuid())
+  name            String
+  code            String   @unique
+  description     String?
+  sectorId        String?  @map("sector_id")
+  qualificationId String?  @map("qualification_id")
+  durationHours   Int      @map("duration_hours")
+  // DRAFT | ACTIVE | UNDER_REVIEW | DEPRECATED
+  status          String   @default("ACTIVE")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  sector       Sector?           @relation("CourseSector", fields: [sectorId], references: [id])
+  qualification Qualification?   @relation(fields: [qualificationId], references: [id])
+  courseSkills CourseSkill[]
+  courseInstitutions CourseInstitution[]
+
+  @@index([sectorId])
+  @@index([qualificationId])
+  @@map("courses")
+}
+
+// ---------------------------------------------------------------------
+// Employers
+// ---------------------------------------------------------------------
+
+model Employer {
+  id               String   @id @default(cuid())
+  name             String
+  industrySectorId String?  @map("industry_sector_id")
+  districtId       String?  @map("district_id")
+  description      String?
+  website          String?
+  // MICRO | SMALL | MEDIUM | LARGE | ENTERPRISE
+  sizeCategory     String   @default("MEDIUM") @map("size_category")
+  isVerified       Boolean  @default(false) @map("is_verified")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  industrySector Sector?       @relation("EmployerSector", fields: [industrySectorId], references: [id])
+  district       District?     @relation(fields: [districtId], references: [id])
+  employerRoles  EmployerRole[]
+
+  @@index([industrySectorId])
+  @@index([districtId])
+  @@map("employers")
+}
+
+// ---------------------------------------------------------------------
+// Relationship tables
+// ---------------------------------------------------------------------
+
+model RoleSkill {
+  id        String   @id @default(cuid())
+  jobRoleId String   @map("job_role_id")
+  skillId   String   @map("skill_id")
+  // 1-5 importance weight
+  importance Int      @default(3)
+  jobRole   JobRole  @relation(fields: [jobRoleId], references: [id], onDelete: Cascade)
+  skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([jobRoleId, skillId])
+  @@index([skillId])
+  @@map("role_skills")
+}
+
+model CourseSkill {
+  id            String   @id @default(cuid())
+  courseId      String   @map("course_id")
+  skillId       String   @map("skill_id")
+  // NONE | INTRODUCED | REINFORCED | MASTERED
+  coverageLevel String   @default("INTRODUCED") @map("coverage_level")
+  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  skill         Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, skillId])
+  @@index([skillId])
+  @@map("course_skills")
+}
+
+model CourseInstitution {
+  id            String      @id @default(cuid())
+  courseId      String      @map("course_id")
+  institutionId String      @map("institution_id")
+  capacity      Int         @default(0)
+  course        Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, institutionId])
+  @@index([institutionId])
+  @@map("course_institutions")
+}
+
+model EmployerRole {
+  id        String   @id @default(cuid())
+  employerId String  @map("employer_id")
+  jobRoleId String   @map("job_role_id")
+  employer  Employer @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  jobRole   JobRole  @relation(fields: [jobRoleId], references: [id], onDelete: Cascade)
+
+  @@unique([employerId, jobRoleId])
+  @@index([jobRoleId])
+  @@map("employer_roles")
+}
+
+// ---------------------------------------------------------------------
+// Data provenance
+// ---------------------------------------------------------------------
+
+model DataSource {
+  id            String    @id @default(cuid())
+  name          String
+  // JOB_POSTING | EMPLOYER_SURVEY | INDUSTRY_CONSULTATION | SECTOR_GROWTH |
+  // PLACEMENT_OUTCOME | TECHNOLOGY_TREND | TRAINING_PROVIDER | GOVERNMENT
+  sourceType    String    @map("source_type")
+  description   String?
+  sourceUrl     String?   @map("source_url")
+  // REAL | SYNTHETIC | MODELLED | DEMO | UNKNOWN
+  dataStatus    String    @default("DEMO") @map("data_status")
+  lastUpdatedAt DateTime? @map("last_updated_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@index([dataStatus])
+  @@map("data_sources")
+}

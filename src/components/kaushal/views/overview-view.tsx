@@ -1,0 +1,172 @@
+"use client";
+
+import * as React from "react";
+import {
+  Building2,
+  Layers,
+  Briefcase,
+  Sparkles,
+  BookOpen,
+  Users,
+  Database,
+  ArrowRight,
+} from "lucide-react";
+import { PageHeader, SectionLabel } from "@/components/kaushal/page-header";
+import { MetricCard } from "@/components/kaushal/metric-card";
+import { EvidencePanel } from "@/components/kaushal/evidence-panel";
+import { ArchitectureFlow } from "@/components/kaushal/architecture-flow";
+import { StatusPill } from "@/components/kaushal/status-pill";
+import { SourceBadge } from "@/components/kaushal/source-badge";
+import { useFetch } from "@/hooks/use-fetch";
+import { LoadingState } from "@/components/kaushal/states";
+import type { PlatformMeta, DataSource, Paginated } from "@/types/domain";
+import { useNav } from "@/store/app-store";
+
+export function OverviewView() {
+  const { data: meta, loading } = useFetch<PlatformMeta>("/api/v1/meta");
+  const { data: sourcesData } = useFetch<Paginated<DataSource>>("/api/v1/data-sources?pageSize=5");
+  const setActiveView = useNav((s) => s.setActiveView);
+
+  const counts = meta?.counts ?? {};
+  const metrics = [
+    { label: "Demo Districts", value: counts.districts ?? 0, hint: "Pune · Nashik · Nagpur", icon: <Building2 className="size-4" />, tone: "info" as const, view: "districts" },
+    { label: "Demo Sectors", value: counts.sectors ?? 0, hint: "Mfg · Automotive · IT", icon: <Layers className="size-4" />, tone: "default" as const, view: "training" },
+    { label: "Demo Job Roles", value: counts.jobRoles ?? 0, hint: "Canonical role catalogue", icon: <Briefcase className="size-4" />, tone: "default" as const, view: "training" },
+    { label: "Demo Skills", value: counts.skills ?? 0, hint: "Technical · Digital · Safety", icon: <Sparkles className="size-4" />, tone: "default" as const, view: "skills" },
+    { label: "Demo Courses", value: counts.courses ?? 0, hint: "Active & under review", icon: <BookOpen className="size-4" />, tone: "default" as const, view: "courses" },
+    { label: "Demo Employers", value: counts.employers ?? 0, hint: "Synthetic demonstration", icon: <Users className="size-4" />, tone: "default" as const, view: "districts" },
+  ];
+
+  const flow = [
+    { label: "Demand Signals", caption: "Job postings, surveys, sector growth" },
+    { label: "Skill Intelligence", caption: "Canonical skills & roles" },
+    { label: "Training Supply", caption: "Institutions, courses, capacity" },
+    { label: "Gap Analysis", caption: "Demand vs. supply comparison" },
+    { label: "Policy Decisions", caption: "Simulate & prioritise interventions" },
+    { label: "Outcomes", caption: "Placement & feedback loop" },
+  ];
+
+  return (
+    <div className="space-y-8">
+      <PageHeader
+        title="Maharashtra Skill Intelligence Overview"
+        description="Monitor the evolving relationship between labour-market demand and training capacity."
+        badge={
+          <StatusPill tone="attention" dot>
+            Foundation / Synthetic Demonstration Data
+          </StatusPill>
+        }
+      />
+
+      {/* Foundation disclaimer */}
+      <div className="rounded-lg border border-status-attention/30 bg-status-attention/5 px-4 py-3 text-sm text-foreground/80 flex items-start gap-3">
+        <div className="size-2 rounded-full bg-status-attention mt-1.5 shrink-0" />
+        <div className="space-y-1">
+          <p className="font-medium">Current View: Foundation / Synthetic Demonstration Data</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Phase 1 establishes the technical and UX foundation. All figures shown derive from
+            synthetic demonstration data and are not actual Maharashtra Government statistics.
+            Labour-market intelligence, gap analysis, policy simulation and outcomes arrive in later phases.
+          </p>
+        </div>
+      </div>
+
+      {/* KPI grid */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <SectionLabel>Foundation Metrics</SectionLabel>
+          <span className="text-[11px] text-muted-foreground">Derived from seeded demonstration data</span>
+        </div>
+        {loading ? (
+          <LoadingState label="Loading foundation metrics…" />
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+            {metrics.map((m) => (
+              <button
+                key={m.label}
+                onClick={() => setActiveView(m.view)}
+                className="text-left transition-transform hover:-translate-y-0.5"
+              >
+                <MetricCard
+                  label={m.label}
+                  value={m.value}
+                  hint={m.hint}
+                  icon={m.icon}
+                  tone={m.tone}
+                />
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Architecture preview + data provenance */}
+      <section className="grid lg:grid-cols-3 gap-6">
+        <EvidencePanel
+          title="KAUSHAL DRISHTI Intelligence Architecture"
+          source="Conceptual"
+          className="lg:col-span-2"
+        >
+          <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+            The full intelligence flow below is a conceptual preview. Phase 1 implements the
+            foundation layers (entities, taxonomy, provenance). Analytical layers activate in later phases.
+          </p>
+          <ArchitectureFlow nodes={flow} />
+        </EvidencePanel>
+
+        <EvidencePanel
+          title="Data Provenance"
+          source="Data Sources"
+          lastUpdated="Phase 1 seed"
+        >
+          <div className="space-y-2">
+            {sourcesData?.items.slice(0, 5).map((s) => (
+              <div key={s.id} className="flex items-start justify-between gap-2 rounded-md border bg-muted/30 px-3 py-2">
+                <div className="min-w-0">
+                  <p className="text-xs font-medium truncate">{s.name}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{s.sourceType}</p>
+                </div>
+                <SourceBadge status={s.dataStatus} />
+              </div>
+            ))}
+            {!sourcesData ? (
+              <p className="text-xs text-muted-foreground">Loading sources…</p>
+            ) : null}
+            <button
+              onClick={() => setActiveView("data-sources")}
+              className="flex items-center gap-1 text-xs text-primary hover:underline mt-2"
+            >
+              View all data sources <ArrowRight className="size-3" />
+            </button>
+          </div>
+        </EvidencePanel>
+      </section>
+
+      {/* Phase roadmap */}
+      <section className="space-y-3">
+        <SectionLabel>Phase Roadmap</SectionLabel>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[
+            { p: "Phase 1", t: "Foundation & Data Model", d: "Entities, taxonomy, provenance, RBAC, dashboard shell.", active: true },
+            { p: "Phase 4", t: "Labour-Market Intelligence", d: "Job-posting signals, employer surveys, sector growth.", active: false },
+            { p: "Phase 7", t: "Employer Validation", d: "Structured employer demand-validation workflows.", active: false },
+            { p: "Phase 9", t: "District Action Plans", d: "Generate district-level training plans from evidence.", active: false },
+            { p: "Phase 11", t: "Policy Simulation Engine", d: "Compare policy interventions before implementation.", active: false },
+            { p: "Phase 12", t: "Outcome Feedback", d: "Placement & outcome learning feeding back into planning.", active: false },
+          ].map((r) => (
+            <div key={r.p} className="rounded-lg border bg-card p-4 space-y-2 shadow-none">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">{r.p}</span>
+                <StatusPill tone={r.active ? "positive" : "neutral"} dot>
+                  {r.active ? "Active" : "Planned"}
+                </StatusPill>
+              </div>
+              <p className="text-sm font-medium">{r.t}</p>
+              <p className="text-xs text-muted-foreground leading-snug">{r.d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
