@@ -104,7 +104,7 @@ export function LoginScreen() {
           </p>
           <div className="flex flex-wrap gap-2">
             <Badge className="bg-sidebar-accent text-sidebar-accent-foreground border-transparent">
-              Phase 1 — Foundation
+              Demonstration Environment
             </Badge>
             <Badge className="bg-sidebar-accent text-sidebar-accent-foreground border-transparent">
               Synthetic Demonstration Data
@@ -154,7 +154,7 @@ export function LoginScreen() {
           <div className="space-y-1.5">
             <h2 className="text-2xl font-semibold tracking-tight">Sign in</h2>
             <p className="text-sm text-muted-foreground">
-              Access the Phase 1 demonstration environment.
+              Access the demonstration environment.
             </p>
           </div>
 

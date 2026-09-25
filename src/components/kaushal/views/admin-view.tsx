@@ -61,8 +61,8 @@ export function AdminView() {
     <div className="space-y-6">
       <PageHeader
         title="Administration"
-        description="Platform foundation status: roles, RBAC, health, environment, data provenance, and Phase 2 ingestion operations."
-        badge={<StatusPill tone="info" dot>Phase 2 — Ingestion Layer</StatusPill>}
+        description="Platform foundation status: roles, RBAC, health, environment, data provenance, and data ingestion operations."
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       {loading ? (
@@ -76,7 +76,7 @@ export function AdminView() {
         </div>
       )}
 
-      {/* Data Operations quick links (Phase 2) */}
+      {/* Data Operations quick links */}
       <section className="space-y-3">
         <SectionLabel>Data Operations</SectionLabel>
         <DataOperationsGrid />
@@ -107,7 +107,7 @@ export function AdminView() {
           </dl>
         </EvidencePanel>
 
-        <EvidencePanel title="Authentication" source="Phase 1 — JWT foundation">
+        <EvidencePanel title="Authentication" source="Intelligence Module">
           <ul className="space-y-1.5 text-xs text-muted-foreground leading-relaxed list-disc pl-4">
             <li>JWT-based foundation (HMAC-SHA256). Replace with Keycloak / OAuth2 in a later phase without touching route contracts.</li>
             <li>Demo users live in the <span className="font-mono">users</span> table; clearly labelled, not actual government identities.</li>

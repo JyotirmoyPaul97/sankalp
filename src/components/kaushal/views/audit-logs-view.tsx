@@ -50,7 +50,7 @@ export function AuditLogsView() {
       <PageHeader
         title="Audit Logs"
         description="Ingestion + admin action trail. No passwords, tokens, or secrets are ever logged."
-        badge={<StatusPill tone="info" dot>Phase 2 — Audit</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       <div className="flex items-center gap-2">

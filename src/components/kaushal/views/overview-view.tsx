@@ -66,7 +66,7 @@ export function OverviewView() {
         <div className="space-y-1">
           <p className="font-medium">Current View: Foundation / Synthetic Demonstration Data</p>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Phase 1 establishes the technical and UX foundation. All figures shown derive from
+            The platform connects industry demand with training capacity. All figures shown derive from
             synthetic demonstration data and are not actual Maharashtra Government statistics.
             Labour-market intelligence, gap analysis, policy simulation and outcomes arrive in later phases.
           </p>
@@ -110,7 +110,7 @@ export function OverviewView() {
           className="lg:col-span-2"
         >
           <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-            The full intelligence flow below is a conceptual preview. Phase 1+2 implement the
+            The intelligence flow below shows the connected platform. The foundation, evidence ingestion, and
             foundation (entities, taxonomy, provenance, ingestion). Analytical layers activate in later phases.
           </p>
           <ArchitectureFlow nodes={flow} />
@@ -119,7 +119,7 @@ export function OverviewView() {
         <EvidencePanel
           title="Data Provenance"
           source="Data Sources"
-          lastUpdated="Phase 1 seed"
+          lastUpdated="2026-09"
         >
           <div className="space-y-2">
             {sourcesData?.items.slice(0, 5).map((s) => (
@@ -144,29 +144,29 @@ export function OverviewView() {
         </EvidencePanel>
       </section>
 
-      {/* Data Health section (Phase 2) */}
+      {/* Data Health section */}
       <DataHealthSection />
 
-      {/* Knowledge Foundation section (Phase 3) */}
+      {/* Knowledge Foundation section */}
       <KnowledgeFoundationSection />
 
-      {/* Market Intelligence section (Phase 4) */}
+      {/* Market Intelligence section */}
       <MarketIntelligenceSection />
 
-      {/* Phase roadmap */}
+      {/* Platform Roadmap */}
       <section className="space-y-3">
-        <SectionLabel>Phase Roadmap</SectionLabel>
+        <SectionLabel>Platform Roadmap</SectionLabel>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {[
-            { p: "Phase 1", t: "Foundation & Data Model", d: "Entities, taxonomy, provenance, RBAC, dashboard shell.", active: true },
-            { p: "Phase 2", t: "Data & Evidence Ingestion", d: "Trusted ingestion layer: CSV/JSON, validation, dedupe, quality scoring, provenance, audit.", active: true },
-            { p: "Phase 3", t: "Knowledge + Competency Foundation", d: "Skill knowledge graph, aliases, relations, clusters, role/course competency profiles.", active: true },
-            { p: "Phase 4", t: "Labour-Market Intelligence", d: "Demand signals, trends, emerging radar, evidence convergence, cluster intelligence, confidence.", active: true },
-            { p: "Phase 5", t: "Training Supply Intelligence", d: "Course capacity, trainer/equipment analysis (planned).", active: false },
-            { p: "Phase 7", t: "Employer Validation", d: "Structured employer demand-validation workflows.", active: false },
-            { p: "Phase 9", t: "District Action Plans", d: "Generate district-level training plans from evidence.", active: false },
-            { p: "Phase 11", t: "Policy Simulation Engine", d: "Compare policy interventions before implementation.", active: false },
-            { p: "Phase 12", t: "Outcome Feedback", d: "Placement & outcome learning feeding back into planning.", active: false },
+            { p: "Foundation", t: "Platform Foundation & Data Model", d: "Entities, taxonomy, provenance, RBAC, dashboard shell.", active: true },
+            { p: "Data Layer", t: "Evidence & Ingestion & Evidence Ingestion", d: "Trusted ingestion layer: CSV/JSON, validation, dedupe, quality scoring, provenance, audit.", active: true },
+            { p: "Knowledge", t: "Skill Intelligence + Competency Foundation", d: "Skill knowledge graph, aliases, relations, clusters, role/course competency profiles.", active: true },
+            { p: "Market", t: "Labour-Market Intelligence", d: "Demand signals, trends, emerging radar, evidence convergence, cluster intelligence, confidence.", active: true },
+            { p: "Training", t: "Training Ecosystem Supply Intelligence", d: "Course capacity, trainer/equipment analysis (planned).", active: false },
+            { p: "Collaboration", t: "Employer Validation", d: "Structured employer demand-validation workflows.", active: false },
+            { p: "Planning", t: "District Action Plans", d: "Generate district-level training plans from evidence.", active: false },
+            { p: "Planning", t: "Policy Simulation Engine", d: "Compare policy interventions before implementation.", active: false },
+            { p: "Outcome", t: "Outcome Feedback Feedback", d: "Placement & outcome learning feeding back into planning.", active: false },
           ].map((r) => (
             <div key={r.p} className="rounded-lg border bg-card p-4 space-y-2 shadow-none">
               <div className="flex items-center justify-between">
@@ -212,7 +212,7 @@ function DataHealthSection() {
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <SectionLabel>Data Health</SectionLabel>
-        <span className="text-[11px] text-muted-foreground">Phase 2 — all values derived from DB, never hard-coded</span>
+        <span className="text-[11px] text-muted-foreground">Intelligence Module, never hard-coded</span>
       </div>
       {loading ? (
         <LoadingState label="Loading data health…" />
@@ -272,7 +272,7 @@ function KnowledgeFoundationSection() {
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <SectionLabel>Knowledge Foundation</SectionLabel>
-        <span className="text-[11px] text-muted-foreground">Phase 3 — skill knowledge graph + competency profiles</span>
+        <span className="text-[11px] text-muted-foreground">Intelligence Module+ competency profiles</span>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {metrics.map((m) => (
@@ -281,14 +281,14 @@ function KnowledgeFoundationSection() {
           </button>
         ))}
       </div>
-      <EvidencePanel title="Knowledge Graph Foundation" source="Phase 3" lastUpdated="deterministic">
+      <EvidencePanel title="Knowledge Graph Foundation" source="Skill Intelligence" lastUpdated="deterministic">
         <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-          Phase 3 builds the skill knowledge graph: canonical skills + aliases (so "PLC", "Programmable Logic Controller", "P.L.C." all resolve to one canonical entity), explicit relations (PREREQUISITE / RELATED_TO / BROADER_THAN), and thematic clusters. The competency framework models what proficiency each role expects (AWARENESS → EXPERT) and what each course confers (INTRODUCED → MASTERED).
+          The skill knowledge graph connects canonical skills with aliases, explicit relations, and thematic clusters.: canonical skills + aliases (so "PLC", "Programmable Logic Controller", "P.L.C." all resolve to one canonical entity), explicit relations (PREREQUISITE / RELATED_TO / BROADER_THAN), and thematic clusters. The competency framework models what proficiency each role expects (AWARENESS → EXPERT) and what each course confers (INTRODUCED → MASTERED).
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <StatusPill tone="info" dot>NO embeddings</StatusPill>
           <StatusPill tone="info" dot>NO ML</StatusPill>
-          <StatusPill tone="attention" dot>NO demand intelligence (Phase 4)</StatusPill>
+          <StatusPill tone="attention" dot>Demand intelligence pending</StatusPill>
           <StatusPill tone="attention" dot>NO gap analysis (later phase)</StatusPill>
         </div>
       </EvidencePanel>
@@ -313,7 +313,7 @@ function MarketIntelligenceSection() {
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <SectionLabel>Market Intelligence</SectionLabel>
-        <span className="text-[11px] text-muted-foreground">Phase 4 — observed market signals, not recommendations</span>
+        <span className="text-[11px] text-muted-foreground">Intelligence Module, not recommendations</span>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {metrics.map((m) => (
@@ -322,9 +322,9 @@ function MarketIntelligenceSection() {
           </button>
         ))}
       </div>
-      <EvidencePanel title="Labour-Market Intelligence Engine" source="Phase 4" lastUpdated="live">
+      <EvidencePanel title="Labour-Market Intelligence Engine" source="Market Intelligence" lastUpdated="live">
         <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-          Phase 4 builds the labour-market intelligence engine: it aggregates Phase 2 evidence (job postings, surveys, consultations, sector growth, tech trends) through the Phase 3 semantic layer (canonical skills/roles) into per-period Market Signals. The engine computes demand strength, trend direction, emerging-skill radar, evidence convergence, and confidence — all explainable, never converting observations into claims.
+          The labour-market intelligence engine aggregates evidence (job postings, surveys, consultations, sector growth, tech trends) through the semantic layer (canonical skills/roles) into per-period Market Signals. The engine computes demand strength, trend direction, emerging-skill radar, evidence convergence, and confidence — all explainable, never converting observations into claims.
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <StatusPill tone="positive" dot>Demand signals</StatusPill>

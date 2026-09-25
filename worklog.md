@@ -644,3 +644,23 @@ Work Log:
 
 Stage Summary:
 - Phase 11 COMPLETE and browser-verified. Visual-first government intelligence platform with animated counters, demand-supply comparisons, evidence chains, gap matrices, proficiency ladders, flow nodes, scenario comparisons, and district twin visuals. SHOW > EXPLAIN. STOP — Phase 12 not started.
+
+---
+Task ID: p10.5
+Agent: GLM (main)
+Task: Phase 10.5 — Functional Integrity, Role Separation & Demo Readiness
+
+Work Log:
+- Removed ALL phase labels from user-facing views (40+ replacements across 15+ files). Phase X badges replaced with user-facing names: "Live Intelligence", "Market Intelligence", "Gap Intelligence", "Competency Framework", "Skill Knowledge Graph", "Delivery Capability", "District Digital Twin", "Policy Sandbox", "Outcome Monitoring", "Data Governance", "System Health", "Intelligence Traceability", etc. Sidebar footer changed from "Build Phase: Phase 1" to "Environment: Prototype".
+- Replaced placeholder entity names with realistic synthetic names:
+  • 200 courses: "Demo Advanced Course 043" → "Advanced Industrial Automation — PLC & SCADA", "Industrial Robotics Technician Programme", "EV Service & Diagnostics Technician", etc.
+  • 242 employers: "Demo Automation Works" → "Maharashtra Precision Systems", "Pune Automation Works", "Vidarbha EV Technologies", etc.
+  • 160 training centres: "Demo PRIVATE TRAINING PROVIDER Solapur 093 — Centre 01" → "Pune Advanced Manufacturing Centre — Centre 01", etc.
+  • 105 institutions: "Demo ITI Pune 001" → "Pune Industrial Training Institute 01", etc.
+- Fixed District Planner role separation: District Planner now gets district-scoped sidebar (District Command → District Overview + Digital Twin; District Intelligence → Market Demand + Skill Gaps + Cluster Gaps + Emerging Skills; Training & Capability → Training Supply + Courses + Centre Readiness + Training Gaps; Planning → Policy Sandbox + District Plans + Outcomes). State Admin retains full state-wide access. District Planner topbar shows "Pune District Workspace". State Admin shows "Government Workspace".
+- Made Employer Validation functional: replaced placeholder PhasePlaceholder with full EmployerValidationView including demand signal validation table (6 skills with CONFIRMED/PENDING/MODIFIED status), validation summary metrics, example validation flow showing intelligence → employer response → confirmed result, and Industry/Cluster Consultation panel with consensus signals. "Demand Validation" nav item now active in Industry & Employer workspace.
+- Lint: 0 errors, 0 warnings.
+- E2E verified (4 screenshots): State Admin workspace (no phase labels), District Planner workspace (district-scoped sidebar), Employer workspace (with Demand Validation), Employer Validation view (functional with validation table + industry consultation). 0 console errors.
+
+Stage Summary:
+- Phase 10.5 COMPLETE. All phase labels removed. Placeholder names replaced with realistic synthetic names. District Planner is genuinely district-scoped. Employer Validation is functional. No "coming soon" or "planned" placeholders on critical screens. System is ready for Phase 11 visual transformation.

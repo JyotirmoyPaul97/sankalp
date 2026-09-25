@@ -46,7 +46,7 @@ export function CandidateIntelligenceView() {
       <PageHeader
         title="Candidate Skill Intelligence"
         description="Evidence-based skill profiles, individual gap analysis, development pathways, and opportunity readiness. NO employment guarantees — market-referenced readiness only."
-        badge={<StatusPill tone="info" dot>Phase 7 — Candidate Intelligence</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       <div className="space-y-2 max-w-sm">
@@ -98,7 +98,7 @@ function CandidateDashboard({ candidateId }: { candidateId: string }) {
 
           {/* Opportunity readiness */}
           {oppReadiness ? (
-            <EvidencePanel title="Opportunity Readiness" source="Phase 7 Part 2">
+            <EvidencePanel title="Opportunity Readiness" source="Opportunity Readiness">
               <div className="flex items-center gap-3">
                 <StatusPill tone={READINESS_TONE[oppReadiness.overallReadinessSignal] ?? "neutral"} dot>{oppReadiness.overallReadinessSignal.replace(/_/g, " ")}</StatusPill>
                 <span className="text-sm text-muted-foreground">Role readiness: {Math.round(oppReadiness.roleReadiness * 100)}% · Evidence: {Math.round(oppReadiness.evidenceReadiness * 100)}%</span>
@@ -194,7 +194,7 @@ function CandidateDashboard({ candidateId }: { candidateId: string }) {
             emptyMessage="No course matches — insufficient data."
           />
         )}
-        <p className="text-[11px] text-muted-foreground">Each match is backed by course relevance (Phase 6), centre readiness (Phase 6), and candidate gap evidence (Phase 7). NO guaranteed outcomes — development suggestions only.</p>
+        <p className="text-[11px] text-muted-foreground">Each match is backed by course relevance, centre readiness, and candidate gap evidence. NO guaranteed outcomes — development suggestions only.</p>
       </section>
 
       {/* Development Pathway */}

@@ -46,7 +46,7 @@ export function SkillGraphView() {
       <PageHeader
         title="Skill Intelligence Graph"
         description="End-to-end traceability: trace any skill through the entire intelligence chain — from employer demand to training supply to candidate capability to outcomes."
-        badge={<StatusPill tone="info" dot>Phase 10 — Traceability</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       <div className="grid sm:grid-cols-2 gap-3">
@@ -72,11 +72,11 @@ export function SkillGraphView() {
           <div className="flex flex-col md:flex-row items-stretch gap-2">
             {[
               { icon: <Users className="size-5 text-primary" />, label: "Employer Demand", detail: skill ? `${skill.name} demanded by employers` : "—" },
-              { icon: <TrendingUp className="size-5 text-primary" />, label: "Market Signal", detail: "Phase 4 intelligence" },
+              { icon: <TrendingUp className="size-5 text-primary" />, label: "Market Signal", detail: "Market intelligence" },
               { icon: <GraduationCap className="size-5 text-primary" />, label: "Training Coverage", detail: "Courses & curriculum" },
               { icon: <Network className="size-5 text-primary" />, label: "Knowledge Graph", detail: "Aliases & relations" },
-              { icon: <Activity className="size-5 text-primary" />, label: "Candidate Gap", detail: "Phase 7 readiness" },
-              { icon: <ShieldCheck className="size-5 text-primary" />, label: "Government Intelligence", detail: "Phase 8 twin" },
+              { icon: <Activity className="size-5 text-primary" />, label: "Candidate Gap", detail: "Candidate readiness" },
+              { icon: <ShieldCheck className="size-5 text-primary" />, label: "Government Intelligence", detail: "District twin" },
             ].map((node, i, arr) => (
               <React.Fragment key={node.label}>
                 <div className="flex-1 rounded-lg border bg-card p-3 space-y-1 shadow-sm min-w-[120px]">
@@ -105,15 +105,15 @@ export function SkillGraphView() {
           ) : null}
 
           {/* Data lineage */}
-          <EvidencePanel title="Data Lineage — Where did this result come from?" source="Phase 10 traceability">
+          <EvidencePanel title="Data Lineage — Where did this result come from?" source="Intelligence Traceability">
             <ol className="space-y-1.5 text-sm">
-              <li className="flex items-center gap-2"><span className="text-[10px] font-mono text-muted-foreground w-6">01</span> <FileText className="size-3.5 text-muted-foreground" /> Raw evidence (Phase 2 ingestion)</li>
-              <li className="flex items-center gap-2"><span className="text-[10px] font-mono text-muted-foreground w-6">02</span> <Network className="size-3.5 text-muted-foreground" /> Semantic mapping (Phase 3 normalizer)</li>
-              <li className="flex items-center gap-2"><span className="text-[10px] font-mono text-muted-foreground w-6">03</span> <TrendingUp className="size-3.5 text-muted-foreground" /> Market signal aggregation (Phase 4)</li>
-              <li className="flex items-center gap-2"><span className="text-[10px] font-mono text-muted-foreground w-6">04</span> <GraduationCap className="size-3.5 text-muted-foreground" /> Training supply mapping (Phase 5)</li>
-              <li className="flex items-center gap-2"><span className="text-[10px] font-mono text-muted-foreground w-6">05</span> <AlertCircle className="size-3.5 text-muted-foreground" /> Gap classification (Phase 5 Part 2)</li>
-              <li className="flex items-center gap-2"><span className="text-[10px] font-mono text-muted-foreground w-6">06</span> <Activity className="size-3.5 text-muted-foreground" /> Candidate comparison (Phase 7)</li>
-              <li className="flex items-center gap-2"><span className="text-[10px] font-mono text-muted-foreground w-6">07</span> <ShieldCheck className="size-3.5 text-muted-foreground" /> District twin + state intelligence (Phase 8-9)</li>
+              <li className="flex items-center gap-2"><span className="text-[10px] font-mono text-muted-foreground w-6">01</span> <FileText className="size-3.5 text-muted-foreground" /> Raw evidence (ingestion pipeline)</li>
+              <li className="flex items-center gap-2"><span className="text-[10px] font-mono text-muted-foreground w-6">02</span> <Network className="size-3.5 text-muted-foreground" /> Semantic mapping (skill normalizer)</li>
+              <li className="flex items-center gap-2"><span className="text-[10px] font-mono text-muted-foreground w-6">03</span> <TrendingUp className="size-3.5 text-muted-foreground" /> Market signal aggregation</li>
+              <li className="flex items-center gap-2"><span className="text-[10px] font-mono text-muted-foreground w-6">04</span> <GraduationCap className="size-3.5 text-muted-foreground" /> Training supply mapping</li>
+              <li className="flex items-center gap-2"><span className="text-[10px] font-mono text-muted-foreground w-6">05</span> <AlertCircle className="size-3.5 text-muted-foreground" /> Gap classification</li>
+              <li className="flex items-center gap-2"><span className="text-[10px] font-mono text-muted-foreground w-6">06</span> <Activity className="size-3.5 text-muted-foreground" /> Candidate comparison</li>
+              <li className="flex items-center gap-2"><span className="text-[10px] font-mono text-muted-foreground w-6">07</span> <ShieldCheck className="size-3.5 text-muted-foreground" /> District twin + state intelligence</li>
             </ol>
             <p className="mt-3 text-[11px] text-muted-foreground">Every transformation is inspectable. No black-box AI. No hidden assumptions.</p>
           </EvidencePanel>
@@ -150,7 +150,7 @@ export function DataGovernanceView() {
       <PageHeader
         title="Data Governance Centre"
         description="Source health, freshness, completeness, semantic governance, and provenance. Every data source tracked. Every transformation inspectable."
-        badge={<StatusPill tone="info" dot>Phase 10 — Governance</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       {/* Summary metrics */}
@@ -162,7 +162,7 @@ export function DataGovernanceView() {
       </div>
 
       {/* Source health */}
-      <EvidencePanel title="Source Health" source="Phase 2 provenance">
+      <EvidencePanel title="Source Health" source="Data Provenance">
         <div className="space-y-2">
           {(sources?.items ?? []).map((s) => {
             const health = sourceHealth(s);
@@ -183,7 +183,7 @@ export function DataGovernanceView() {
       </EvidencePanel>
 
       {/* Knowledge governance */}
-      <EvidencePanel title="Knowledge Governance" source="Phase 3 semantic layer">
+      <EvidencePanel title="Knowledge Governance" source="Skill Knowledge Graph">
         <div className="grid sm:grid-cols-3 gap-3 text-sm">
           <div className="rounded border p-3"><p className="text-muted-foreground text-xs">Skill Aliases</p><p className="text-xl font-bold tabular-nums">{kh.skillAliases ?? 0}</p></div>
           <div className="rounded border p-3"><p className="text-muted-foreground text-xs">Skill Relations</p><p className="text-xl font-bold tabular-nums">{kh.skillRelations ?? 0}</p></div>
@@ -227,7 +227,7 @@ export function SystemHealthView() {
       <PageHeader
         title="System Health"
         description="Platform observability: API health, database, copilot, auth, and data pipelines."
-        badge={<StatusPill tone="info" dot>Phase 10 — Observability</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">

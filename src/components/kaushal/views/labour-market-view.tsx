@@ -44,7 +44,7 @@ export function LabourMarketView() {
       <PageHeader
         title="Labour Market Intelligence"
         description="Understand what Maharashtra's economy is demanding, where demand is concentrated, and how requirements are changing. OBSERVED MARKET SIGNALS — not government recommendations."
-        badge={<StatusPill tone="info" dot>Phase 4 — Market Intelligence</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       {/* Filters */}
@@ -175,7 +175,7 @@ export function RoleDemandDetailView() {
       <PageHeader
         title={role?.roleTitle ?? "Role Demand"}
         description="Observed market demand for this role — evidence-backed, not a recommendation."
-        badge={<StatusPill tone="info" dot>Phase 4 — Role Demand</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       {intel ? (
@@ -189,7 +189,7 @@ export function RoleDemandDetailView() {
       ) : null}
 
       <div className="grid lg:grid-cols-2 gap-6">
-        <EvidencePanel title="Required Competencies" source="Phase 3 competency profile" confidence="high">
+        <EvidencePanel title="Required Competencies" source="Competency Profile" confidence="high">
           {roleFetch.loading ? <LoadingState /> : role ? (
             <ul className="space-y-1.5">
               {role.competencies.map((c) => (
@@ -205,7 +205,7 @@ export function RoleDemandDetailView() {
           ) : <ErrorState message="No competency profile" />}
         </EvidencePanel>
 
-        <EvidencePanel title="Evidence Summary" source="Phase 4 market intelligence">
+        <EvidencePanel title="Evidence Summary" source="Market Intelligence">
           {intel ? (
             <div className="space-y-2">
               <div className="grid grid-cols-2 gap-2 text-xs">
@@ -251,7 +251,7 @@ export function SkillDemandDetailView() {
       <PageHeader
         title="Skill Demand"
         description="Observed market demand signal for this skill — evidence-backed, not a recommendation."
-        badge={<StatusPill tone="info" dot>Phase 4 — Skill Demand</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       {intel ? (
@@ -334,7 +334,7 @@ export function EmergingRadarView() {
       <PageHeader
         title="Emerging Skill Radar"
         description="Observed emerging-technology + emerging-skill signals from multiple evidence streams. This is a SIGNAL, not a guaranteed future demand forecast."
-        badge={<StatusPill tone="info" dot>Phase 4 — Emerging Radar</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       <div className="rounded-md border border-status-attention/30 bg-status-attention/5 px-4 py-3 text-sm text-foreground/80 flex items-start gap-3">
@@ -393,7 +393,7 @@ export function EvidenceConvergenceView() {
       <PageHeader
         title="Evidence Convergence"
         description="Cross-source agreement for a skill. If sources conflict → MIXED EVIDENCE. Sources remain individually visible."
-        badge={<StatusPill tone="info" dot>Phase 4 — Convergence</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
       <div className="space-y-2 max-w-sm">
         <Label>Skill</Label>
@@ -471,7 +471,7 @@ export function MarketTrendsView() {
       <PageHeader
         title="Market Trends"
         description="Time-series of market signals across 12 monthly periods. Missing periods appear as gaps — never fabricated as zeros."
-        badge={<StatusPill tone="info" dot>Phase 4 — Trends</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
       <div className="space-y-2 max-w-sm">
         <Label>Skill</Label>

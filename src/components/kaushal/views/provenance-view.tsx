@@ -23,7 +23,7 @@ export function ProvenanceView() {
       <PageHeader
         title="Provenance"
         description="Trace every record back to its source, ingestion batch, and raw origin. Source → Batch → Record chain."
-        badge={<StatusPill tone="info" dot>Phase 2 — Traceability</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       <EvidencePanel title="Provenance Model" source="Governance">

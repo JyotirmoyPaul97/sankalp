@@ -23,7 +23,7 @@ const confidenceTone = {
 
 /**
  * Structural component for evidence-driven panels.
- * Phase 1 builds the visual scaffold; later phases populate real
+ * Visual scaffold for evidence panels; real
  * WHY / EVIDENCE / SOURCE / LAST UPDATED / CONFIDENCE metadata.
  */
 export function EvidencePanel({

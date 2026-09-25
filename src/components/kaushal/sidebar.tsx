@@ -93,7 +93,7 @@ const GROUPS: NavGroup[] = [
     label: "Collaboration",
     items: [
       { id: "candidate-intelligence", label: "Candidate Intelligence", icon: <User className="size-4" />, phase: 7, active: true },
-      { id: "employer-validation", label: "Employer Validation", icon: <ShieldCheck className="size-4" />, phase: 7, active: false },
+      { id: "employer-validation", label: "Employer Validation", icon: <ShieldCheck className="size-4" />, phase: 7, active: true },
     ],
   },
   {
@@ -133,8 +133,35 @@ interface SidebarProps {
 function getGroupsForRole(role: string | undefined): NavGroup[] {
   if (!role) return GROUPS;
 
-  // Government: full access (STATE_ADMIN, DISTRICT_PLANNER, AUDITOR)
-  if (["STATE_ADMIN", "DISTRICT_PLANNER", "AUDITOR"].includes(role)) {
+  // Government: District Planner — district-scoped
+  if (role === "DISTRICT_PLANNER") {
+    return [
+      { id: "command", label: "District Command", items: [
+        { id: "overview", label: "District Overview", icon: <LayoutDashboard className="size-4" />, phase: 9, active: true },
+        { id: "district-twin", label: "District Digital Twin", icon: <Building className="size-4" />, phase: 8, active: true },
+      ]},
+      { id: "district-intelligence", label: "District Intelligence", items: [
+        { id: "labour-market", label: "Market Demand", icon: <TrendingUp className="size-4" />, phase: 4, active: true },
+        { id: "gap-districts", label: "Skill Gaps", icon: <Building2 className="size-4" />, phase: 5, active: true },
+        { id: "gap-clusters", label: "Cluster Gaps", icon: <Building2 className="size-4" />, phase: 5, active: true },
+        { id: "emerging-radar", label: "Emerging Skills", icon: <Radar className="size-4" />, phase: 4, active: true },
+      ]},
+      { id: "district-training", label: "Training & Capability", items: [
+        { id: "training", label: "Training Supply", icon: <GraduationCap className="size-4" />, phase: 1, active: true },
+        { id: "courses", label: "Courses", icon: <BookOpen className="size-4" />, phase: 1, active: true },
+        { id: "delivery-capability", label: "Centre Readiness", icon: <Truck className="size-4" />, phase: 6, active: true },
+        { id: "gap-intelligence", label: "Training Gaps", icon: <GitCompareArrows className="size-4" />, phase: 5, active: true },
+      ]},
+      { id: "district-planning", label: "Planning", items: [
+        { id: "policy-sandbox", label: "Policy Sandbox", icon: <FlaskConical className="size-4" />, phase: 8, active: true },
+        { id: "district-plans", label: "District Plans", icon: <ClipboardList className="size-4" />, phase: 8, active: true },
+        { id: "outcomes", label: "Outcomes", icon: <Activity className="size-4" />, phase: 8, active: true },
+      ]},
+    ];
+  }
+
+  // Government: State Admin — full state-wide access
+  if (["STATE_ADMIN", "AUDITOR"].includes(role)) {
     return [
       { id: "command", label: "Command", items: [
         { id: "overview", label: "Command Centre", icon: <LayoutDashboard className="size-4" />, phase: 9, active: true },
@@ -185,7 +212,7 @@ function getGroupsForRole(role: string | undefined): NavGroup[] {
         { id: "labour-market", label: "Market Intelligence", icon: <TrendingUp className="size-4" />, phase: 4, active: true },
         { id: "emerging-radar", label: "Emerging Skills", icon: <Radar className="size-4" />, phase: 4, active: true },
         { id: "skills", label: "Skills", icon: <Sparkles className="size-4" />, phase: 1, active: true },
-        { id: "employer-validation", label: "Employer Validation", icon: <ShieldCheck className="size-4" />, phase: 7, active: true },
+        { id: "employer-validation", label: "Demand Validation", icon: <ShieldCheck className="size-4" />, phase: 7, active: true },
       ]},
     ];
   }
@@ -268,7 +295,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                       <span className="flex-1 truncate text-left">{item.label}</span>
                       {!item.active ? (
                         <span className="text-[9px] font-mono uppercase tracking-wide text-sidebar-foreground/40">
-                          P{item.phase}
+                          ·
                         </span>
                       ) : isActive ? (
                         <ChevronRight className="size-3.5 text-sidebar-foreground/60" />
@@ -286,9 +313,9 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       <div className="border-t border-sidebar-border px-4 py-3 space-y-2 shrink-0">
         <div className="flex items-center justify-between">
           <span className="text-[10px] uppercase tracking-wider text-sidebar-foreground/50">
-            Build Phase
+            Environment
           </span>
-          <span className="text-[11px] font-mono text-sidebar-foreground/70">Phase 1</span>
+          <span className="text-[11px] font-mono text-sidebar-foreground/70">Prototype</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="size-1.5 rounded-full bg-status-attention" />

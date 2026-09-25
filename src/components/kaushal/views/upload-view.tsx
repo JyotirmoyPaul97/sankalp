@@ -118,7 +118,7 @@ export function UploadView() {
       <PageHeader
         title="Upload Dataset"
         description="Ingest CSV or JSON evidence into a registered data source. Admin-only — protected by JWT."
-        badge={<StatusPill tone="info" dot>Phase 2 — Ingestion</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       {/* Stepper */}

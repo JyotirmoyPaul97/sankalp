@@ -51,7 +51,7 @@ export function RecordsExplorerView() {
       <PageHeader
         title="Records Explorer"
         description="Searchable, filterable view across every ingested evidence table. Each row carries full provenance."
-        badge={<StatusPill tone="info" dot>Phase 2 — Explorer</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">

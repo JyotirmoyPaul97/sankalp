@@ -71,7 +71,7 @@ export function DataSourcesView() {
       <PageHeader
         title="Data Sources"
         description="Registered evidence feeds with provenance, provider, geography, frequency, and data-status classification."
-        badge={<StatusPill tone="info" dot>Phase 2 — Provenance</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
         actions={
           <Button onClick={() => setCreating(true)}><Plus className="size-4" /> New Source</Button>
         }
@@ -81,7 +81,7 @@ export function DataSourcesView() {
         <ul className="space-y-1.5 text-xs text-muted-foreground leading-relaxed list-disc pl-4">
           <li>No labour-market figures are hard-coded in application logic — all values come from registered sources.</li>
           <li>Every source declares a <span className="font-mono">data_status</span>: REAL, SYNTHETIC, MODELLED, DEMO, UNKNOWN.</li>
-          <li>Phase 2 sources are SYNTHETIC / MODELLED / DEMO. The provenance structure supports future real feeds without architecture changes.</li>
+          <li>Sources are SYNTHETIC / MODELLED / DEMO. The provenance structure supports future real feeds without architecture changes.</li>
           <li>Providers (SyntheticDataProvider, CSVDataProvider, JSONDataProvider, ManualEntryProvider) plug into the same ingestion pipeline.</li>
         </ul>
       </EvidencePanel>

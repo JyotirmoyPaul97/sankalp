@@ -30,13 +30,13 @@ export function DeliveryCapabilityView() {
       <PageHeader
         title="Training Delivery Capability"
         description="Assess whether training centres have the curriculum, trainers, equipment and capacity required to deliver market-relevant skills. Diagnostic — not recommendations."
-        badge={<StatusPill tone="info" dot>Phase 6 — Delivery Capability</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       {/* Chain banner */}
       <div className="rounded-lg border bg-card p-4 flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
         {[
-          { icon: <Gauge className="size-5 text-primary" />, label: "Course Relevance", desc: "Phase 6 Part 1" },
+          { icon: <Gauge className="size-5 text-primary" />, label: "Course Relevance", desc: "Delivery Capability" },
           { icon: <GraduationCap className="size-5 text-primary" />, label: "Curriculum", desc: "Coverage + freshness" },
           { icon: <Users className="size-5 text-primary" />, label: "Trainers", desc: "Proficiency + capacity" },
           { icon: <Wrench className="size-5 text-primary" />, label: "Equipment", desc: "Availability + condition" },

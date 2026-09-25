@@ -17,9 +17,9 @@ export function PolicySandboxView() {
 
       <PhasePlaceholder
         title="Policy Simulation Engine"
-        phase="Planned for Phase 11"
+        phase="Planned"
         icon={<FlaskConical className="size-7" />}
-        description="The Policy Simulation Engine will let planners model the likely impact of interventions — new course launches, capacity expansion, trainer development, curriculum revision — and compare Option A vs. Option B before committing resources. No simulation is performed in Phase 1; this is an intentional premium capability reserved for a later phase."
+        description="The Policy Simulation Engine will let planners model the likely impact of interventions — new course launches, capacity expansion, trainer development, curriculum revision — and compare Option A vs. Option B before committing resources. This is a premium capability for policy simulation and scenario comparison."
         capabilities={[
           { label: "Scenario Modelling", detail: "Define interventions (courses, capacity, trainers, curriculum)." },
           { label: "Comparative Projection", detail: "Project demand-supply outcomes for Option A vs. Option B." },

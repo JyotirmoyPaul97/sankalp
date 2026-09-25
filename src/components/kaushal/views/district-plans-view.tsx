@@ -17,7 +17,7 @@ export function DistrictPlansView() {
 
       <PhasePlaceholder
         title="District Action Plan Generation"
-        phase="Planned for Phase 9"
+        phase="Planned"
         icon={<ClipboardList className="size-7" />}
         description="District action-plan generation will be introduced in a later phase. It will combine demand intelligence, supply capacity, gap analysis and policy simulation to produce prioritised, district-specific plans — including course launches, capacity expansion, trainer development and equipment planning."
         capabilities={[

@@ -37,7 +37,7 @@ export function DistrictTwinView() {
       <PageHeader
         title="District Skill Digital Twin"
         description="A continuously updated evidence-based view of the district skill ecosystem — market, training, capability, candidates, outcomes, and gaps. All values from existing system data."
-        badge={<StatusPill tone="info" dot>Phase 8 — Digital Twin</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       <div className="space-y-2 max-w-sm">
@@ -106,7 +106,7 @@ function TwinDashboard({ districtId }: { districtId: string }) {
       </div>
 
       {/* Market state */}
-      <EvidencePanel title="Market State" source="Phase 4" lastUpdated={twin.freshness}>
+      <EvidencePanel title="Market State" source="Market Intelligence" lastUpdated={twin.freshness}>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Top Demand Skills</p>
@@ -131,7 +131,7 @@ function TwinDashboard({ districtId }: { districtId: string }) {
 
       {/* Training + Capability */}
       <div className="grid lg:grid-cols-2 gap-6">
-        <EvidencePanel title="Training State" source="Phase 5">
+        <EvidencePanel title="Training State" source="Training Intelligence">
           <div className="space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Institutions</span><span className="tabular-nums">{twin.training.institutions}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Training centres</span><span className="tabular-nums">{twin.training.centres}</span></div>
@@ -143,7 +143,7 @@ function TwinDashboard({ districtId }: { districtId: string }) {
           </div>
         </EvidencePanel>
 
-        <EvidencePanel title="Capability State" source="Phase 6">
+        <EvidencePanel title="Capability State" source="Capability Intelligence">
           <div className="space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Course delivery ready</span><StatusPill tone="positive" dot>{twin.capability.readyCourses}</StatusPill></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Partially ready</span><StatusPill tone="attention" dot>{twin.capability.partiallyReadyCourses}</StatusPill></div>
@@ -155,7 +155,7 @@ function TwinDashboard({ districtId }: { districtId: string }) {
 
       {/* Gap + Candidate state */}
       <div className="grid lg:grid-cols-2 gap-6">
-        <EvidencePanel title="Gap Intelligence" source="Phase 5 Part 2">
+        <EvidencePanel title="Gap Intelligence" source="Gap Intelligence">
           <div className="space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">High gaps</span><StatusPill tone="critical" dot>{twin.gaps.highGapCount}</StatusPill></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Moderate gaps</span><StatusPill tone="attention" dot>{twin.gaps.moderateGapCount}</StatusPill></div>
@@ -164,7 +164,7 @@ function TwinDashboard({ districtId }: { districtId: string }) {
           </div>
         </EvidencePanel>
 
-        <EvidencePanel title="Candidate State" source="Phase 7">
+        <EvidencePanel title="Candidate State" source="Candidate Intelligence">
           <div className="space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Total candidates</span><span className="tabular-nums">{twin.candidates.totalCandidates}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">High readiness</span><StatusPill tone="positive" dot>{twin.candidates.highReadiness}</StatusPill></div>
@@ -175,7 +175,7 @@ function TwinDashboard({ districtId }: { districtId: string }) {
       </div>
 
       {/* Implementation monitoring */}
-      <EvidencePanel title="Implementation Monitoring" source="Phase 8 Part 2">
+      <EvidencePanel title="Implementation Monitoring" source="Outcome Monitoring">
         {outcomesFetch.loading ? <LoadingState /> : (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">{(outcomesFetch.data?.interventions ?? []).length} district interventions tracked</p>
@@ -229,7 +229,7 @@ export function PolicySandboxView() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Policy Sandbox" description="Create scenarios, configure interventions, simulate impacts, compare alternatives. SIMULATED RESULTS — NOT FORECASTS. Decision support, not automatic decision making." badge={<StatusPill tone="info" dot>Phase 8 — Policy Sandbox</StatusPill>} />
+      <PageHeader title="Policy Sandbox" description="Create scenarios, configure interventions, simulate impacts, compare alternatives. SIMULATED RESULTS — NOT FORECASTS. Decision support, not automatic decision making." badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>} />
       <div className="rounded-md border border-status-attention/30 bg-status-attention/5 px-4 py-3 text-sm text-foreground/80 flex items-start gap-3">
         <AlertTriangle className="size-4 text-status-attention mt-0.5 shrink-0" />
         <div>
@@ -260,7 +260,7 @@ export function DistrictOutcomesView() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="District Skill Outcomes" description="Implementation tracking, KPI monitoring, pre/post comparison, and outcome feedback. NO causal claims — temporal association only." badge={<StatusPill tone="info" dot>Phase 8 — Outcome Feedback Loop</StatusPill>} />
+      <PageHeader title="District Skill Outcomes" description="Implementation tracking, KPI monitoring, pre/post comparison, and outcome feedback. NO causal claims — temporal association only." badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>} />
 
       <div className="space-y-2 max-w-sm">
         <Label>District</Label>

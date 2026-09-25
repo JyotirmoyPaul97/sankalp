@@ -125,7 +125,7 @@ export function TrainingView() {
       <PageHeader
         title="Training Ecosystem"
         description="Institutions, courses and qualifications forming the training-supply foundation. All data is synthetic demonstration data."
-        badge={<StatusPill tone="info" dot>Phase 1 — Foundation</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       <Tabs value={tab} onValueChange={(v) => { setTab(v); setPage(1); }}>

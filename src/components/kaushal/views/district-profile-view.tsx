@@ -156,11 +156,11 @@ export function DistrictProfileView() {
         </EvidencePanel>
       </div>
 
-      <EvidencePanel title="Labour-Market Intelligence" source="Phase 4 — Planned">
+      <EvidencePanel title="Labour-Market Intelligence" source="Intelligence Module">
         <div className="rounded-md border border-dashed bg-muted/30 px-4 py-6 text-center">
           <p className="text-sm text-muted-foreground">
             Demand signals, skill-gap analysis and district-level intelligence will be introduced
-            in <span className="font-medium text-foreground">Phase 4</span>.
+            in a later module.
           </p>
         </div>
       </EvidencePanel>

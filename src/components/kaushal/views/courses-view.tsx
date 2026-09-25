@@ -90,7 +90,7 @@ export function CoursesView() {
       <PageHeader
         title="Courses"
         description="Course catalogue mapped to sectors and qualifications. Relevance scores and demand-vs-supply gap analysis arrive in later phases."
-        badge={<StatusPill tone="info" dot>Phase 1 — Foundation</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">

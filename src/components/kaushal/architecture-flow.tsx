@@ -16,7 +16,7 @@ interface ArchitectureFlowProps {
 
 /**
  * Conceptual preview of the KAUSHAL DRISHTI intelligence architecture.
- * Purely illustrative in Phase 1 — no live data flows through it yet.
+ * Conceptual intelligence architecture flow.
  */
 export function ArchitectureFlow({ nodes, className }: ArchitectureFlowProps) {
   return (

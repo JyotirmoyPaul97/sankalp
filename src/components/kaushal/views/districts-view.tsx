@@ -77,7 +77,7 @@ export function DistrictsView() {
       <PageHeader
         title="District Intelligence"
         description="District-level foundation view of the demonstration training ecosystem. Click a district to open its profile."
-        badge={<StatusPill tone="info" dot>Phase 1 — Foundation</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       <div className="flex items-center gap-3">

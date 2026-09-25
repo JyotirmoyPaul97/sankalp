@@ -35,7 +35,7 @@ export function DataQualityView() {
       <PageHeader
         title="Data Quality"
         description="Per-batch quality dashboard: completeness, validity, uniqueness, consistency. Deterministic — no ML."
-        badge={<StatusPill tone="info" dot>Phase 2 — Quality</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       <div className="grid lg:grid-cols-3 gap-6">

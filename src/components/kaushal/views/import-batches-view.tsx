@@ -68,7 +68,7 @@ export function ImportBatchesView() {
       <PageHeader
         title="Import Batches"
         description="History of every ingestion operation with summary counts, quality score, and provenance."
-        badge={<StatusPill tone="info" dot>Phase 2 — Audit</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">

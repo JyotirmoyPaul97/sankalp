@@ -27,8 +27,8 @@ export function SkillIntelligenceView() {
     <div className="space-y-6">
       <PageHeader
         title="Skill Intelligence"
-        description="Canonical skill knowledge graph — aliases, relations, and clusters. The deterministic normalizer resolves raw skill strings to canonical entities (no embeddings / no ML — Phase 3 foundation)."
-        badge={<StatusPill tone="info" dot>Phase 3 — Knowledge Graph</StatusPill>}
+        description="Canonical skill knowledge graph — aliases, relations, and clusters. The deterministic normalizer resolves raw skill strings to canonical entities (deterministic foundation)."
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       <div className="grid lg:grid-cols-2 gap-6">
@@ -102,7 +102,7 @@ function SkillNormalizerPlayground() {
           ) : (
             <div className="rounded-md border border-status-attention/40 bg-status-attention/5 p-3 text-sm">
               <p className="font-medium text-status-attention">No canonical skill matched.</p>
-              <p className="text-xs text-muted-foreground mt-1">Phase 3 is a foundation — unresolved strings can be mapped manually in a later phase.</p>
+              <p className="text-xs text-muted-foreground mt-1">Unresolved strings can be mapped manually through the review queue.</p>
             </div>
           )}
         </div>

@@ -46,19 +46,19 @@ export function GapIntelligenceView() {
       <PageHeader
         title="Training Supply & Gap Intelligence"
         description="Compare observed labour-market demand with the training ecosystem that currently serves it. OBSERVATION + LIMITED INTERPRETATION — not recommendations."
-        badge={<StatusPill tone="info" dot>Phase 5 — Gap Intelligence</StatusPill>}
+        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
       {/* Two-sided model banner */}
       <div className="rounded-lg border bg-card p-4 flex flex-col md:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <TrendingUp className="size-6 text-primary" />
-          <div><p className="text-sm font-medium">MARKET DEMAND</p><p className="text-xs text-muted-foreground">Phase 4 observed signals</p></div>
+          <div><p className="text-sm font-medium">MARKET DEMAND</p><p className="text-xs text-muted-foreground">Market demand signals</p></div>
         </div>
         <ArrowRight className="size-5 text-muted-foreground rotate-90 md:rotate-0" />
         <div className="flex items-center gap-3">
           <GraduationCap className="size-6 text-primary" />
-          <div><p className="text-sm font-medium">TRAINING SUPPLY</p><p className="text-xs text-muted-foreground">Phase 5 Part 1 capacity</p></div>
+          <div><p className="text-sm font-medium">TRAINING SUPPLY</p><p className="text-xs text-muted-foreground">Training capacity data</p></div>
         </div>
         <ArrowRight className="size-5 text-muted-foreground rotate-90 md:rotate-0" />
         <div className="flex items-center gap-3">
@@ -230,7 +230,7 @@ export function GapDetailView() {
 
       {/* Two-sided evidence */}
       <div className="grid lg:grid-cols-2 gap-6">
-        <EvidencePanel title="Demand Evidence (Market)" source="Phase 4">
+        <EvidencePanel title="Demand Evidence (Market)" source="Market Intelligence">
           <div className="space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Demand signal</span><StatusPill tone={DEMAND_TONE[gap.marketDemandSignal] ?? "neutral"} dot>{gap.marketDemandSignal}</StatusPill></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Demand strength</span><span className="tabular-nums">{Math.round(gap.marketDemandStrength)}/100</span></div>
@@ -243,7 +243,7 @@ export function GapDetailView() {
           </div>
         </EvidencePanel>
 
-        <EvidencePanel title="Supply Evidence (Training)" source="Phase 5 Part 1">
+        <EvidencePanel title="Supply Evidence (Training)" source="Training Intelligence">
           <div className="space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Supply signal</span><StatusPill tone={DEMAND_TONE[gap.trainingSupplySignal] ?? "neutral"} dot>{gap.trainingSupplySignal}</StatusPill></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Supply strength</span><span className="tabular-nums">{Math.round(gap.trainingSupplyStrength)}/100</span></div>
@@ -260,7 +260,7 @@ export function GapDetailView() {
       </div>
 
       {/* Gap dimensions */}
-      <EvidencePanel title="Gap Dimensions" source="Phase 5 Part 2 engine">
+      <EvidencePanel title="Gap Dimensions" source="Gap Intelligence Engine">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { k: "Coverage", v: gap.coverageStatus },
@@ -303,7 +303,7 @@ export function DistrictGapView() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="District Gap View" description="Geographic distribution of demand–supply gap signals across districts." badge={<StatusPill tone="info" dot>Phase 5 — Geographic Gap</StatusPill>} />
+      <PageHeader title="District Gap View" description="Geographic distribution of demand–supply gap signals across districts." badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>} />
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {(data?.districts ?? []).map((d) => (
           <div key={d.district.id} className="rounded-lg border bg-card p-4 space-y-3">
@@ -346,7 +346,7 @@ export function ClusterGapView() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Cluster Gap View" description="Local economic cluster demand–supply gap intelligence — a major differentiator of KAUSHAL DRISHTI." badge={<StatusPill tone="info" dot>Phase 5 — Cluster Gap</StatusPill>} />
+      <PageHeader title="Cluster Gap View" description="Local economic cluster demand–supply gap intelligence — a major differentiator of KAUSHAL DRISHTI." badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>} />
       <div className="grid sm:grid-cols-2 gap-3">
         {(data?.clusters ?? []).map((c) => (
           <div key={c.cluster.id} className="rounded-lg border bg-card p-4 space-y-3">
@@ -403,7 +403,7 @@ export function GapMatrixView() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Market–Training Matrix" description="Side-by-side comparison of observed demand vs training supply for each role. Filterable by district and sector." badge={<StatusPill tone="info" dot>Phase 5 — Matrix</StatusPill>} />
+      <PageHeader title="Market–Training Matrix" description="Side-by-side comparison of observed demand vs training supply for each role. Filterable by district and sector." badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>} />
       <DataTable columns={cols} rows={data?.matrix ?? []} rowKey={(r) => `${r.role}-${r.gapSignal}`} emptyMessage="No matrix data." />
       <p className="text-[11px] text-muted-foreground">Gap signal computed from transparent rules comparing normalized demand (0-100) with normalized supply (0-100). Weights documented as 'initial system configuration — subject to validation.' No workforce-unit estimation.</p>
     </div>
