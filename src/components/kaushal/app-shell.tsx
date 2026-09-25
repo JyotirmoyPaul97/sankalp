@@ -27,6 +27,7 @@ import { AuditLogsView } from "./views/audit-logs-view";
 import { SkillIntelligenceView } from "./views/skill-intelligence-view";
 import { CompetencyFrameworkView } from "./views/competency-framework-view";
 import { GapIntelligenceView, GapDetailView, DistrictGapView, ClusterGapView, GapMatrixView } from "./views/gap-intelligence-view";
+import { DeliveryCapabilityView } from "./views/delivery-capability-view";
 
 const VIEW_REGISTRY: Record<string, React.ComponentType> = {
   overview: OverviewView,
@@ -43,6 +44,7 @@ const VIEW_REGISTRY: Record<string, React.ComponentType> = {
   "gap-districts": DistrictGapView,
   "gap-clusters": ClusterGapView,
   "gap-matrix": GapMatrixView,
+  "delivery-capability": DeliveryCapabilityView,
   training: TrainingView,
   courses: CoursesView,
   "employer-validation": EmployerValidationView,

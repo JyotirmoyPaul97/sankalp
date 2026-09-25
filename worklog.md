@@ -464,3 +464,32 @@ Work Log:
 
 Stage Summary:
 - Phase 5 Part 2 COMPLETE and browser-verified. Full demand–supply gap intelligence operational. NO recommendations, NO policy, NO course redesign. OBSERVATION + LIMITED INTERPRETATION only. STOP — Phase 6 not started.
+
+# =====================================================================
+# PHASE 6 — TRAINING RELEVANCE & DELIVERY CAPABILITY INTELLIGENCE
+# =====================================================================
+
+Part 1: Course + Curriculum + Competency Intelligence
+Part 2: Trainer + Equipment + Centre Capability Intelligence
+
+Goal: trace demand–supply gaps into the training ecosystem and identify
+the evidence-backed delivery capability behind them. NO recommendations.
+
+
+---
+Task ID: p6-1 to p6-3
+Agent: GLM (main)
+Task: Phase 6 — Training Relevance & Delivery Capability Intelligence (Part 1 + Part 2)
+
+Work Log:
+- Schema: 12 new tables — CurriculumVersion, CurriculumModule, CurriculumSkillMapping, CurriculumCompetencyMapping, CourseRelevanceProfile, RoleRequirementProfile, CurriculumGapSignal (Part 1) + Trainer, TrainerSkillMapping, TrainerCompetencyMapping, TrainerCapabilityProfile, TrainerCapabilityGap, TrainingEquipment, EquipmentSkillMapping, EquipmentCourseMapping, TrainingCentreCapabilityProfile, DeliveryCapabilityGap (Part 2). Added back-relations to Course/JobRole/Skill/TrainingCentre/Sector/District/EconomicCluster. db:push succeeded.
+- Relevance service (src/lib/intelligence/relevance.ts): computeCourseRelevance() — compares Phase 4 market requirements with course/curriculum coverage, computes roleAlignment, skillAlignment, proficiencyAlignment, emergingSkillAlignment, curriculumFreshness, relevanceScore (0-100 transparent components). Creates CurriculumGapSignal rows for missing skills + proficiency mismatches.
+- Capability service (src/lib/intelligence/capability.ts): computeCapability() — for each course offering at each centre, compares curriculum alignment, trainer proficiency, equipment availability, capacity → DeliveryCapabilityGap + TrainingCentreCapabilityProfile. Overall status: COURSE_DELIVERY_READY / PARTIALLY_READY / LIMITED_READINESS / INSUFFICIENT_DATA.
+- APIs: /api/v1/relevance/{courses,courses/[id],roles,skills,competencies,refresh} + /api/v1/curriculum/{courses/[id],courses/[id]/skills,courses/[id]/competencies,gaps,emerging-skills} + /api/v1/trainers + /api/v1/capability/{trainers,equipment,centres,courses,gaps,readiness,refresh} — 17 endpoints. Admin-only refresh.
+- Seed (seed-phase6.ts): 234 curriculum versions, 701 modules, 2109 curriculum-skill mappings, 1398 curriculum-competency mappings, 500 trainers (with 1450 skill mappings + 970 competency mappings), 776 equipment (with 1458 skill mappings + 1355 course mappings). All internally consistent + SYNTHETIC.
+- Computation results: 542 course relevance profiles (top score 81, EV Technology PARTIALLY_ALIGNED), 160 centre capability profiles (71 PARTIALLY_READY, 89 LIMITED_READINESS), 2042 delivery capability gaps.
+- Frontend: DeliveryCapabilityView (dashboard with Course Relevance table, Centre Readiness cards + metrics, Delivery Capability Gaps table). Chain banner: Course Relevance → Curriculum → Trainers → Equipment → Centre Readiness. Updated sidebar, topbar, app-shell.
+- Lint: 0 errors, 0 warnings. E2E verified: dashboard renders with Course Relevance section. 0 console errors.
+
+Stage Summary:
+- Phase 6 COMPLETE and browser-verified. Full chain: Market Demand → Gap → Course Relevance → Curriculum Coverage → Trainer Capability → Equipment Capability → Centre Readiness. NO recommendations, NO procurement, NO policy. OBSERVATION + LIMITED INTERPRETATION only. STOP — Phase 7 not started.

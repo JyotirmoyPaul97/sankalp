@@ -30,6 +30,7 @@ import {
   LineChart,
   Gauge,
   GitCompareArrows,
+  Truck,
 } from "lucide-react";
 
 interface NavItem {
@@ -74,6 +75,7 @@ const GROUPS: NavGroup[] = [
     label: "Decision Support",
     items: [
       { id: "gap-intelligence", label: "Gap Intelligence", icon: <GitCompareArrows className="size-4" />, phase: 5, active: true },
+      { id: "delivery-capability", label: "Delivery Capability", icon: <Truck className="size-4" />, phase: 6, active: true },
       { id: "gap-districts", label: "District Gaps", icon: <Building2 className="size-4" />, phase: 5, active: true },
       { id: "gap-clusters", label: "Cluster Gaps", icon: <Building2 className="size-4" />, phase: 5, active: true },
       { id: "gap-matrix", label: "Market–Training Matrix", icon: <Gauge className="size-4" />, phase: 5, active: true },

@@ -93,6 +93,7 @@ model District {
   trainingCentres  TrainingCentre[]  @relation("TrainingCentreDistrict")
   supplySignals    TrainingSupplySignal[]
   gapSignals       DemandSupplyGapSignal[] @relation("GapDistrict")
+  roleRequirementProfiles RoleRequirementProfile[]
 
   @@index([stateCode])
   @@index([divisionId])
@@ -121,6 +122,7 @@ model EconomicCluster {
   jobPostings JobPosting[]
   marketSignals MarketSignal[]
   gapSignals  DemandSupplyGapSignal[] @relation("GapCluster")
+  roleRequirementProfiles RoleRequirementProfile[]
 
   @@index([districtId])
   @@index([sectorId])
@@ -166,6 +168,7 @@ model Sector {
   skillSectorPresence   SkillSectorPresence[]
   supplySignals         TrainingSupplySignal[]
   gapSignals            DemandSupplyGapSignal[] @relation("GapSector")
+  roleRequirementProfiles RoleRequirementProfile[]
 
   @@map("sectors")
 }
@@ -192,6 +195,12 @@ model Skill {
   emergingSignal  EmergingSkillSignal?
   supplySignals   TrainingSupplySignal[]
   gapSignals      DemandSupplyGapSignal[] @relation("GapSkill")
+  curriculumSkillMappings CurriculumSkillMapping[]
+  trainerSkillMappings   TrainerSkillMapping[]
+  equipmentSkillMappings  EquipmentSkillMapping[]
+  trainerCapabilityGaps   TrainerCapabilityGap[]
+  curriculumGaps          CurriculumGapSignal[]
+  deliveryGaps            DeliveryCapabilityGap[]
 
   @@index([category])
   @@map("skills")
@@ -294,6 +303,10 @@ model JobRole {
   courseRoleMappings CourseRoleMapping[]
   supplySignals     TrainingSupplySignal[]
   gapSignals        DemandSupplyGapSignal[] @relation("GapJobRole")
+  relevanceProfiles CourseRelevanceProfile[]
+  roleRequirementProfiles RoleRequirementProfile[]
+  curriculumGaps    CurriculumGapSignal[]
+  trainerCapabilityGaps TrainerCapabilityGap[]
 
   @@map("job_roles")
 }
@@ -380,6 +393,12 @@ model Course {
   courseRoleMappings CourseRoleMapping[]
   courseOfferings    CourseOffering[]
   supplySignals      TrainingSupplySignal[]
+  curriculumVersions CurriculumVersion[]
+  relevanceProfiles  CourseRelevanceProfile[]
+  curriculumGaps     CurriculumGapSignal[]
+  equipmentCourseMappings EquipmentCourseMapping[]
+  trainerCapabilityGaps  TrainerCapabilityGap[]
+  deliveryGaps       DeliveryCapabilityGap[]
 
   @@index([sectorId])
   @@index([qualificationId])
@@ -1169,6 +1188,11 @@ model TrainingCentre {
   district       District?      @relation("TrainingCentreDistrict", fields: [districtId], references: [id])
   courseOfferings CourseOffering[]
   supplySignals   TrainingSupplySignal[]
+  trainers        Trainer[]
+  equipment       TrainingEquipment[]
+  trainerCapabilityGaps TrainerCapabilityGap[]
+  capabilityProfiles TrainingCentreCapabilityProfile[]
+  deliveryGaps    DeliveryCapabilityGap[]
 
   @@index([institutionId])
   @@index([districtId])
@@ -1427,4 +1451,446 @@ model DemandSupplyGapSignal {
   @@index([period])
   @@index([gapSignal])
   @@map("demand_supply_gap_signals")
+}
+
+// =====================================================================
+// PHASE 6 PART 1 — COURSE RELEVANCE + CURRICULUM INTELLIGENCE
+// =====================================================================
+
+model CurriculumVersion {
+  id              String    @id @default(cuid())
+  courseId        String    @map("course_id")
+  version         String
+  effectiveFrom   DateTime  @map("effective_from")
+  effectiveTo     DateTime? @map("effective_to")
+  revisionDate    DateTime? @map("revision_date")
+  curriculumSourceId String? @map("curriculum_source_id")
+  // DRAFT | ACTIVE | SUPERSEDED | ARCHIVED
+  status          String    @default("ACTIVE")
+  dataStatus      String    @default("DEMO") @map("data_status")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  course          Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  modules         CurriculumModule[]
+
+  @@unique([courseId, version])
+  @@index([courseId])
+  @@index([status])
+  @@map("curriculum_versions")
+}
+
+model CurriculumModule {
+  id              String   @id @default(cuid())
+  curriculumVersionId String @map("curriculum_version_id")
+  name            String
+  sequence        Int      @default(1)
+  description     String?
+  durationHours   Int?     @map("duration_hours")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  curriculumVersion CurriculumVersion @relation(fields: [curriculumVersionId], references: [id], onDelete: Cascade)
+  skillMappings     CurriculumSkillMapping[]
+  competencyMappings CurriculumCompetencyMapping[]
+
+  @@index([curriculumVersionId])
+  @@map("curriculum_modules")
+}
+
+model CurriculumSkillMapping {
+  id              String   @id @default(cuid())
+  curriculumModuleId String @map("curriculum_module_id")
+  skillId         String   @map("skill_id")
+  // INTRODUCED | PRACTICED | ASSESSED | MASTERED | CERTIFIED | UNKNOWN
+  coverageType    String   @default("INTRODUCED") @map("coverage_type")
+  coverageStrength Float   @default(0.5) @map("coverage_strength")
+  expectedProficiency String? @map("expected_proficiency")
+  assessmentPresent Boolean @default(false) @map("assessment_present")
+  confidence      Float    @default(0.7)
+  dataSourceId    String?  @map("data_source_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  curriculumModule CurriculumModule @relation(fields: [curriculumModuleId], references: [id], onDelete: Cascade)
+  skill            Skill            @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([curriculumModuleId, skillId])
+  @@index([skillId])
+  @@map("curriculum_skill_mappings")
+}
+
+model CurriculumCompetencyMapping {
+  id              String   @id @default(cuid())
+  curriculumModuleId String @map("curriculum_module_id")
+  competencyId    String   @map("competency_id")
+  // INTRODUCED | PRACTICED | ASSESSED | MASTERED | CERTIFIED | UNKNOWN
+  coverageType    String   @default("INTRODUCED") @map("coverage_type")
+  coverageStrength Float   @default(0.5) @map("coverage_strength")
+  expectedProficiency String? @map("expected_proficiency")
+  assessmentPresent Boolean @default(false) @map("assessment_present")
+  confidence      Float    @default(0.7)
+  dataSourceId    String?  @map("data_source_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  curriculumModule CurriculumModule @relation(fields: [curriculumModuleId], references: [id], onDelete: Cascade)
+
+  @@unique([curriculumModuleId, competencyId])
+  @@index([competencyId])
+  @@map("curriculum_competency_mappings")
+}
+
+model CourseRelevanceProfile {
+  id              String   @id @default(cuid())
+  courseId        String   @map("course_id")
+  jobRoleId       String?  @map("job_role_id")
+
+  marketAlignmentScore Float? @map("market_alignment_score")
+
+  // STRONG_ALIGNMENT | PARTIAL_ALIGNMENT | WEAK_ALIGNMENT | NO_CONFIDENT_ALIGNMENT | INSUFFICIENT_DATA
+  roleAlignment       String  @default("INSUFFICIENT_DATA") @map("role_alignment")
+  competencyAlignment String  @default("INSUFFICIENT_DATA") @map("competency_alignment")
+  skillAlignment      String  @default("INSUFFICIENT_DATA") @map("skill_alignment")
+  // ALIGNED | LOWER_THAN_MARKET | HIGHER_THAN_MARKET | MIXED | UNKNOWN | INSUFFICIENT_DATA
+  proficiencyAlignment String @default("UNKNOWN") @map("proficiency_alignment")
+  // EMERGING_AND_COVERED | EMERGING_PARTIALLY_COVERED | EMERGING_NOT_IDENTIFIED | INSUFFICIENT_DATA
+  emergingSkillAlignment String @default("INSUFFICIENT_DATA") @map("emerging_skill_alignment")
+  // RECENT | CURRENT | AGING | STALE | UNKNOWN
+  curriculumFreshness String @default("UNKNOWN") @map("curriculum_freshness")
+  evidenceConfidence  Float   @default(0) @map("evidence_confidence")
+
+  // STRONGLY_ALIGNED | ALIGNED | PARTIALLY_ALIGNED | WEAKLY_ALIGNED | INSUFFICIENT_DATA
+  coverageStatus  String   @default("INSUFFICIENT_DATA") @map("coverage_status")
+  alignmentStatus String   @default("INSUFFICIENT_DATA") @map("alignment_status")
+
+  // Course Relevance Signal (0-100) — transparent, configurable, explainable
+  relevanceScore  Float    @default(0) @map("relevance_score")
+
+  observationPeriod String
+  dataStatus       String   @default("DEMO") @map("data_status")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  jobRole   JobRole? @relation(fields: [jobRoleId], references: [id])
+
+  @@unique([courseId, jobRoleId, observationPeriod])
+  @@index([courseId])
+  @@index([jobRoleId])
+  @@map("course_relevance_profiles")
+}
+
+model RoleRequirementProfile {
+  id              String   @id @default(cuid())
+  jobRoleId       String   @map("job_role_id")
+  sectorId        String?  @map("sector_id")
+  districtId      String?  @map("district_id")
+  clusterId       String?  @map("cluster_id")
+
+  competencies    String?  // JSON array
+  skills          String?  // JSON array
+  requiredProficiency String? @map("required_proficiency")
+
+  demandSignal    String   @default("NONE") @map("demand_signal")
+  trendDirection  String   @default("UNKNOWN") @map("trend_direction")
+  employerSignal  String   @default("NONE") @map("employer_signal")
+  employerCount   Int      @default(0) @map("employer_count")
+  sourceDiversity Int      @default(0) @map("source_diversity")
+  confidence      Float    @default(0)
+
+  observationPeriod String
+  dataStatus       String   @default("DEMO") @map("data_status")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  jobRole   JobRole  @relation(fields: [jobRoleId], references: [id])
+  sector    Sector?  @relation(fields: [sectorId], references: [id])
+  district  District? @relation(fields: [districtId], references: [id])
+  cluster   EconomicCluster? @relation(fields: [clusterId], references: [id])
+
+  @@unique([jobRoleId, sectorId, districtId, observationPeriod])
+  @@index([jobRoleId])
+  @@map("role_requirement_profiles")
+}
+
+model CurriculumGapSignal {
+  id              String   @id @default(cuid())
+  courseId        String   @map("course_id")
+  jobRoleId       String?  @map("job_role_id")
+  skillId         String?  @map("skill_id")
+  competencyId    String?  @map("competency_id")
+
+  marketRequirement String  @default("UNKNOWN") @map("market_requirement")
+  curriculumCoverage String @default("UNKNOWN") @map("curriculum_coverage")
+  proficiencyAlignment String @default("UNKNOWN") @map("proficiency_alignment")
+
+  emergingSignal  String   @default("UNKNOWN") @map("emerging_signal")
+  freshnessSignal String   @default("UNKNOWN") @map("freshness_signal")
+
+  // MISSING_SKILL | PARTIAL_SKILL_COVERAGE | PROFICIENCY_MISMATCH | MISSING_COMPETENCY | EMERGING_SKILL_GAP | CURRICULUM_FRESHNESS_GAP | INSUFFICIENT_DATA
+  gapType         String   @default("INSUFFICIENT_DATA") @map("gap_type")
+  gapSignal       String   @default("INSUFFICIENT_DATA") @map("gap_signal")
+  confidence      Float    @default(0)
+
+  observationPeriod String
+  dataStatus       String   @default("DEMO") @map("data_status")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  jobRole   JobRole? @relation(fields: [jobRoleId], references: [id])
+  skill     Skill?   @relation(fields: [skillId], references: [id])
+
+  @@index([courseId])
+  @@index([jobRoleId])
+  @@index([skillId])
+  @@index([gapSignal])
+  @@map("curriculum_gap_signals")
+}
+
+// =====================================================================
+// PHASE 6 PART 2 — TRAINER + EQUIPMENT + CENTRE CAPABILITY INTELLIGENCE
+// =====================================================================
+
+model Trainer {
+  id              String   @id @default(cuid())
+  trainingCentreId String  @map("training_centre_id")
+  name            String?
+  trainerType     String   @default("INSTRUCTOR") // INSTRUCTOR | INDUSTRY_EXPERT | GUEST | ADJUNCT | OTHER
+  qualificationSummary String? @map("qualification_summary")
+  experienceYears Int?     @map("experience_years")
+  industryExperience String? @map("industry_experience")
+  // ACTIVE | INACTIVE | ON_LEAVE | UNKNOWN
+  status          String   @default("ACTIVE")
+  dataSourceId    String?  @map("data_source_id")
+  dataStatus      String   @default("DEMO") @map("data_status")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  trainingCentre  TrainingCentre @relation(fields: [trainingCentreId], references: [id], onDelete: Cascade)
+  skillMappings   TrainerSkillMapping[]
+  competencyMappings TrainerCompetencyMapping[]
+  capabilityProfiles TrainerCapabilityProfile[]
+
+  @@index([trainingCentreId])
+  @@map("trainers")
+}
+
+model TrainerSkillMapping {
+  id              String   @id @default(cuid())
+  trainerId       String   @map("trainer_id")
+  skillId         String   @map("skill_id")
+  proficiencyLevel String  @default("WORKING") @map("proficiency_level")
+  // SELF_DECLARED | ASSESSED | CERTIFIED | EMPLOYER_VERIFIED | INSTITUTION_VERIFIED | UNKNOWN
+  verificationStatus String @default("SELF_DECLARED") @map("verification_status")
+  lastVerifiedAt  DateTime? @map("last_verified_at")
+  evidenceSourceId String?  @map("evidence_source_id")
+  confidence      Float    @default(0.5)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  trainer  Trainer @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  skill    Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([trainerId, skillId])
+  @@index([skillId])
+  @@map("trainer_skill_mappings")
+}
+
+model TrainerCompetencyMapping {
+  id              String   @id @default(cuid())
+  trainerId       String   @map("trainer_id")
+  competencyId    String   @map("competency_id")
+  proficiencyLevel String  @default("WORKING") @map("proficiency_level")
+  verificationStatus String @default("SELF_DECLARED") @map("verification_status")
+  lastVerifiedAt  DateTime? @map("last_verified_at")
+  confidence      Float    @default(0.5)
+  evidenceSourceId String?  @map("evidence_source_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  trainer  Trainer @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+
+  @@unique([trainerId, competencyId])
+  @@index([competencyId])
+  @@map("trainer_competency_mappings")
+}
+
+model TrainerCapabilityProfile {
+  id              String   @id @default(cuid())
+  trainerId       String   @map("trainer_id")
+  primarySkills   String?  @map("primary_skills") // JSON
+  primaryCompetencies String? @map("primary_competencies") // JSON
+  highestVerifiedProficiency String? @map("highest_verified_proficiency")
+  industryExperience String? @map("industry_experience")
+  qualificationLevel String? @map("qualification_level")
+  recentUpskilling String?  @map("recent_upskilling")
+  capabilityConfidence Float @default(0) @map("capability_confidence")
+  // CURRENT | RECENTLY_UPDATED | AGING | STALE | UNKNOWN
+  freshnessStatus String   @default("UNKNOWN") @map("freshness_status")
+  observationPeriod String
+  dataStatus      String   @default("DEMO") @map("data_status")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  trainer  Trainer @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+
+  @@unique([trainerId, observationPeriod])
+  @@map("trainer_capability_profiles")
+}
+
+model TrainerCapabilityGap {
+  id              String   @id @default(cuid())
+  trainingCentreId String  @map("training_centre_id")
+  courseId        String?  @map("course_id")
+  jobRoleId       String?  @map("job_role_id")
+  skillId         String?  @map("skill_id")
+  competencyId    String?  @map("competency_id")
+
+  requiredProficiency String? @map("required_proficiency")
+  observedTrainerProficiency String? @map("observed_trainer_proficiency")
+
+  trainerCount    Int      @default(0) @map("trainer_count")
+  requiredTrainerCapacity Int? @map("required_trainer_capacity")
+
+  // CAPABILITY_ALIGNED | LIMITED_CAPABILITY | PROFICIENCY_MISMATCH | INSUFFICIENT_DATA
+  capabilityStatus String  @default("INSUFFICIENT_DATA") @map("capability_status")
+  confidence       Float    @default(0)
+  observationPeriod String
+  dataStatus       String   @default("DEMO") @map("data_status")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  trainingCentre  TrainingCentre @relation(fields: [trainingCentreId], references: [id], onDelete: Cascade)
+  course          Course?         @relation(fields: [courseId], references: [id])
+  jobRole         JobRole?        @relation(fields: [jobRoleId], references: [id])
+  skill           Skill?          @relation(fields: [skillId], references: [id])
+
+  @@index([trainingCentreId])
+  @@index([courseId])
+  @@index([skillId])
+  @@map("trainer_capability_gaps")
+}
+
+model TrainingEquipment {
+  id              String   @id @default(cuid())
+  trainingCentreId String  @map("training_centre_id")
+  name            String
+  equipmentType   String   @default("GENERAL") @map("equipment_type")
+  manufacturer    String?
+  model           String?
+  quantity        Int      @default(1)
+  operationalQuantity Int? @map("operational_quantity")
+  // OPERATIONAL | PARTIALLY_OPERATIONAL | UNDER_MAINTENANCE | NON_OPERATIONAL | UNKNOWN
+  conditionStatus String  @default("OPERATIONAL") @map("condition_status")
+  acquisitionDate DateTime? @map("acquisition_date")
+  lastMaintenanceDate DateTime? @map("last_maintenance_date")
+  // CURRENT | AGING | OUTDATED | UNKNOWN
+  currencyStatus  String   @default("UNKNOWN") @map("currency_status")
+  status          String   @default("ACTIVE")
+  dataSourceId    String?  @map("data_source_id")
+  dataStatus      String   @default("DEMO") @map("data_status")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  trainingCentre  TrainingCentre @relation(fields: [trainingCentreId], references: [id], onDelete: Cascade)
+  skillMappings   EquipmentSkillMapping[]
+  courseMappings  EquipmentCourseMapping[]
+
+  @@index([trainingCentreId])
+  @@map("training_equipment")
+}
+
+model EquipmentSkillMapping {
+  id              String   @id @default(cuid())
+  equipmentId     String   @map("equipment_id")
+  skillId         String   @map("skill_id")
+  requiredQuantity Int?    @map("required_quantity")
+  coverageStrength Float   @default(0.5) @map("coverage_strength")
+  confidence      Float    @default(0.7)
+  dataSourceId    String?  @map("data_source_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  equipment TrainingEquipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  skill     Skill             @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([equipmentId, skillId])
+  @@index([skillId])
+  @@map("equipment_skill_mappings")
+}
+
+model EquipmentCourseMapping {
+  id              String   @id @default(cuid())
+  equipmentId     String   @map("equipment_id")
+  courseId        String   @map("course_id")
+  requiredQuantity Int?    @map("required_quantity")
+  minimumCapacity Int?    @map("minimum_capacity")
+  coverageStrength Float   @default(0.5) @map("coverage_strength")
+  confidence      Float    @default(0.7)
+  dataSourceId    String?  @map("data_source_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  equipment TrainingEquipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  course    Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([equipmentId, courseId])
+  @@index([courseId])
+  @@map("equipment_course_mappings")
+}
+
+model TrainingCentreCapabilityProfile {
+  id              String   @id @default(cuid())
+  trainingCentreId String  @map("training_centre_id")
+
+  courseCoverage  String?  @map("course_coverage") // JSON
+  skillCoverage   String?  @map("skill_coverage")  // JSON
+  competencyCoverage String? @map("competency_coverage") // JSON
+
+  trainerCapability String  @default("UNKNOWN") @map("trainer_capability")
+  equipmentCapability String @default("UNKNOWN") @map("equipment_capability")
+  capacity        Int      @default(0)
+
+  // READY | PARTIALLY_READY | LIMITED_READINESS | INSUFFICIENT_DATA
+  centreReadinessSignal String @default("INSUFFICIENT_DATA") @map("centre_readiness_signal")
+  confidence      Float    @default(0)
+
+  observationPeriod String
+  dataStatus       String   @default("DEMO") @map("data_status")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  trainingCentre  TrainingCentre @relation(fields: [trainingCentreId], references: [id], onDelete: Cascade)
+
+  @@unique([trainingCentreId, observationPeriod])
+  @@map("training_centre_capability_profiles")
+}
+
+model DeliveryCapabilityGap {
+  id              String   @id @default(cuid())
+  trainingCentreId String  @map("training_centre_id")
+  courseId        String?  @map("course_id")
+  skillId         String?  @map("skill_id")
+  competencyId    String?  @map("competency_id")
+
+  // ALIGNED | PARTIAL | MISSING | INSUFFICIENT_DATA
+  curriculumStatus String  @default("INSUFFICIENT_DATA") @map("curriculum_status")
+  trainerStatus   String   @default("INSUFFICIENT_DATA") @map("trainer_status")
+  equipmentStatus String   @default("INSUFFICIENT_DATA") @map("equipment_status")
+  capacityStatus  String   @default("INSUFFICIENT_DATA") @map("capacity_status")
+
+  // COURSE_DELIVERY_READY | PARTIALLY_READY | LIMITED_READINESS | INSUFFICIENT_DATA
+  overallCapabilityStatus String @default("INSUFFICIENT_DATA") @map("overall_capability_status")
+  confidence      Float    @default(0)
+
+  observationPeriod String
+  dataStatus       String   @default("DEMO") @map("data_status")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  trainingCentre  TrainingCentre @relation(fields: [trainingCentreId], references: [id], onDelete: Cascade)
+  course          Course?         @relation(fields: [courseId], references: [id])
+  skill           Skill?          @relation(fields: [skillId], references: [id])
+
+  @@index([trainingCentreId])
+  @@index([courseId])
+  @@map("delivery_capability_gaps")
 }
