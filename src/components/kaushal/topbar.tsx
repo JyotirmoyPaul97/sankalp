@@ -98,7 +98,10 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
       <div className="min-w-0 flex-1 flex items-center gap-3">
         <div className="min-w-0">
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-            KAUSHAL DRISHTI
+            {user?.role === "STATE_ADMIN" || user?.role === "DISTRICT_PLANNER" || user?.role === "AUDITOR" ? "Government Workspace" :
+             user?.role === "EMPLOYER" ? "Industry & Employer Workspace" :
+             user?.role === "TRAINING_PROVIDER" || user?.role === "INSTITUTION" || user?.role === "TRAINER" ? "Training Ecosystem Workspace" :
+             user?.role === "CANDIDATE" ? "Candidate Workspace" : "KAUSHAL DRISHTI"}
           </p>
           <h1 className="text-sm font-semibold tracking-tight truncate">
             {VIEW_TITLES[activeView] ?? "Overview"}

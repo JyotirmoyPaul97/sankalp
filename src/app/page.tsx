@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useAuth } from "@/store/app-store";
-import { LoginScreen } from "@/components/kaushal/login-screen";
+import { LandingScreen } from "@/components/kaushal/landing-screen";
 import { AppShell } from "@/components/kaushal/app-shell";
 
 export default function Page() {
@@ -16,7 +16,7 @@ export default function Page() {
   }, [hydrate]);
 
   if (!user) {
-    return <LoginScreen />;
+    return <LandingScreen />;
   }
 
   return <AppShell />;
