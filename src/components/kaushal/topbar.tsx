@@ -45,6 +45,7 @@ const VIEW_TITLES: Record<string, string> = {
   "gap-clusters": "Cluster Gaps",
   "gap-matrix": "Market–Training Matrix",
   "delivery-capability": "Training Delivery Capability",
+  "candidate-intelligence": "Candidate Skill Intelligence",
   training: "Training Ecosystem",
   courses: "Courses",
   "employer-validation": "Employer Validation",

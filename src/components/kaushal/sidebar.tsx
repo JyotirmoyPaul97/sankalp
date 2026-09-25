@@ -31,6 +31,7 @@ import {
   Gauge,
   GitCompareArrows,
   Truck,
+  User,
 } from "lucide-react";
 
 interface NavItem {
@@ -88,6 +89,7 @@ const GROUPS: NavGroup[] = [
     id: "collaboration",
     label: "Collaboration",
     items: [
+      { id: "candidate-intelligence", label: "Candidate Intelligence", icon: <User className="size-4" />, phase: 7, active: true },
       { id: "employer-validation", label: "Employer Validation", icon: <ShieldCheck className="size-4" />, phase: 7, active: false },
     ],
   },

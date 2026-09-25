@@ -94,6 +94,8 @@ model District {
   supplySignals    TrainingSupplySignal[]
   gapSignals       DemandSupplyGapSignal[] @relation("GapDistrict")
   roleRequirementProfiles RoleRequirementProfile[]
+  candidates         Candidate[]
+  candidateTargetProfiles CandidateTargetProfile[]
 
   @@index([stateCode])
   @@index([divisionId])
@@ -123,6 +125,7 @@ model EconomicCluster {
   marketSignals MarketSignal[]
   gapSignals  DemandSupplyGapSignal[] @relation("GapCluster")
   roleRequirementProfiles RoleRequirementProfile[]
+  candidateTargetProfiles CandidateTargetProfile[]
 
   @@index([districtId])
   @@index([sectorId])
@@ -169,6 +172,7 @@ model Sector {
   supplySignals         TrainingSupplySignal[]
   gapSignals            DemandSupplyGapSignal[] @relation("GapSector")
   roleRequirementProfiles RoleRequirementProfile[]
+  candidateTargetProfiles CandidateTargetProfile[]
 
   @@map("sectors")
 }
@@ -201,6 +205,12 @@ model Skill {
   trainerCapabilityGaps   TrainerCapabilityGap[]
   curriculumGaps          CurriculumGapSignal[]
   deliveryGaps            DeliveryCapabilityGap[]
+  candidateSkills         CandidateSkill[]
+  candidateEvidence       CandidateEvidence[]
+  candidateAssessments     CandidateAssessment[]
+  candidateSkillGaps      CandidateSkillGap[]
+  developmentObjectives   DevelopmentObjective[]
+  developmentPathwaySteps DevelopmentPathwayStep[]
 
   @@index([category])
   @@map("skills")
@@ -307,6 +317,13 @@ model JobRole {
   roleRequirementProfiles RoleRequirementProfile[]
   curriculumGaps    CurriculumGapSignal[]
   trainerCapabilityGaps TrainerCapabilityGap[]
+  candidateTargetProfiles CandidateTargetProfile[]
+  candidateSkillGaps      CandidateSkillGap[]
+  candidateReadiness      CandidateRoleReadiness[]
+  candidateGapPriorities  CandidateGapPriority[]
+  developmentObjectives   DevelopmentObjective[]
+  candidateDevelopmentPaths CandidateDevelopmentPath[]
+  candidateOpportunityReadiness CandidateOpportunityReadiness[]
 
   @@map("job_roles")
 }
@@ -399,6 +416,8 @@ model Course {
   equipmentCourseMappings EquipmentCourseMapping[]
   trainerCapabilityGaps  TrainerCapabilityGap[]
   deliveryGaps       DeliveryCapabilityGap[]
+  candidateCourseMatches CandidateCourseMatch[]
+  pathwaySteps       DevelopmentPathwayStep[]
 
   @@index([sectorId])
   @@index([qualificationId])
@@ -1893,4 +1912,392 @@ model DeliveryCapabilityGap {
   @@index([trainingCentreId])
   @@index([courseId])
   @@map("delivery_capability_gaps")
+}
+
+// =====================================================================
+// PHASE 7 — CANDIDATE SKILL INTELLIGENCE & PERSONALIZED READINESS
+// =====================================================================
+
+model Candidate {
+  id              String   @id @default(cuid())
+  name            String
+  email           String   @unique
+  // AWARENESS | BASIC | INTERMEDIATE | ADVANCED | EXPERT
+  educationLevel  String?  @map("education_level")
+  experienceYears Int?     @map("experience_years")
+  currentDistrictId String? @map("current_district_id")
+  // ACTIVE | INACTIVE
+  status          String   @default("ACTIVE")
+  dataStatus      String   @default("SYNTHETIC") @map("data_status")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  district        District? @relation(fields: [currentDistrictId], references: [id])
+  skills          CandidateSkill[]
+  competencies    CandidateCompetency[]
+  evidence        CandidateEvidence[]
+  assessments     CandidateAssessment[]
+  targetProfiles  CandidateTargetProfile[]
+  skillGaps       CandidateSkillGap[]
+  competencyGaps  CandidateCompetencyGap[]
+  readiness       CandidateRoleReadiness[]
+  gapPriorities   CandidateGapPriority[]
+  developmentObjectives DevelopmentObjective[]
+  courseMatches   CandidateCourseMatch[]
+  developmentPaths CandidateDevelopmentPath[]
+  opportunityReadiness CandidateOpportunityReadiness[]
+  gapResolutions  CandidateGapResolutionEvent[]
+
+  @@map("candidates")
+}
+
+model CandidateSkill {
+  id              String   @id @default(cuid())
+  candidateId     String   @map("candidate_id")
+  skillId         String   @map("skill_id")
+  // AWARENESS | WORKING | PROFICIENT | EXPERT
+  currentProficiency String @default("WORKING") @map("current_proficiency")
+  proficiencyConfidence Float @default(0.5) @map("proficiency_confidence")
+  evidenceStrength Float   @default(0.3) @map("evidence_strength")
+  evidenceCount   Int      @default(0) @map("evidence_count")
+  lastVerifiedAt  DateTime? @map("last_verified_at")
+  lastAssessedAt  DateTime? @map("last_assessed_at")
+  // CURRENT | RECENT | AGING | STALE | UNKNOWN
+  freshnessStatus String   @default("UNKNOWN") @map("freshness_status")
+  // VERIFIED | ASSESSED | SUPPORTED | SELF_DECLARED | STALE | INSUFFICIENT_EVIDENCE | UNKNOWN
+  status          String   @default("SELF_DECLARED")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  skill           Skill     @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, skillId])
+  @@index([skillId])
+  @@map("candidate_skills")
+}
+
+model CandidateCompetency {
+  id              String   @id @default(cuid())
+  candidateId     String   @map("candidate_id")
+  competencyId    String   @map("competency_id")
+  proficiencyLevel String  @default("WORKING") @map("proficiency_level")
+  confidence      Float    @default(0.5)
+  evidenceCount   Int      @default(0) @map("evidence_count")
+  lastVerifiedAt  DateTime? @map("last_verified_at")
+  status          String   @default("SELF_DECLARED")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, competencyId])
+  @@map("candidate_competencies")
+}
+
+model CandidateEvidence {
+  id              String   @id @default(cuid())
+  candidateId     String   @map("candidate_id")
+  skillId         String?  @map("skill_id")
+  competencyId    String?  @map("competency_id")
+  // SELF_DECLARED | ASSESSED | CERTIFIED | PROJECT | EXPERIENCE | EMPLOYER_VERIFIED | SYSTEM_INFERRED | UNKNOWN
+  evidenceType    String   @default("SELF_DECLARED") @map("evidence_type")
+  evidenceSource  String?  @map("evidence_source")
+  evidenceTimestamp DateTime @default(now()) @map("evidence_timestamp")
+  proficiencyLevel String  @default("WORKING") @map("proficiency_level")
+  // PENDING | VERIFIED | REJECTED
+  verificationStatus String @default("PENDING") @map("verification_status")
+  confidence      Float    @default(0.5)
+  description     String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  skill           Skill?    @relation(fields: [skillId], references: [id])
+
+  @@index([candidateId])
+  @@index([skillId])
+  @@map("candidate_evidence")
+}
+
+model CandidateAssessment {
+  id              String   @id @default(cuid())
+  candidateId     String   @map("candidate_id")
+  skillId         String?  @map("skill_id")
+  assessmentType  String   @default("FORMAL") @map("assessment_type")
+  proficiencyLevel String  @default("WORKING") @map("proficiency_level")
+  score           Float?
+  assessedAt      DateTime @default(now()) @map("assessed_at")
+  confidence      Float    @default(0.7)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  skill           Skill?    @relation(fields: [skillId], references: [id])
+
+  @@index([candidateId])
+  @@index([skillId])
+  @@map("candidate_assessments")
+}
+
+model CandidateTargetProfile {
+  id              String   @id @default(cuid())
+  candidateId     String   @map("candidate_id")
+  targetRoleId    String   @map("target_role_id")
+  targetSectorId  String?  @map("target_sector_id")
+  targetDistrictId String?  @map("target_district_id")
+  targetClusterId String?  @map("target_cluster_id")
+  marketDemandSignal String @default("NONE") @map("market_demand_signal")
+  marketConfidence Float   @default(0) @map("market_confidence")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobRole         JobRole   @relation(fields: [targetRoleId], references: [id])
+  sector          Sector?   @relation(fields: [targetSectorId], references: [id])
+  district        District? @relation(fields: [targetDistrictId], references: [id])
+  cluster         EconomicCluster? @relation(fields: [targetClusterId], references: [id])
+
+  @@unique([candidateId, targetRoleId])
+  @@map("candidate_target_profiles")
+}
+
+model CandidateSkillGap {
+  id              String   @id @default(cuid())
+  candidateId     String   @map("candidate_id")
+  targetRoleId    String   @map("target_role_id")
+  skillId         String   @map("skill_id")
+  requiredProficiency String @map("required_proficiency")
+  candidateProficiency String? @map("candidate_proficiency")
+  // MISSING_SKILL | PARTIAL_SKILL | PROFICIENCY_GAP | STALE_EVIDENCE | INSUFFICIENT_EVIDENCE | ALIGNED | UNKNOWN
+  gapType         String   @default("UNKNOWN") @map("gap_type")
+  gapSeverity     String?  @map("gap_severity")
+  candidateEvidenceConfidence Float @default(0) @map("candidate_evidence_confidence")
+  marketRequirementConfidence Float @default(0) @map("market_requirement_confidence")
+  evidenceCount   Int      @default(0) @map("evidence_count")
+  freshness       String   @default("UNKNOWN")
+  // OPEN | IN_PROGRESS | EVIDENCE_ADDED | RESOLVED | REOPENED | INSUFFICIENT_DATA
+  status          String   @default("OPEN")
+  observationPeriod String
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobRole         JobRole   @relation(fields: [targetRoleId], references: [id])
+  skill           Skill     @relation(fields: [skillId], references: [id])
+
+  @@unique([candidateId, targetRoleId, skillId, observationPeriod])
+  @@index([candidateId])
+  @@index([skillId])
+  @@map("candidate_skill_gaps")
+}
+
+model CandidateCompetencyGap {
+  id              String   @id @default(cuid())
+  candidateId     String   @map("candidate_id")
+  targetRoleId    String   @map("target_role_id")
+  competencyId    String   @map("competency_id")
+  requiredProficiency String? @map("required_proficiency")
+  candidateProficiency String? @map("candidate_proficiency")
+  // ALIGNED | PARTIAL | MISSING | PROFICIENCY_GAP | INSUFFICIENT_EVIDENCE
+  gapType         String   @default("UNKNOWN") @map("gap_type")
+  status          String   @default("OPEN")
+  observationPeriod String
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, targetRoleId, competencyId, observationPeriod])
+  @@map("candidate_competency_gaps")
+}
+
+model CandidateRoleReadiness {
+  id              String   @id @default(cuid())
+  candidateId     String   @map("candidate_id")
+  targetRoleId    String   @map("target_role_id")
+  // HIGH_READINESS | MODERATE_READINESS | DEVELOPING | LOW_READINESS | INSUFFICIENT_DATA
+  overallReadinessSignal String @default("INSUFFICIENT_DATA") @map("overall_readiness_signal")
+  skillCoverage   Float    @default(0) @map("skill_coverage")
+  competencyCoverage Float @default(0) @map("competency_coverage")
+  proficiencyAlignment Float @default(0) @map("proficiency_alignment")
+  evidenceConfidence Float @default(0) @map("evidence_confidence")
+  criticalGapCount Int     @default(0) @map("critical_gap_count")
+  highGapCount    Int      @default(0) @map("high_gap_count")
+  moderateGapCount Int     @default(0) @map("moderate_gap_count")
+  marketConfidence Float   @default(0) @map("market_confidence")
+  candidateConfidence Float @default(0) @map("candidate_confidence")
+  dataStatus      String   @default("SYNTHETIC") @map("data_status")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobRole         JobRole   @relation(fields: [targetRoleId], references: [id])
+
+  @@unique([candidateId, targetRoleId])
+  @@map("candidate_role_readiness")
+}
+
+model CandidateGapResolutionEvent {
+  id              String   @id @default(cuid())
+  candidateId     String   @map("candidate_id")
+  gapId           String?  @map("gap_id")
+  // ASSESSMENT_COMPLETED | PROJECT_ADDED | CERTIFICATE_ADDED | EMPLOYER_VERIFIED | PRACTICE_EVIDENCE_ADDED
+  actionType      String   @map("action_type")
+  evidenceId      String?  @map("evidence_id")
+  previousStatus  String?  @map("previous_status")
+  newStatus       String?  @map("new_status")
+  timestamp       DateTime @default(now())
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+  @@map("candidate_gap_resolution_events")
+}
+
+// Part 2 — Development Pathway
+
+model CandidateGapPriority {
+  id              String   @id @default(cuid())
+  candidateId     String   @map("candidate_id")
+  targetRoleId    String   @map("target_role_id")
+  gapId           String   @map("gap_id")
+  marketImportance Float   @default(0) @map("market_importance")
+  employerSignal  String   @default("NONE") @map("employer_signal")
+  proficiencyGap  Float    @default(0) @map("proficiency_gap")
+  candidateConfidence Float @default(0) @map("candidate_confidence")
+  marketConfidence Float   @default(0) @map("market_confidence")
+  emergingSignal  String   @default("NONE") @map("emerging_signal")
+  trainingAvailability String @default("UNKNOWN") @map("training_availability")
+  // CRITICAL | HIGH | MEDIUM | LOW | INFORMATIONAL
+  prioritySignal  String   @default("MEDIUM") @map("priority_signal")
+  priorityReason  String?   @map("priority_reason")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobRole         JobRole   @relation(fields: [targetRoleId], references: [id])
+
+  @@unique([candidateId, targetRoleId, gapId])
+  @@map("candidate_gap_priorities")
+}
+
+model DevelopmentObjective {
+  id              String   @id @default(cuid())
+  candidateId     String   @map("candidate_id")
+  targetRoleId    String   @map("target_role_id")
+  skillId         String?  @map("skill_id")
+  competencyId    String?  @map("competency_id")
+  currentLevel    String   @default("UNKNOWN") @map("current_level")
+  targetLevel     String   @default("UNKNOWN") @map("target_level")
+  // CRITICAL | HIGH | MEDIUM | LOW | INFORMATIONAL
+  priority        String   @default("MEDIUM")
+  // OPEN | IN_PROGRESS | COMPLETED | CANCELLED
+  status          String   @default("OPEN")
+  estimatedEffort String?  @map("estimated_effort")
+  evidenceRequired String? @map("evidence_required")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobRole         JobRole   @relation(fields: [targetRoleId], references: [id])
+  skill           Skill?    @relation(fields: [skillId], references: [id])
+
+  @@index([candidateId])
+  @@map("development_objectives")
+}
+
+model CandidateCourseMatch {
+  id              String   @id @default(cuid())
+  candidateId     String   @map("candidate_id")
+  courseId        String   @map("course_id")
+  targetRoleId    String   @map("target_role_id")
+  matchedGapIds   String?  @map("matched_gap_ids") // JSON array
+  skillCoverage   Float    @default(0) @map("skill_coverage")
+  competencyCoverage Float  @default(0) @map("competency_coverage")
+  proficiencyAlignment String @default("UNKNOWN") @map("proficiency_alignment")
+  courseRelevance Float    @default(0) @map("course_relevance")
+  centreReadiness String   @default("UNKNOWN") @map("centre_readiness")
+  trainerCapability String @default("UNKNOWN") @map("trainer_capability")
+  equipmentCapability String @default("UNKNOWN") @map("equipment_capability")
+  capacityAvailability String @default("UNKNOWN") @map("capacity_availability")
+  geographicAccess String   @default("UNKNOWN") @map("geographic_access")
+  // STRONG_MATCH | MATCH | PARTIAL_MATCH | WEAK_MATCH | INSUFFICIENT_DATA
+  matchStatus     String   @default("INSUFFICIENT_DATA") @map("match_status")
+  matchConfidence Float    @default(0) @map("match_confidence")
+  matchReason     String?  @map("match_reason")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  course          Course    @relation(fields: [courseId], references: [id])
+
+  @@index([candidateId])
+  @@index([courseId])
+  @@map("candidate_course_matches")
+}
+
+model CandidateDevelopmentPath {
+  id              String   @id @default(cuid())
+  candidateId     String   @map("candidate_id")
+  targetRoleId    String   @map("target_role_id")
+  // DRAFT | ACTIVE | COMPLETED | ARCHIVED
+  pathwayStatus   String   @default("DRAFT") @map("pathway_status")
+  estimatedSequence String? @map("estimated_sequence") // JSON
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobRole         JobRole   @relation(fields: [targetRoleId], references: [id])
+  steps           DevelopmentPathwayStep[]
+
+  @@unique([candidateId, targetRoleId])
+  @@map("candidate_development_paths")
+}
+
+model DevelopmentPathwayStep {
+  id              String   @id @default(cuid())
+  pathwayId       String   @map("pathway_id")
+  sequence        Int      @default(1)
+  // COURSE | MODULE | PROJECT | PRACTICE | ASSESSMENT | CERTIFICATION | MENTORSHIP | WORK_EXPERIENCE | INDUSTRY_PROJECT
+  actionType      String   @map("action_type")
+  skillId         String?  @map("skill_id")
+  competencyId    String?  @map("competency_id")
+  courseId        String?  @map("course_id")
+  objective       String?
+  prerequisiteStepId String? @map("prerequisite_step_id")
+  // PENDING | IN_PROGRESS | COMPLETED | SKIPPED
+  status          String   @default("PENDING")
+  evidenceRequired String? @map("evidence_required")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  pathway         CandidateDevelopmentPath @relation(fields: [pathwayId], references: [id], onDelete: Cascade)
+  skill           Skill?    @relation(fields: [skillId], references: [id])
+  course          Course?   @relation(fields: [courseId], references: [id])
+
+  @@index([pathwayId])
+  @@map("development_pathway_steps")
+}
+
+model CandidateOpportunityReadiness {
+  id              String   @id @default(cuid())
+  candidateId     String   @map("candidate_id")
+  targetRoleId    String   @map("target_role_id")
+  roleReadiness   Float    @default(0) @map("role_readiness")
+  skillReadiness  Float    @default(0) @map("skill_readiness")
+  competencyReadiness Float @default(0) @map("competency_readiness")
+  evidenceReadiness Float  @default(0) @map("evidence_readiness")
+  criticalGapCount Int     @default(0) @map("critical_gap_count")
+  highGapCount    Int      @default(0) @map("high_gap_count")
+  marketConfidence Float   @default(0) @map("market_confidence")
+  candidateConfidence Float @default(0) @map("candidate_confidence")
+  // READY_FOR_CONSIDERATION | DEVELOPING | SIGNIFICANT_GAPS | INSUFFICIENT_EVIDENCE
+  overallReadinessSignal String @default("INSUFFICIENT_EVIDENCE") @map("overall_readiness_signal")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobRole         JobRole   @relation(fields: [targetRoleId], references: [id])
+
+  @@unique([candidateId, targetRoleId])
+  @@map("candidate_opportunity_readiness")
 }

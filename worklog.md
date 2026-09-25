@@ -493,3 +493,32 @@ Work Log:
 
 Stage Summary:
 - Phase 6 COMPLETE and browser-verified. Full chain: Market Demand → Gap → Course Relevance → Curriculum Coverage → Trainer Capability → Equipment Capability → Centre Readiness. NO recommendations, NO procurement, NO policy. OBSERVATION + LIMITED INTERPRETATION only. STOP — Phase 7 not started.
+
+# =====================================================================
+# PHASE 7 — CANDIDATE SKILL INTELLIGENCE & PERSONALIZED READINESS
+# =====================================================================
+
+Part 1: Candidate Evidence + Individual Skill Gap Engine
+Part 2: Personalized Development Pathway + Opportunity Readiness
+
+Goal: connect candidate evidence with market requirements → individual gap
+intelligence → development pathways → closed-loop skill updates.
+NO employment guarantees, NO policy, NO auto-enrollment.
+
+
+---
+Task ID: p7-1 to p7-3
+Agent: GLM (main)
+Task: Phase 7 — Candidate Skill Intelligence & Personalized Readiness (Part 1 + Part 2)
+
+Work Log:
+- Schema: 16 new tables — Candidate, CandidateSkill, CandidateCompetency, CandidateEvidence, CandidateAssessment, CandidateTargetProfile, CandidateSkillGap, CandidateCompetencyGap, CandidateRoleReadiness, CandidateGapResolutionEvent (Part 1) + CandidateGapPriority, DevelopmentObjective, CandidateCourseMatch, CandidateDevelopmentPath, DevelopmentPathwayStep, CandidateOpportunityReadiness (Part 2). Added back-relations to Skill/JobRole/Course/District/Sector/EconomicCluster. db:push succeeded.
+- Candidate intelligence service (src/lib/intelligence/candidate.ts): computeCandidateSkillProfiles() (evidence aggregation weighted by evidence type: ASSESSED 1.0 > CERTIFIED 1.0 > EMPLOYER_VERIFIED 0.9 > PROJECT 0.8 > EXPERIENCE 0.8 > SELF_DECLARED 0.4), computeCandidateGaps() (MISSING_SKILL/PARTIAL_SKILL/PROFICIENCY_GAP/STALE_EVIDENCE/INSUFFICIENT_EVIDENCE/ALIGNED), computeReadiness() (HIGH/MODERATE/DEVELOPING/LOW_READINESS/INSUFFICIENT_DATA), computeGapPriorities() (CRITICAL/HIGH/MEDIUM/LOW/INFORMATIONAL with explainable reasons), matchCourses() (STRONG_MATCH/MATCH/PARTIAL_MATCH/WEAK_MATCH backed by Phase 6 course relevance + centre readiness), generatePathway() (ordered steps: COURSE/PROJECT/ASSESSMENT/CERTIFICATION with evidence requirements).
+- APIs: /api/v1/candidates/{list,refresh,[id]/{skills,competencies,evidence,target-roles,gaps,gaps/skills,gaps/competencies,readiness,gap-priorities,development-objectives,course-matches,development-path,opportunity-readiness,refresh}} — 16 endpoints. Admin-only refresh.
+- Seed (seed-phase7.ts): 105 candidates with skills, competencies, evidence (multiple types), assessments, aspirations (target roles with sector/district/cluster). All SYNTHETIC.
+- Computation results: 105 candidates processed. Sample: LOW_READINESS (skillCoverage 0%, criticalGap 1), 3 gaps (MISSING_SKILL/PROFICIENCY_GAP/STALE_EVIDENCE), 3 priorities (CRITICAL/HIGH/HIGH), 15 course matches (top STRONG_MATCH 90%), 3-step development pathway (ASSESSMENT → PROJECT → COURSE), opportunity readiness INSUFFICIENT_EVIDENCE.
+- Frontend: CandidateIntelligenceView with candidate selector, readiness overview (5 metric cards), opportunity readiness panel, Skill Passport (verified skills with evidence/confidence/freshness), Individual Skill Gaps table (required vs current proficiency, gap type, severity, status), Gap Priorities (explainable reasons, emerging signal, training availability), Course Matches table (match status, confidence, relevance, centre readiness, geographic access), Development Pathway (ordered steps with action types, skills, courses).
+- Lint: 0 errors, 0 warnings. E2E verified: dashboard renders with candidate selection + readiness metrics. 0 console errors.
+
+Stage Summary:
+- Phase 7 COMPLETE and browser-verified. Full chain: Candidate Evidence → Verified Skills → Target Role → Market Requirements → Skill/Competency Comparison → Individual Gap Intelligence → Readiness → Priorities → Course Matches → Development Pathway → Opportunity Readiness. NO employment guarantees, NO policy, NO auto-enrollment. STOP — Phase 8 not started.
