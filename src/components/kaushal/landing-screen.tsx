@@ -24,13 +24,14 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
   { email: "planner@kaushal-drishti.demo", password: "demo-planner", name: "Demo District Planner", role: "DISTRICT_PLANNER", description: "District-scoped planning.", icon: <Building2 className="size-4" />, workspace: "government" },
   { email: "employer@kaushal-drishti.demo", password: "demo-employer", name: "Demo Employer", role: "EMPLOYER", description: "Demand validation and feedback.", icon: <Users className="size-4" />, workspace: "industry" },
   { email: "provider@kaushal-drishti.demo", password: "demo-provider", name: "Demo Training Provider", role: "TRAINING_PROVIDER", description: "Course and capacity management.", icon: <GraduationCap className="size-4" />, workspace: "training" },
+  { email: "arjun.sharma@kaushal-drishti.demo", password: "demo-candidate", name: "Arjun Sharma", role: "CANDIDATE", description: "Target: PLC Technician. Verified skill passport, evidence, gaps, development path.", icon: <Activity className="size-4" />, workspace: "candidate" },
 ];
 
 const WORKSPACES = [
   { id: "government", label: "Government", icon: <ShieldCheck className="size-5" />, desc: "State & district intelligence, policy sandbox, planning" },
   { id: "industry", label: "Industry & Employer", icon: <Users className="size-5" />, desc: "Hiring demand, skill validation, industry signals" },
   { id: "training", label: "Training Ecosystem", icon: <GraduationCap className="size-5" />, desc: "Courses, curriculum, trainers, centre readiness" },
-  { id: "candidate", label: "Candidate / Beneficiary", icon: <Activity className="size-5" />, desc: "Skill passport, gaps, development pathway" },
+  { id: "candidate", label: "Candidate / Beneficiary", icon: <Activity className="size-5" />, desc: "Build your verified skill profile, understand your gaps, improve your capability and connect to relevant opportunities." },
 ];
 
 const FLOW_STEPS = [

@@ -62,7 +62,7 @@ const KEYWORDS: Record<QueryIntent, string[]> = {
   EMERGING_SKILLS: ["emerging", "new skills", "rising", "accelerating", "future skills"],
   TRAINING_COVERAGE: ["training", "course", "coverage", "curriculum", "which courses"],
   CAPABILITY_STATUS: ["ready", "capability", "centre", "partially", "trainer", "equipment"],
-  CANDIDATE_GAP: ["my gap", "why do i", "my evidence", "my skill", "proficiency gap"],
+  CANDIDATE_GAP: ["my gap", "why do i", "my evidence", "my skill", "proficiency gap", "my biggest", "biggest skill gap", "what evidence supports", "move from", "intermediate to advanced", "why is this opportunity", "matched to me", "becoming more important", "my target role", "my readiness"],
   SCENARIO: ["what if", "simulate", "add.*seats", "scenario", "intervention"],
   STATE_OVERVIEW: ["state", "maharashtra", "overview", "summary", "command"],
   UNSUPPORTED: [],
@@ -78,10 +78,29 @@ export function detectIntent(question: string): ParsedQuery {
   const sectorMatch = q.match(/\b(manufacturing|automotive|information technology|it)\b/);
 
   const parameters: Record<string, string> = {};
+  parameters.question = q; // preserve the normalized question for sub-question branching
   if (districtMatch) parameters.district = districtMatch[1];
   if (skillMatch) parameters.skill = skillMatch[1];
   if (roleMatch) parameters.role = roleMatch[1];
   if (sectorMatch) parameters.sector = sectorMatch[1];
+
+  // Candidate-personal-context pre-check: if the question is about "my" / "I" / "me",
+  // route to CANDIDATE_GAP regardless of other keyword matches (avoids "gap" hijacking
+  // candidate questions like "What is my biggest skill gap?").
+  const isPersonal = /\b(my|i |i'm|i have|me|myself)\b/.test(q) || /\bmy\b/.test(q);
+  if (isPersonal) {
+    // Still let emerging/market questions through if they're clearly not personal.
+    if (!/emerging|demand|which skills|top skills|training coverage|what if|simulate/.test(q)) {
+      return {
+        intent: "CANDIDATE_GAP" as QueryIntent,
+        district: districtMatch?.[1],
+        skill: skillMatch?.[1],
+        role: roleMatch?.[1],
+        sector: sectorMatch?.[1],
+        parameters,
+      };
+    }
+  }
 
   // Detect intent
   for (const [intent, words] of Object.entries(KEYWORDS)) {
@@ -360,11 +379,31 @@ async function queryCapabilityStatus(parsed: ParsedQuery): Promise<CopilotRespon
 }
 
 async function queryCandidateGap(parsed: ParsedQuery, userId?: string): Promise<CopilotResponse> {
-  if (!userId) return insufficientEvidence("Please log in as a candidate to query personal gaps.", parsed);
+  if (!userId) return insufficientEvidence("Please log in as a candidate to query personal intelligence.", parsed);
 
   const candidate = await db.candidate.findFirst({ where: { email: { contains: userId } } });
-  if (!candidate) return insufficientEvidence("Candidate profile not found.", parsed);
+  if (!candidate) return insufficientEvidence("Candidate profile not found for this account.", parsed);
 
+  const question = (parsed.parameters.question ?? "").toLowerCase();
+
+  // Branch on the candidate's sub-question.
+  if (question.includes("evidence supports") || question.includes("what evidence")) {
+    return await queryCandidateEvidence(candidate.id, parsed);
+  }
+  if (question.includes("move from") || question.includes("intermediate to advanced") || question.includes("what should i do")) {
+    return await queryCandidateDevelopment(candidate.id, parsed);
+  }
+  if (question.includes("opportunity") || question.includes("matched to me")) {
+    return await queryCandidateOpportunity(candidate.id, parsed);
+  }
+  if (question.includes("becoming more important") || question.includes("emerging") || question.includes("important for my target")) {
+    return await queryCandidateEmerging(candidate.id, parsed);
+  }
+  if (question.includes("readiness")) {
+    return await queryCandidateReadiness(candidate.id, parsed);
+  }
+
+  // Default: biggest gap / overall gap summary.
   const gaps = await db.candidateSkillGap.findMany({
     where: { candidateId: candidate.id, status: "OPEN" },
     include: { skill: true, jobRole: true },
@@ -375,24 +414,122 @@ async function queryCandidateGap(parsed: ParsedQuery, userId?: string): Promise<
     answer: "No open skill gaps identified. All required skills are aligned or resolved.",
     evidence: [], confidence: "HIGH", dataPeriod: "2026-09", dataStatus: "SYNTHETIC",
     sources: ["CANDIDATE_SKILL_GAPS"],
-    exploreLinks: [{ label: "View My Skill Intelligence", view: "candidate-intelligence" }],
+    exploreLinks: [{ label: "View My Skill Passport", view: "c-passport" }, { label: "View My Skill Gaps", view: "c-gaps" }],
   };
 
   const profGaps = gaps.filter((g) => g.gapType === "PROFICIENCY_GAP");
   const missing = gaps.filter((g) => g.gapType === "MISSING_SKILL");
+  const biggest = gaps[0];
+  const priority = await db.candidateGapPriority.findFirst({ where: { candidateId: candidate.id, gapId: biggest.id } });
 
   return {
-    answer: `You have ${gaps.length} open skill gaps: ${missing.length} missing skills, ${profGaps.length} proficiency gaps. Top gap: ${gaps[0].skill.name} — ${gaps[0].gapType} (required: ${gaps[0].requiredProficiency}, current: ${gaps[0].candidateProficiency ?? "none"}).`,
+    answer: `Your biggest skill gap for ${biggest.jobRole?.title ?? "your target role"} is ${biggest.skill.name}: required ${biggest.requiredProficiency}, you demonstrate ${biggest.candidateProficiency ?? "none"} (severity: ${biggest.gapSeverity ?? "—"}).${priority ? ` Priority: ${priority.prioritySignal} — ${priority.priorityReason}` : ""} You have ${gaps.length} open gaps in total (${missing.length} missing, ${profGaps.length} proficiency gaps).`,
     evidence: gaps.slice(0, 5).map((g) => ({
       source: `CandidateSkillGap — ${g.skill.name}`,
-      detail: `Type: ${g.gapType}, required: ${g.requiredProficiency}, current: ${g.candidateProficiency ?? "—"}, severity: ${g.gapSeverity ?? "—"}`,
+      detail: `Type: ${g.gapType}, required: ${g.requiredProficiency}, current: ${g.candidateProficiency ?? "—"}, severity: ${g.gapSeverity ?? "—"}, evidence: ${g.evidenceCount}`,
       type: "CANDIDATE_GAP",
     })),
-    confidence: gaps[0]?.candidateEvidenceConfidence > 0.7 ? "HIGH" : "MEDIUM",
-    dataPeriod: gaps[0]?.observationPeriod ?? "2026-09",
+    confidence: biggest.candidateEvidenceConfidence > 0.7 ? "HIGH" : biggest.candidateEvidenceConfidence > 0.4 ? "MEDIUM" : "LOW",
+    dataPeriod: biggest.observationPeriod ?? "2026-09",
     dataStatus: "SYNTHETIC",
-    sources: ["CANDIDATE_SKILL_GAPS"],
-    exploreLinks: [{ label: "View My Skill Intelligence", view: "candidate-intelligence" }],
+    sources: ["CANDIDATE_SKILL_GAPS", "CANDIDATE_GAP_PRIORITIES"],
+    exploreLinks: [{ label: "View My Skill Gaps", view: "c-gaps" }, { label: "View My Skill Passport", view: "c-passport" }, { label: "View Development Path", view: "c-development-path" }],
+  };
+}
+
+async function queryCandidateEvidence(candidateId: string, parsed: ParsedQuery): Promise<CopilotResponse> {
+  const evidence = await db.candidateEvidence.findMany({ where: { candidateId }, include: { skill: true }, orderBy: { evidenceTimestamp: "desc" } });
+  const verified = evidence.filter((e) => e.verificationStatus === "VERIFIED");
+  const byType = new Map<string, number>();
+  for (const e of evidence) byType.set(e.evidenceType, (byType.get(e.evidenceType) ?? 0) + 1);
+  const skillParam = parsed.skill;
+  const filtered = skillParam ? evidence.filter((e) => e.skill?.name.toLowerCase().includes(skillParam)) : evidence;
+  return {
+    answer: `You have ${evidence.length} evidence items supporting your demonstrated proficiency (${verified.length} verified). Breakdown by type: ${Array.from(byType.entries()).map(([t, n]) => `${t}=${n}`).join(", ")}.${skillParam ? ` Filtered to ${filtered.length} items for "${skillParam}".` : ""} Evidence, not claims — every proficiency is backed by structured evidence.`,
+    evidence: filtered.slice(0, 5).map((e) => ({
+      source: `${e.evidenceType} — ${e.skill?.name ?? "—"}`,
+      detail: `${e.evidenceSource ?? "—"} · ${e.proficiencyLevel} · ${e.verificationStatus} · ${new Date(e.evidenceTimestamp).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}`,
+      type: "CANDIDATE_EVIDENCE",
+    })),
+    confidence: verified.length >= 3 ? "HIGH" : verified.length >= 1 ? "MEDIUM" : "LOW",
+    dataPeriod: "2026-Q1",
+    dataStatus: "SYNTHETIC",
+    sources: ["CANDIDATE_EVIDENCE"],
+    exploreLinks: [{ label: "View Evidence", view: "c-evidence" }, { label: "View Skill Passport", view: "c-passport" }],
+  };
+}
+
+async function queryCandidateDevelopment(candidateId: string, parsed: ParsedQuery): Promise<CopilotResponse> {
+  const paths = await db.candidateDevelopmentPath.findMany({ where: { candidateId }, include: { jobRole: true, steps: { include: { skill: true, course: true }, orderBy: { sequence: "asc" } } } });
+  if (paths.length === 0) return insufficientEvidence("No development path defined yet. Set a target role to generate one.", parsed);
+  const path = paths[0];
+  const steps = path.steps.map((s) => `${s.sequence}. ${s.actionType}${s.skill ? ` (${s.skill.name})` : ""}${s.course ? ` → ${s.course.name}` : ""}`).join(" → ");
+  return {
+    answer: `To move from Intermediate to Advanced for ${path.jobRole?.title ?? "your target role"}, follow your development path: ${steps}. Each step connects action to measurable evidence. Complete practice, then assessment, then a project, then verification.`,
+    evidence: path.steps.map((s) => ({
+      source: `DevelopmentStep ${s.sequence} — ${s.actionType}`,
+      detail: `${s.objective ?? "—"}${s.evidenceRequired ? ` · Evidence: ${s.evidenceRequired}` : ""} · Status: ${s.status}`,
+      type: "DEVELOPMENT_PATH",
+    })),
+    confidence: "HIGH",
+    dataPeriod: "2026-Q1",
+    dataStatus: "SYNTHETIC",
+    sources: ["CANDIDATE_DEVELOPMENT_PATH"],
+    exploreLinks: [{ label: "View Development Path", view: "c-development-path" }],
+  };
+}
+
+async function queryCandidateOpportunity(candidateId: string, parsed: ParsedQuery): Promise<CopilotResponse> {
+  const opp = await db.candidateOpportunityReadiness.findFirst({ where: { candidateId }, include: { jobRole: true } });
+  if (!opp) return insufficientEvidence("No opportunity readiness computed yet. Set a target role.", parsed);
+  return {
+    answer: `Your opportunities are matched on demonstrated capability + evidence (NOT claims). Current opportunity readiness for ${opp.jobRole?.title ?? "your target role"}: ${opp.overallReadinessSignal.replace(/_/g, " ")} (role ${Math.round(opp.roleReadiness * 100)}%, skill ${Math.round(opp.skillReadiness * 100)}%, evidence ${Math.round(opp.evidenceReadiness * 100)}%). You have ${opp.highGapCount} high-priority gaps to close for stronger matches.`,
+    evidence: [
+      { source: "OpportunityReadiness", detail: `Signal: ${opp.overallReadinessSignal} · Role: ${Math.round(opp.roleReadiness * 100)}% · Evidence: ${Math.round(opp.evidenceReadiness * 100)}%`, type: "OPPORTUNITY_READINESS" },
+    ],
+    confidence: opp.evidenceReadiness > 0.7 ? "HIGH" : opp.evidenceReadiness > 0.4 ? "MEDIUM" : "LOW",
+    dataPeriod: "2026-Q1",
+    dataStatus: "SYNTHETIC",
+    sources: ["CANDIDATE_OPPORTUNITY_READINESS"],
+    exploreLinks: [{ label: "View Opportunities", view: "c-opportunities" }],
+  };
+}
+
+async function queryCandidateEmerging(candidateId: string, parsed: ParsedQuery): Promise<CopilotResponse> {
+  const target = await db.candidateTargetProfile.findFirst({ where: { candidateId }, include: { jobRole: true } });
+  if (!target) return insufficientEvidence("No target role set.", parsed);
+  const roleSkills = await db.roleSkill.findMany({ where: { jobRoleId: target.targetRoleId }, include: { skill: true } });
+  const skillIds = roleSkills.map((rs) => rs.skillId);
+  const emerging = await db.emergingSkillSignal.findMany({ where: { skillId: { in: skillIds } }, include: { skill: true } });
+  if (emerging.length === 0) return insufficientEvidence("No emerging signals for your target role's skills yet.", parsed);
+  return {
+    answer: `For your target role ${target.jobRole.title}, these skills are becoming more important: ${emerging.map((e) => `${e.skill.name} (${e.emergenceStatus}, strength ${e.signalStrength})`).join(", ")}. Build these before they become critical gaps.`,
+    evidence: emerging.map((e) => ({
+      source: `EmergingSkillSignal — ${e.skill.name}`,
+      detail: `${e.emergenceStatus} · strength ${e.signalStrength}/100 · velocity ${e.trendVelocity}`,
+      type: "EMERGING_SKILL",
+    })),
+    confidence: "MEDIUM",
+    dataPeriod: "2026-Q1",
+    dataStatus: "SYNTHETIC",
+    sources: ["EMERGING_SKILL_SIGNALS"],
+    exploreLinks: [{ label: "View Market Context", view: "c-market-context" }],
+  };
+}
+
+async function queryCandidateReadiness(candidateId: string, parsed: ParsedQuery): Promise<CopilotResponse> {
+  const r = await db.candidateRoleReadiness.findFirst({ where: { candidateId }, include: { jobRole: true } });
+  if (!r) return insufficientEvidence("No readiness computed yet.", parsed);
+  return {
+    answer: `Your readiness for ${r.jobRole?.title ?? "your target role"}: ${r.overallReadinessSignal.replace(/_/g, " ")}. Skill coverage ${Math.round(r.skillCoverage * 100)}%, evidence confidence ${Math.round(r.evidenceConfidence * 100)}%, proficiency alignment ${Math.round(r.proficiencyAlignment * 100)}%. You have ${r.criticalGapCount} critical and ${r.highGapCount} high-priority gaps. This is a market-referenced signal — NOT a guaranteed outcome.`,
+    evidence: [
+      { source: "RoleReadiness", detail: `Signal: ${r.overallReadinessSignal} · Coverage: ${Math.round(r.skillCoverage * 100)}% · Evidence: ${Math.round(r.evidenceConfidence * 100)}%`, type: "ROLE_READINESS" },
+    ],
+    confidence: r.evidenceConfidence > 0.7 ? "HIGH" : r.evidenceConfidence > 0.4 ? "MEDIUM" : "LOW",
+    dataPeriod: "2026-Q1",
+    dataStatus: "SYNTHETIC",
+    sources: ["CANDIDATE_ROLE_READINESS"],
+    exploreLinks: [{ label: "View Readiness", view: "c-readiness" }],
   };
 }
 

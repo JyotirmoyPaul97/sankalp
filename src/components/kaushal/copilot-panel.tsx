@@ -52,10 +52,11 @@ const ROLE_QUESTIONS: Record<string, string[]> = {
     "Which emerging skills are not in curriculum?",
   ],
   CANDIDATE: [
-    "Why do I have a skill gap?",
-    "What evidence supports my skill level?",
-    "What does my target role require?",
-    "What skills are emerging?",
+    "What is my biggest skill gap for PLC Technician?",
+    "What evidence supports my PLC proficiency?",
+    "What should I do to move from Intermediate to Advanced?",
+    "Why is this opportunity matched to me?",
+    "What skills are becoming more important for my target role?",
   ],
 };
 

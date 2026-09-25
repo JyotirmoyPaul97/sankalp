@@ -757,3 +757,50 @@ Work Log:
 
 Stage Summary:
 - Phase 13 COMPLETE. Fixed 2 broken API endpoints (`/api/v1/scenarios` GET list + `/api/v1/scenarios/[id]` GET detail — both 500 → 200). Fixed 1 React duplicate-key warning + 2 duplicate-text typos in overview roadmap. Verified all 24 sidebar views + 4 dynamic detail views + Copilot query pipeline render and respond cleanly with zero console errors. No broken navigation links. No broken API contracts. SIH-ready. STOP.
+
+---
+Task ID: p14
+Agent: GLM (main)
+Task: Phase 12.5 Part 1 + Part 2 — Candidate / Beneficiary Intelligence Workspace (full closed loop)
+
+Work Log:
+- Discovery: read Prisma candidate models (Candidate, CandidateSkill, CandidateEvidence, CandidateAssessment, CandidateTargetProfile, CandidateSkillGap, CandidateRoleReadiness, CandidateGapPriority, CandidateCourseMatch, CandidateDevelopmentPath, DevelopmentPathwayStep, CandidateOpportunityReadiness, CandidateGapResolutionEvent), login API, landing screen, auth store, existing candidate-intelligence-view, seed-phase7.
+- Seed (`prisma/seed-candidate-workspace.ts`): created CANDIDATE login user `arjun.sharma@kaushal-drishti.demo` / `demo-candidate` (role CANDIDATE) + Candidate "Arjun Sharma" (Pune, ITI, 3y exp) wired to PLC Technician target role with hand-crafted narrative: PLC Programming WORKING (gap to EXPERT = HIGH), SCADA PROFICIENT (aligned), Workplace Safety WORKING (aligned), Industrial IoT AWARENESS (MEDIUM emerging gap). 11 evidence records (Assessment+Project+Certificate+Practice+Employer), 3 assessments, target profile, 4 skill gaps, role readiness (DEVELOPING), 2 gap priorities WITH reasons, 1 STRONG course match (Advanced Industrial Automation — PLC & SCADA), 5-step development path (Practice→Assessment→Project→Certification→Mentorship), opportunity readiness, 6 gap-resolution events (Awareness→Working evolution timeline). Idempotent. Ran successfully.
+- Landing screen: added Candidate/Beneficiary workspace button + Arjun Sharma demo account + full description "Build your verified skill profile…".
+- Routing (`page.tsx`): CANDIDATE role → `<CandidateShell />` (separate beneficiary workspace, NOT the government control plane); all other roles → `<AppShell />` as before.
+- Candidate shell (`candidate-shell.tsx`): sidebar (12 nav items in 5 groups: Capability / Target Role / Development / Opportunity / Account) + topbar + sticky footer + view registry + dynamic `c-one-skill:<id>` routing + Copilot panel.
+- Candidate proficiency vocabulary: DB (AWARENESS/WORKING/PROFICIENT/EXPERT) ↔ candidate UI ladder (Basic/Intermediate/Advanced/Expert) via `proficiency.ts` helpers; gap label + tone + freshness + evidence-type label/icon helpers.
+- New backend APIs (8):
+  • GET /api/v1/candidate/me — resolves logged-in candidate by email (privacy: own data only).
+  • GET /api/v1/candidate/skill-evolution — chronological timeline grouped by skill + resolution events.
+  • GET /api/v1/candidate/one-skill/[skillId] — unified 8-block view (market·role·required·demonstrated·evidence·gap·path·outcome).
+  • POST /api/v1/candidate/progress-event — candidate records progress → creates CandidateEvidence + CandidateGapResolutionEvent + bumps skill freshness (feedback loop).
+  • GET /api/v1/candidate/market-context — target role demand/trend/districts/emerging skills from shared Market Intelligence Engine.
+  • GET /api/v1/candidate/training-path/[skillId] — gap→course→curriculum→centre→trainer→equipment mapping.
+  • GET /api/v1/candidate/opportunities — evidence-based opportunity match with claimed-vs-demonstrated breakdown.
+  • GET /api/v1/candidate/aggregated — privacy-preserving population distribution + candidate percentile + contribution message.
+  • POST /api/v1/employers/feedback — employer structured feedback → CandidateEvidence (EMPLOYER_VERIFIED, VERIFIED) + gap resolution events (Employer→Candidate evidence channel).
+- Fixed 3 Prisma field-name bugs during build: RoleSkill uses `jobRoleId`+`proficiencyLevel` (not roleId+proficiencyExpected); MarketSignal uses `periodLabel` (not observationPeriod); one-skill `gap` referenced before init in Promise.all (split into 2 awaits).
+- Part 1 views (12): CandidateHome (hero + metrics + passport preview + priority-gap callout + dev flow + quick nav), SkillPassport (per-skill proficiency ladder with YOU/REQUIRED markers + evidence chips → drawer), EvidenceView (claimed-vs-demonstrated banner + add-evidence form + evidence list → drawer), TargetRolesView (role card + required competencies + quick links), RoleComparisonView (required-vs-demonstrated table + aligned/gaps counts), SkillGapsView (priority gaps with WHY reasoning + factors + all-gaps table), DevelopmentPathView (visual flow + pathway steps + learning recommendations with capability breakdown), SkillEvolutionView (per-skill progression timeline + event list + resolution log), ReadinessView (readiness summary + supporting factors + opportunity readiness + assessment status), OpportunitiesView (claimed-vs-demonstrated + readiness + opportunity cards with strengths/remaining-gaps/evidence-match), MarketContextView (role+demand + districts + emerging + required skills + cross-stakeholder visual), ProfileView (identity + target + stats + aggregated-intelligence contribution + privacy + sign-out).
+- EvidenceDrawer component: opens on evidence click; shows Evidence Type / Demonstrated Proficiency / Date / Source / Verification Status / Confidence / privacy note.
+- Part 2 closed-loop features:
+  • Cross-stakeholder connection visual (Market Context view): Employer → Market Intelligence → Training → Candidate → Gap.
+  • Employer feedback → evidence: POST /employers/feedback creates verified EMPLOYER_VERIFIED evidence in candidate's ledger (tested: employer login → feedback → candidate evidence list shows the new verified item).
+  • Candidate progress events: POST /candidate/progress-event (tested: candidate submits practice → evidence + resolution event created → appears in passport + evolution).
+  • Evidence freshness: Recent/Ageing/Outdated badges throughout passport + evidence.
+  • Copilot candidate context: enhanced detectIntent with personal-context pre-check ("my"/"I"/"me" → CANDIDATE_GAP) + 5 new sub-question handlers (biggest-gap, evidence-supports, move-from-intermediate-to-advanced, opportunity-matched, emerging-for-target, readiness). All return evidence-backed answers with candidate-workspace explore links. Updated CopilotPanel CANDIDATE suggestions.
+  • Aggregated intelligence: /candidate/aggregated returns population distribution by proficiency + candidate percentile + contribution message (privacy-preserving).
+  • One-Skill unified view: PLC PROGRAMMING hero + 8-block grid (MARKET/ROLE/REQUIRED/CANDIDATE/EVIDENCE/GAP/PATH/OUTCOME) + priority reason + development flow + supporting evidence + market snapshot.
+- Lint: 0 errors, 0 warnings.
+- Browser E2E verification (agent-browser):
+  • Landing → Candidate/Beneficiary workspace → Arjun Sharma demo login → Candidate workspace.
+  • All 12 sidebar views navigated: Overview, Skill Passport, Evidence, Target Roles, Role Readiness, Skill Gaps, Development Path, Skill Evolution, Readiness, Opportunities, Market Context, Profile — ALL render with 0 console errors / 0 page errors.
+  • Skill Passport: proficiency ladder with YOU + REQUIRED markers renders; evidence chips clickable → EvidenceDrawer opens with full detail (Evidence Type, Demonstrated Proficiency, Date, Source, Verification Status VERIFIED, Confidence 82%).
+  • One-Skill view (PLC Programming): renders unified 8-block grid + priority reason + development flow + supporting evidence + market snapshot.
+  • Progress event: candidate fills Add Evidence form (PLC Programming, Practice, Intermediate) → submits → new evidence appears in passport list ("Test PLC practice session · Candidate-submitted"). Employer feedback evidence also visible ("Employer Validation · Strong PLC commissioning · Verified").
+  • Copilot (candidate context): "What is my biggest skill gap for PLC Technician?" → panel renders "MEDIUM confidence · SYNTHETIC · 2026-Q1 · Your biggest skill gap for PLC Technician is Industrial IoT: required WORKING, you demonstrate AWARENESS (severity MEDIUM). Priority: MEDIUM — Emerging skill with EARLY_SIGNAL…" + Evidence(2) + Explore Further links.
+  • All 5 candidate copilot questions verified via API: biggest-gap, evidence-supports, move-from-intermediate-to-advanced, opportunity-matched, emerging-for-target — all return evidence-backed answers.
+- dev.log: 0 ⨯ errors after fixes.
+
+Stage Summary:
+- Phase 12.5 Part 1 + Part 2 COMPLETE and browser-verified. Full candidate/beneficiary workspace implemented as the INDIVIDUAL CAPABILITY AND EVIDENCE LAYER (not a jobs portal) reusing the shared Skill Intelligence Engine (skill ontology, competency layer, market intelligence, training intelligence, evidence layer, employer validation, outcome intelligence, copilot). Closed loop functional: MARKET DEMAND → ROLE REQUIREMENT → CANDIDATE CAPABILITY → EVIDENCE → SKILL GAP → TRAINING/DEVELOPMENT → NEW EVIDENCE → EMPLOYER VALIDATION → OUTCOME → UPDATED INTELLIGENCE. Privacy: candidate sees own data only; employer feedback written to candidate ledger; aggregated intelligence exposes no individual identities. All Part 1 (25 sections) + Part 2 (11 sections) acceptance items satisfied. STOP.
