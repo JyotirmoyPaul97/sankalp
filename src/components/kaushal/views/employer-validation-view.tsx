@@ -7,6 +7,7 @@ import { StatusPill } from "@/components/kaushal/status-pill";
 import { EvidencePanel } from "@/components/kaushal/evidence-panel";
 import { MetricCard } from "@/components/kaushal/metric-card";
 import { LoadingState, ErrorState } from "@/components/kaushal/states";
+import { StatusBadge, ConfidenceBadge, VisualBar } from "@/components/kaushal/visual-components";
 import { useFetch } from "@/hooks/use-fetch";
 import { DataTable, type Column } from "@/components/kaushal/data-table";
 import { Button } from "@/components/ui/button";
@@ -64,7 +65,7 @@ export function EmployerValidationView() {
       <PageHeader
         title="Employer Validation"
         description="Validate role-skill demand signals, proficiency expectations, and employer consensus. Confirmed validations flow back into the shared Market Intelligence layer."
-        badge={<StatusPill tone="info" dot>Active Workflow</StatusPill>}
+        badge={<StatusBadge status="OBSERVED" />}
       />
 
       {/* Validation summary */}

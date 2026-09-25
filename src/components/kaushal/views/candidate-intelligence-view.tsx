@@ -8,6 +8,7 @@ import { StatusPill } from "@/components/kaushal/status-pill";
 import { MetricCard } from "@/components/kaushal/metric-card";
 import { DataTable, type Column } from "@/components/kaushal/data-table";
 import { LoadingState, ErrorState } from "@/components/kaushal/states";
+import { ProficiencyLadder, EvidenceChain, StatusBadge, ConfidenceBadge, SkillJourneyFlow } from "@/components/kaushal/visual-components";
 import { useFetch } from "@/hooks/use-fetch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -111,18 +112,18 @@ function CandidateDashboard({ candidateId }: { candidateId: string }) {
 
       {/* Skill Passport */}
       <section className="space-y-3">
-        <SectionLabel>Skill Passport — Verified Skills</SectionLabel>
+        <SectionLabel>Skill Passport — Evidence, Not Claims</SectionLabel>
         {skillsFetch.loading ? <LoadingState /> : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {(skillsFetch.data?.skills ?? []).slice(0, 9).map((s) => (
+            {(skillsFetch.data?.skills ?? []).slice(0, 6).map((s) => (
               <div key={s.id} className="rounded-lg border bg-card p-3 space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-medium truncate">{s.skill.name}</p>
-                  <StatusPill tone={s.status === "ASSESSED" || s.status === "VERIFIED" ? "positive" : s.status === "STALE" || s.status === "INSUFFICIENT_EVIDENCE" ? "attention" : "info"} dot>{s.status}</StatusPill>
+                  <StatusBadge status={s.status === "ASSESSED" || s.status === "VERIFIED" ? "OBSERVED" : "SYNTHETIC"} />
                 </div>
+                <ProficiencyLadder required="EXPERT" current={s.currentProficiency} />
                 <div className="grid grid-cols-2 gap-1 text-xs">
-                  <div><span className="text-muted-foreground">Proficiency:</span> <span className="font-medium">{s.currentProficiency}</span></div>
-                  <div><span className="text-muted-foreground">Confidence:</span> <span className="tabular-nums">{Math.round(s.proficiencyConfidence * 100)}%</span></div>
+                  <div><span className="text-muted-foreground">Confidence:</span> <ConfidenceBadge confidence={s.proficiencyConfidence >= 0.7 ? "HIGH" : s.proficiencyConfidence >= 0.4 ? "MEDIUM" : "LOW"} /></div>
                   <div><span className="text-muted-foreground">Evidence:</span> <span className="tabular-nums">{s.evidenceCount}</span></div>
                   <div><span className="text-muted-foreground">Freshness:</span> <StatusPill tone={s.freshnessStatus === "CURRENT" ? "positive" : s.freshnessStatus === "STALE" ? "attention" : "neutral"}>{s.freshnessStatus}</StatusPill></div>
                 </div>
@@ -200,6 +201,17 @@ function CandidateDashboard({ candidateId }: { candidateId: string }) {
       {/* Development Pathway */}
       <section className="space-y-3">
         <SectionLabel>Personalized Development Pathway</SectionLabel>
+
+        {/* Visual skill journey */}
+        <SkillJourneyFlow steps={[
+          { icon: <Target className="size-4" />, label: "Target Role", detail: "PLC Technician", tone: "info" },
+          { icon: <CheckCircle2 className="size-4" />, label: "Current", detail: "Intermediate", tone: "positive" },
+          { icon: <AlertTriangle className="size-4" />, label: "Gap", detail: "Advanced required", tone: "attention" },
+          { icon: <GraduationCap className="size-4" />, label: "Course", detail: "Advanced PLC Practice", tone: "info" },
+          { icon: <FileText className="size-4" />, label: "Assessment", detail: "Verify skill", tone: "neutral" },
+          { icon: <CheckCircle2 className="size-4" />, label: "Verified", detail: "Advanced evidence", tone: "positive" },
+        ]} />
+
         {pathsFetch.loading ? <LoadingState /> : (
           <div className="space-y-3">
             {(pathsFetch.data?.paths ?? []).map((path) => (

@@ -8,6 +8,7 @@ import { StatusPill } from "@/components/kaushal/status-pill";
 import { MetricCard } from "@/components/kaushal/metric-card";
 import { DataTable, type Column } from "@/components/kaushal/data-table";
 import { LoadingState, ErrorState } from "@/components/kaushal/states";
+import { VisualBar, ScenarioComparison, StatusBadge, ConfidenceBadge } from "@/components/kaushal/visual-components";
 import { useFetch } from "@/hooks/use-fetch";
 
 const READINESS_TONE: Record<string, "positive" | "info" | "attention" | "critical" | "neutral"> = {
@@ -30,8 +31,45 @@ export function DeliveryCapabilityView() {
       <PageHeader
         title="Training Delivery Capability"
         description="Assess whether training centres have the curriculum, trainers, equipment and capacity required to deliver market-relevant skills. Diagnostic — not recommendations."
-        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
+        badge={<StatusBadge status="SYNTHETIC" />}
       />
+
+      {/* Visual capability chain */}
+      <div className="rounded-lg border bg-card p-4 space-y-4">
+        <div className="flex items-center gap-2"><Gauge className="size-4 text-primary" /><h3 className="text-sm font-semibold">Capability Chain: Market Demand → Centre Readiness</h3></div>
+        <div className="grid sm:grid-cols-5 gap-3">
+          <div className="space-y-1">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Market Demand</p>
+            <VisualBar label="PLC Programming" value={88} tone="attention" height="sm" />
+            <VisualBar label="Industrial IoT" value={95} tone="critical" height="sm" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Curriculum</p>
+            <VisualBar label="PLC Programming" value={72} tone="info" height="sm" />
+            <VisualBar label="Industrial IoT" value={30} tone="critical" height="sm" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Trainer</p>
+            <VisualBar label="PLC Programming" value={65} tone="info" height="sm" />
+            <VisualBar label="Industrial IoT" value={20} tone="critical" height="sm" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Equipment</p>
+            <VisualBar label="PLC Programming" value={80} tone="positive" height="sm" />
+            <VisualBar label="Industrial IoT" value={25} tone="critical" height="sm" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Capacity</p>
+            <VisualBar label="PLC Programming" value={55} tone="attention" height="sm" />
+            <VisualBar label="Industrial IoT" value={15} tone="critical" height="sm" />
+          </div>
+        </div>
+        <div className="flex items-center gap-2 pt-2 border-t">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Result:</span>
+          <StatusPill tone="attention" dot>PARTIALLY READY</StatusPill>
+          <ConfidenceBadge confidence="MEDIUM" />
+        </div>
+      </div>
 
       {/* Chain banner */}
       <div className="rounded-lg border bg-card p-4 flex flex-col md:flex-row items-center justify-between gap-3 text-xs">

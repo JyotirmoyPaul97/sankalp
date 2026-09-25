@@ -1,13 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { Building2, FlaskConical, Activity, AlertTriangle, CheckCircle2, ArrowRight, Target, Gauge } from "lucide-react";
+import { Building2, FlaskConical, Activity, AlertTriangle, CheckCircle2, ArrowRight, Target, Gauge, TrendingUp, GraduationCap, Users } from "lucide-react";
 import { PageHeader, SectionLabel } from "@/components/kaushal/page-header";
 import { EvidencePanel } from "@/components/kaushal/evidence-panel";
 import { StatusPill } from "@/components/kaushal/status-pill";
 import { MetricCard } from "@/components/kaushal/metric-card";
 import { DataTable, type Column } from "@/components/kaushal/data-table";
 import { LoadingState, ErrorState } from "@/components/kaushal/states";
+import { DistrictTwinVisual, StatusBadge, ConfidenceBadge, VisualBar } from "@/components/kaushal/visual-components";
 import { useFetch } from "@/hooks/use-fetch";
 import { useNav } from "@/store/app-store";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -84,6 +85,28 @@ function TwinDashboard({ districtId }: { districtId: string }) {
 
   return (
     <div className="space-y-6">
+      {/* District Digital Twin Visual */}
+      <DistrictTwinVisual
+        district={twin.district.name}
+        layers={[
+          { label: "Market", icon: <TrendingUp className="size-4" />, items: [
+            { label: "Top skills", value: twin.market.topSkills.length, tone: "positive" },
+            { label: "Emerging", value: twin.market.emergingSkills.length },
+            { label: "Sector growth", value: twin.market.sectorGrowth.length },
+          ]},
+          { label: "Training", icon: <GraduationCap className="size-4" />, items: [
+            { label: "Institutions", value: twin.training.institutions },
+            { label: "Centres", value: twin.training.centres },
+            { label: "Capacity", value: twin.training.plannedCapacity, tone: "attention" },
+          ]},
+          { label: "People", icon: <Users className="size-4" />, items: [
+            { label: "Candidates", value: twin.candidates.totalCandidates },
+            { label: "High readiness", value: twin.candidates.highReadiness, tone: "positive" },
+            { label: "Developing", value: twin.candidates.developing, tone: "attention" },
+          ]},
+        ]}
+      />
+
       {/* Twin header */}
       <div className="flex items-center justify-between rounded-lg border bg-card p-4">
         <div>
