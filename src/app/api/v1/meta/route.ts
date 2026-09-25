@@ -36,6 +36,7 @@ export async function GET() {
 
   // safe counts — never hard-coded in app code, derived from DB.
   let counts: Record<string, number> = {};
+  let dataHealth: Record<string, number> = {};
   try {
     counts = {
       districts: await db.district.count(),
@@ -48,19 +49,54 @@ export async function GET() {
       qualifications: await db.qualification.count(),
       dataSources: await db.dataSource.count(),
     };
+    // Phase 2 data-health metrics for the Overview page
+    const activeSources = await db.dataSource.count({ where: { isActive: true } });
+    const recentImports = await db.ingestionBatch.count({
+      where: { createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } },
+    });
+    const jobPostings = await db.jobPosting.count();
+    const employerSurveys = await db.employerSurvey.count();
+    const industryConsultations = await db.industryConsultation.count();
+    const sectorGrowth = await db.sectorGrowth.count();
+    const placementOutcomes = await db.placementOutcome.count();
+    const technologyTrends = await db.technologyTrend.count();
+    const totalIngested = jobPostings + employerSurveys + industryConsultations + sectorGrowth + placementOutcomes + technologyTrends;
+    // Average quality score across completed batches
+    const completedBatches = await db.ingestionBatch.findMany({
+      where: { qualityScore: { not: null }, status: { in: ["COMPLETED", "COMPLETED_WITH_WARNINGS"] } },
+      select: { qualityScore: true },
+    });
+    const avgQuality = completedBatches.length > 0
+      ? Math.round(completedBatches.reduce((s, b) => s + (b.qualityScore ?? 0), 0) / completedBatches.length)
+      : 0;
+    dataHealth = {
+      activeSources,
+      recentImports,
+      jobPostings,
+      employerSurveys,
+      industryConsultations,
+      sectorGrowth,
+      placementOutcomes,
+      technologyTrends,
+      totalIngested,
+      avgQuality,
+      totalBatches: await db.ingestionBatch.count(),
+    };
   } catch {
     counts = {};
+    dataHealth = {};
   }
 
   return ok({
     service: "kaushal-drishti",
     tagline: "From Labour-Market Evidence to Better Skill Decisions.",
-    phase: "phase-1",
+    phase: "phase-2",
     environment: process.env.APP_ENV || "development",
     dataDisclaimer: "Demo Environment — Synthetic Data",
     phases,
     roles: roleList,
     dataStatusVocab,
     counts,
+    dataHealth,
   });
 }

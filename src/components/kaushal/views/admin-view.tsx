@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Users, ShieldCheck, KeyRound, Database, Activity } from "lucide-react";
+import { Users, ShieldCheck, KeyRound, Database, Activity, Upload, History, GaugeCircle, TableProperties, ScrollText, FileSearch } from "lucide-react";
 import { PageHeader, SectionLabel } from "@/components/kaushal/page-header";
 import { MetricCard } from "@/components/kaushal/metric-card";
 import { EvidencePanel } from "@/components/kaushal/evidence-panel";
@@ -9,6 +9,7 @@ import { StatusPill } from "@/components/kaushal/status-pill";
 import { DataTable, type Column } from "@/components/kaushal/data-table";
 import { useFetch } from "@/hooks/use-fetch";
 import { LoadingState, ErrorState } from "@/components/kaushal/states";
+import { useNav } from "@/store/app-store";
 import type { PlatformMeta, DataSource, Paginated } from "@/types/domain";
 
 const ROLE_ROWS = [
@@ -60,8 +61,8 @@ export function AdminView() {
     <div className="space-y-6">
       <PageHeader
         title="Administration"
-        description="Platform foundation status: roles, RBAC, health, environment and data provenance. Phase 1 ships the administrative scaffold."
-        badge={<StatusPill tone="info" dot>Phase 1 — Foundation</StatusPill>}
+        description="Platform foundation status: roles, RBAC, health, environment, data provenance, and Phase 2 ingestion operations."
+        badge={<StatusPill tone="info" dot>Phase 2 — Ingestion Layer</StatusPill>}
       />
 
       {loading ? (
@@ -74,6 +75,12 @@ export function AdminView() {
           <MetricCard label="Data Sources" value={counts.dataSources ?? 0} icon={<Activity className="size-4" />} tone="default" />
         </div>
       )}
+
+      {/* Data Operations quick links (Phase 2) */}
+      <section className="space-y-3">
+        <SectionLabel>Data Operations</SectionLabel>
+        <DataOperationsGrid />
+      </section>
 
       <div className="grid lg:grid-cols-2 gap-6">
         <EvidencePanel title="System Health" source="/api/v1/health">
@@ -137,6 +144,29 @@ export function AdminView() {
           </div>
         </section>
       ) : null}
+    </div>
+  );
+}
+
+function DataOperationsGrid() {
+  const setActiveView = useNav((s) => s.setActiveView);
+  const ops = [
+    { id: "data-sources", label: "Data Sources", desc: "Register and manage evidence feeds.", icon: <Database className="size-4" /> },
+    { id: "upload", label: "Upload Dataset", desc: "Ingest CSV / JSON through the validation pipeline.", icon: <Upload className="size-4" /> },
+    { id: "import-batches", label: "Import Batches", desc: "History of every ingestion operation.", icon: <History className="size-4" /> },
+    { id: "data-quality", label: "Data Quality", desc: "Per-batch quality dashboard + error breakdown.", icon: <GaugeCircle className="size-4" /> },
+    { id: "records-explorer", label: "Records Explorer", desc: "Search every ingested evidence table.", icon: <TableProperties className="size-4" /> },
+    { id: "provenance", label: "Provenance", desc: "Source → Batch → Record traceability.", icon: <FileSearch className="size-4" /> },
+    { id: "audit-logs", label: "Audit Logs", desc: "Ingestion + admin action trail.", icon: <ScrollText className="size-4" /> },
+  ];
+  return (
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {ops.map((o) => (
+        <button key={o.id} onClick={() => setActiveView(o.id)} className="text-left rounded-lg border bg-card p-4 space-y-1.5 shadow-none hover:border-primary/40 hover:bg-accent/30 transition-colors">
+          <div className="flex items-center gap-2 text-primary">{o.icon}<span className="text-sm font-medium text-foreground">{o.label}</span></div>
+          <p className="text-xs text-muted-foreground leading-snug">{o.desc}</p>
+        </button>
+      ))}
     </div>
   );
 }

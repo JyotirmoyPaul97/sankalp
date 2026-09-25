@@ -18,6 +18,12 @@ import {
   Database,
   Settings,
   ChevronRight,
+  Upload,
+  History,
+  GaugeCircle,
+  TableProperties,
+  ScrollText,
+  FileSearch,
 } from "lucide-react";
 
 interface NavItem {
@@ -79,8 +85,20 @@ const GROUPS: NavGroup[] = [
     id: "system",
     label: "System",
     items: [
-      { id: "data-sources", label: "Data Sources", icon: <Database className="size-4" />, phase: 1, active: true },
+      { id: "data-sources", label: "Data Sources", icon: <Database className="size-4" />, phase: 2, active: true },
       { id: "admin", label: "Administration", icon: <Settings className="size-4" />, phase: 1, active: true },
+    ],
+  },
+  {
+    id: "data-operations",
+    label: "Data Operations",
+    items: [
+      { id: "upload", label: "Upload Dataset", icon: <Upload className="size-4" />, phase: 2, active: true },
+      { id: "import-batches", label: "Import Batches", icon: <History className="size-4" />, phase: 2, active: true },
+      { id: "data-quality", label: "Data Quality", icon: <GaugeCircle className="size-4" />, phase: 2, active: true },
+      { id: "records-explorer", label: "Records Explorer", icon: <TableProperties className="size-4" />, phase: 2, active: true },
+      { id: "provenance", label: "Provenance", icon: <FileSearch className="size-4" />, phase: 2, active: true },
+      { id: "audit-logs", label: "Audit Logs", icon: <ScrollText className="size-4" />, phase: 2, active: true },
     ],
   },
 ];

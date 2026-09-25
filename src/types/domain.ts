@@ -170,6 +170,7 @@ export interface PlatformMeta {
   roles: MetaRole[];
   dataStatusVocab: DataStatus[];
   counts: Record<string, number>;
+  dataHealth?: DataHealth;
 }
 
 export interface AuthUser {
@@ -185,4 +186,131 @@ export interface Paginated<T> {
   page: number;
   pageSize: number;
   totalPages: number;
+}
+
+// =====================================================================
+// PHASE 2 — Data & Evidence Ingestion types
+// =====================================================================
+
+export interface DataSourceV2 extends DataSource {
+  providerName: string | null;
+  sourceReference: string | null;
+  geographyLevel: string | null;
+  updateFrequency: string | null;
+  isActive: boolean;
+  _count?: { batches: number };
+}
+
+export interface UploadedFile {
+  id: string;
+  fileName: string;
+  fileType: string;
+  storageKey: string;
+  sizeBytes: number;
+  checksum: string;
+  uploadedBy: string | null;
+  uploadedAt: string;
+}
+
+export interface IngestionBatch {
+  id: string;
+  batchCode: string;
+  dataSourceId: string;
+  uploadedFileId: string | null;
+  fileName: string | null;
+  fileType: string;
+  importMode: string;
+  recordsReceived: number;
+  recordsAccepted: number;
+  recordsRejected: number;
+  recordsDuplicate: number;
+  recordsWarning: number;
+  status: string;
+  startedAt: string;
+  completedAt: string | null;
+  errorSummary: string | null;
+  qualityScore: number | null;
+  createdBy: string | null;
+  createdAt: string;
+  dataSource?: { id: string; name: string; dataStatus: string };
+  uploadedFile?: { fileName: string; fileType: string; checksum: string } | null;
+  _count?: { records: number; errors: number };
+}
+
+export interface IngestionError {
+  id: string;
+  batchId: string;
+  rowNumber: number;
+  field: string | null;
+  problem: string;
+  severity: string;
+  suggestedAction: string | null;
+  recordPreview: string | null;
+}
+
+export interface IngestionRecord {
+  id: string;
+  sourceId: string;
+  batchId: string;
+  sourceRecordId: string | null;
+  sourceTimestamp: string | null;
+  ingestedAt: string;
+  dataStatus: string;
+  entityType: string;
+  normalizedId: string | null;
+  qualityStatus: string;
+  fingerprint: string | null;
+  rawJson: string;
+}
+
+export interface AuditLog {
+  id: string;
+  userId: string | null;
+  userEmail: string | null;
+  action: string;
+  resource: string | null;
+  status: string;
+  details: string | null;
+  timestamp: string;
+}
+
+export interface UploadPreview {
+  batchCode: string;
+  batchId?: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  checksum: string;
+  isDuplicateUpload: boolean;
+  entityType: string;
+  dataSource: { id: string; name: string; dataStatus: string };
+  summary: {
+    recordsReceived: number;
+    recordsAccepted: number;
+    recordsRejected: number;
+    recordsDuplicate: number;
+    recordsWarning: number;
+    qualityScore: { total: number; completeness: number; validity: number; uniqueness: number; consistency: number; overall: number };
+  };
+  sampleErrors: Array<{ rowNumber: number; accepted: boolean; qualityStatus: string; issues: Array<{ field: string; problem: string; severity: string }>; preview: string }>;
+}
+
+export interface ConfirmResult {
+  batchId: string;
+  status: string;
+  accepted: number;
+}
+
+export interface DataHealth {
+  activeSources: number;
+  recentImports: number;
+  jobPostings: number;
+  employerSurveys: number;
+  industryConsultations: number;
+  sectorGrowth: number;
+  placementOutcomes: number;
+  technologyTrends: number;
+  totalIngested: number;
+  avgQuality: number;
+  totalBatches: number;
 }

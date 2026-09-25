@@ -136,3 +136,17 @@ export async function requireUser(req: Request): Promise<JwtPayload | null> {
   if (!m) return null;
   return verifyToken(m[1]);
 }
+
+/** Roles permitted to perform administrative ingestion operations. */
+const ADMIN_ROLES = new Set<Phase1Role>(["STATE_ADMIN", "AUDITOR"]);
+
+/**
+ * Require an authenticated admin user. Returns the payload on success,
+ * or null if unauthorized. Callers should return 401/403 accordingly.
+ */
+export async function requireAdmin(req: Request): Promise<JwtPayload | null> {
+  const payload = await requireUser(req);
+  if (!payload) return null;
+  if (!ADMIN_ROLES.has(payload.role as Phase1Role)) return null;
+  return payload;
+}

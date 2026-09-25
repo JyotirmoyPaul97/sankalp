@@ -18,6 +18,12 @@ import { DistrictPlansView } from "./views/district-plans-view";
 import { OutcomesView } from "./views/outcomes-view";
 import { DataSourcesView } from "./views/data-sources-view";
 import { AdminView } from "./views/admin-view";
+import { UploadView } from "./views/upload-view";
+import { ImportBatchesView, BatchDetailView } from "./views/import-batches-view";
+import { DataQualityView } from "./views/data-quality-view";
+import { RecordsExplorerView } from "./views/records-explorer-view";
+import { ProvenanceView } from "./views/provenance-view";
+import { AuditLogsView } from "./views/audit-logs-view";
 
 const VIEW_REGISTRY: Record<string, React.ComponentType> = {
   overview: OverviewView,
@@ -33,6 +39,12 @@ const VIEW_REGISTRY: Record<string, React.ComponentType> = {
   outcomes: OutcomesView,
   "data-sources": DataSourcesView,
   admin: AdminView,
+  upload: UploadView,
+  "import-batches": ImportBatchesView,
+  "data-quality": DataQualityView,
+  "records-explorer": RecordsExplorerView,
+  provenance: ProvenanceView,
+  "audit-logs": AuditLogsView,
 };
 
 export function AppShell() {
@@ -40,7 +52,13 @@ export function AppShell() {
   const sidebarOpen = useNav((s) => s.sidebarOpen);
   const setSidebar = useNav((s) => s.setSidebar);
 
-  const ViewComponent = VIEW_REGISTRY[activeView] ?? OverviewView;
+  // Handle "batch-detail:<id>" dynamic view
+  let ViewComponent: React.ComponentType;
+  if (activeView.startsWith("batch-detail:")) {
+    ViewComponent = BatchDetailView;
+  } else {
+    ViewComponent = VIEW_REGISTRY[activeView] ?? OverviewView;
+  }
 
   return (
     <div className="min-h-screen w-full bg-muted/30">

@@ -108,8 +108,8 @@ export function OverviewView() {
           className="lg:col-span-2"
         >
           <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-            The full intelligence flow below is a conceptual preview. Phase 1 implements the
-            foundation layers (entities, taxonomy, provenance). Analytical layers activate in later phases.
+            The full intelligence flow below is a conceptual preview. Phase 1+2 implement the
+            foundation (entities, taxonomy, provenance, ingestion). Analytical layers activate in later phases.
           </p>
           <ArchitectureFlow nodes={flow} />
         </EvidencePanel>
@@ -142,12 +142,16 @@ export function OverviewView() {
         </EvidencePanel>
       </section>
 
+      {/* Data Health section (Phase 2) */}
+      <DataHealthSection />
+
       {/* Phase roadmap */}
       <section className="space-y-3">
         <SectionLabel>Phase Roadmap</SectionLabel>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {[
             { p: "Phase 1", t: "Foundation & Data Model", d: "Entities, taxonomy, provenance, RBAC, dashboard shell.", active: true },
+            { p: "Phase 2", t: "Data & Evidence Ingestion", d: "Trusted ingestion layer: CSV/JSON, validation, dedupe, quality scoring, provenance, audit.", active: true },
             { p: "Phase 4", t: "Labour-Market Intelligence", d: "Job-posting signals, employer surveys, sector growth.", active: false },
             { p: "Phase 7", t: "Employer Validation", d: "Structured employer demand-validation workflows.", active: false },
             { p: "Phase 9", t: "District Action Plans", d: "Generate district-level training plans from evidence.", active: false },
@@ -168,5 +172,75 @@ export function OverviewView() {
         </div>
       </section>
     </div>
+  );
+}
+
+function DataHealthSection() {
+  const { data: meta, loading } = useFetch<PlatformMeta>("/api/v1/meta");
+  const setActiveView = useNav((s) => s.setActiveView);
+  const dh = meta?.dataHealth;
+  if (!dh) return null;
+
+  const metrics = [
+    { label: "Data Sources", value: meta?.counts.dataSources ?? 0, hint: `${dh.activeSources} active`, tone: "info" as const, view: "data-sources" },
+    { label: "Recent Imports", value: dh.recentImports, hint: "last 30 days", tone: "default" as const, view: "import-batches" },
+    { label: "Records Ingested", value: dh.totalIngested, hint: "across all evidence", tone: "positive" as const, view: "records-explorer" },
+    { label: "Avg Quality", value: `${dh.avgQuality}%`, hint: `${dh.totalBatches} batches`, tone: dh.avgQuality >= 85 ? "positive" : "attention", view: "data-quality" },
+  ];
+
+  const breakdown = [
+    { k: "Job Postings", v: dh.jobPostings, entity: "job_posting" },
+    { k: "Employer Surveys", v: dh.employerSurveys, entity: "employer_survey" },
+    { k: "Consultations", v: dh.industryConsultations, entity: "industry_consultation" },
+    { k: "Sector Growth", v: dh.sectorGrowth, entity: "sector_growth" },
+    { k: "Placements", v: dh.placementOutcomes, entity: "placement_outcome" },
+    { k: "Tech Trends", v: dh.technologyTrends, entity: "technology_trend" },
+  ];
+  const max = Math.max(...breakdown.map((b) => b.v), 1);
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center justify-between">
+        <SectionLabel>Data Health</SectionLabel>
+        <span className="text-[11px] text-muted-foreground">Phase 2 — all values derived from DB, never hard-coded</span>
+      </div>
+      {loading ? (
+        <LoadingState label="Loading data health…" />
+      ) : (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {metrics.map((m) => (
+              <button key={m.label} onClick={() => setActiveView(m.view)} className="text-left transition-transform hover:-translate-y-0.5">
+                <MetricCard label={m.label} value={m.value} hint={m.hint} tone={m.tone} />
+              </button>
+            ))}
+          </div>
+
+          <EvidencePanel title="Ingested Evidence Breakdown" source="Ingestion" lastUpdated="live">
+            <div className="space-y-2.5">
+              {breakdown.map((b) => (
+                <button
+                  key={b.k}
+                  onClick={() => setActiveView("records-explorer")}
+                  className="block w-full text-left"
+                >
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-muted-foreground">{b.k}</span>
+                    <span className="tabular-nums font-medium">{b.v}</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full bg-primary transition-all" style={{ width: `${(b.v / max) * 100}%` }} />
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className="mt-3 flex items-center gap-2">
+              <StatusPill tone="info" dot>SYNTHETIC / MODELLED / DEMO</StatusPill>
+              <span className="text-[11px] text-muted-foreground">No real government data ingested yet.</span>
+            </div>
+          </EvidencePanel>
+        </>
+      )}
+    </section>
   );
 }

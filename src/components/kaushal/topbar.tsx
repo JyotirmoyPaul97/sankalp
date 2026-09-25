@@ -43,6 +43,12 @@ const VIEW_TITLES: Record<string, string> = {
   outcomes: "Outcomes",
   "data-sources": "Data Sources",
   admin: "Administration",
+  upload: "Upload Dataset",
+  "import-batches": "Import Batches",
+  "data-quality": "Data Quality",
+  "records-explorer": "Records Explorer",
+  provenance: "Provenance",
+  "audit-logs": "Audit Logs",
 };
 
 interface TopbarProps {

@@ -1,0 +1,61 @@
+source_record_id,employer,role,district,sector,posted_at,data_status
+JOB-G-0001,Demo Automation Works,Automation Engineer,Pune,Advanced Manufacturing,2026-01-15,SYNTHETIC
+JOB-G-0002,Demo Robotics Industries,PLC Technician,Nashik,Advanced Manufacturing,2026-01-20,SYNTHETIC
+JOB-G-0003,Demo Precision Manufacturing,Robotics Technician,Nagpur,Advanced Manufacturing,2026-01-26,SYNTHETIC
+JOB-G-0004,Demo Motors EV,Software Developer,Pune,Automotive,2026-01-31,SYNTHETIC
+JOB-G-0005,Demo Auto Components,EV Technician,Nashik,Automotive,2026-02-06,SYNTHETIC
+JOB-G-0006,Demo EV Drive Systems,Automation Engineer,Nagpur,Automotive,2026-02-12,SYNTHETIC
+JOB-G-0007,Demo Software Solutions,PLC Technician,Pune,Information Technology,2026-02-17,SYNTHETIC
+JOB-G-0008,Demo Digital Services,Robotics Technician,Nashik,Information Technology,2026-02-23,SYNTHETIC
+JOB-G-0009,Demo Cloud Systems,Software Developer,Nagpur,Information Technology,2026-03-01,SYNTHETIC
+JOB-G-0010,Demo Automation Works,EV Technician,Pune,Advanced Manufacturing,2026-03-06,SYNTHETIC
+JOB-G-0011,Demo Robotics Industries,Automation Engineer,Nashik,Advanced Manufacturing,2026-03-12,SYNTHETIC
+JOB-G-0012,Demo Precision Manufacturing,PLC Technician,Nagpur,Advanced Manufacturing,2026-03-18,SYNTHETIC
+JOB-G-0013,Demo Motors EV,Robotics Technician,Pune,Automotive,2026-03-23,SYNTHETIC
+JOB-G-0014,Demo Auto Components,Software Developer,Nashik,Automotive,2026-03-29,SYNTHETIC
+JOB-G-0015,Demo EV Drive Systems,EV Technician,Nagpur,Automotive,2026-04-03,SYNTHETIC
+JOB-G-0016,Demo Software Solutions,Automation Engineer,Pune,Information Technology,2026-04-09,SYNTHETIC
+JOB-G-0017,Demo Digital Services,PLC Technician,Nashik,Information Technology,2026-04-15,SYNTHETIC
+JOB-G-0018,Demo Cloud Systems,Robotics Technician,Nagpur,Information Technology,2026-04-20,SYNTHETIC
+JOB-G-0019,Demo Automation Works,Software Developer,Pune,Advanced Manufacturing,2026-04-26,SYNTHETIC
+JOB-G-0020,Demo Robotics Industries,EV Technician,Nashik,Advanced Manufacturing,2026-05-02,SYNTHETIC
+JOB-G-0021,Demo Precision Manufacturing,Automation Engineer,Nagpur,Advanced Manufacturing,2026-05-07,SYNTHETIC
+JOB-G-0022,Demo Motors EV,PLC Technician,Pune,Automotive,2026-05-13,SYNTHETIC
+JOB-G-0023,Demo Auto Components,Robotics Technician,Nashik,Automotive,2026-05-19,SYNTHETIC
+JOB-G-0024,Demo EV Drive Systems,Software Developer,Nagpur,Automotive,2026-05-24,SYNTHETIC
+JOB-G-0025,Demo Software Solutions,EV Technician,Pune,Information Technology,2026-05-30,SYNTHETIC
+JOB-G-0026,Demo Digital Services,Automation Engineer,Nashik,Information Technology,2026-06-04,SYNTHETIC
+JOB-G-0027,Demo Cloud Systems,PLC Technician,Nagpur,Information Technology,2026-06-10,SYNTHETIC
+JOB-G-0028,Demo Automation Works,Robotics Technician,Pune,Advanced Manufacturing,2026-06-16,SYNTHETIC
+JOB-G-0029,Demo Robotics Industries,Software Developer,Nashik,Advanced Manufacturing,2026-06-21,SYNTHETIC
+JOB-G-0030,Demo Precision Manufacturing,EV Technician,Nagpur,Advanced Manufacturing,2026-06-27,SYNTHETIC
+JOB-G-0031,Demo Motors EV,Automation Engineer,Pune,Automotive,2026-07-03,SYNTHETIC
+JOB-G-0032,Demo Auto Components,PLC Technician,Nashik,Automotive,2026-07-08,SYNTHETIC
+JOB-G-0033,Demo EV Drive Systems,Robotics Technician,Nagpur,Automotive,2026-07-14,SYNTHETIC
+JOB-G-0034,Demo Software Solutions,Software Developer,Pune,Information Technology,2026-07-20,SYNTHETIC
+JOB-G-0035,Demo Digital Services,EV Technician,Nashik,Information Technology,2026-07-25,SYNTHETIC
+JOB-G-0036,Demo Cloud Systems,Automation Engineer,Nagpur,Information Technology,2026-07-31,SYNTHETIC
+JOB-G-0037,Demo Automation Works,PLC Technician,Pune,Advanced Manufacturing,2026-08-05,SYNTHETIC
+JOB-G-0038,Demo Robotics Industries,Robotics Technician,Nashik,Advanced Manufacturing,2026-08-11,SYNTHETIC
+JOB-G-0039,Demo Precision Manufacturing,Software Developer,Nagpur,Advanced Manufacturing,2026-08-17,SYNTHETIC
+JOB-G-0040,Demo Motors EV,EV Technician,Pune,Automotive,2026-08-22,SYNTHETIC
+JOB-G-0041,Demo Auto Components,Automation Engineer,Nashik,Automotive,2026-08-28,SYNTHETIC
+JOB-G-0042,Demo EV Drive Systems,PLC Technician,Nagpur,Automotive,2026-09-03,SYNTHETIC
+JOB-G-0043,Demo Software Solutions,Robotics Technician,Pune,Information Technology,2026-09-08,SYNTHETIC
+JOB-G-0044,Demo Digital Services,Software Developer,Nashik,Information Technology,2026-09-14,SYNTHETIC
+JOB-G-0045,Demo Cloud Systems,EV Technician,Nagpur,Information Technology,2026-09-20,SYNTHETIC
+JOB-G-0046,Demo Automation Works,,Pune,Advanced Manufacturing,2026-07-23,SYNTHETIC
+JOB-G-0047,Demo Robotics Industries,,Nashik,Advanced Manufacturing,2026-07-27,SYNTHETIC
+JOB-G-0048,Demo Precision Manufacturing,,Nagpur,Advanced Manufacturing,2026-07-31,SYNTHETIC
+JOB-G-0049,Demo Motors EV,Software Developer,Pune,Automotive,2026-13-45,SYNTHETIC
+JOB-G-0050,Demo Auto Components,EV Technician,Nashik,Automotive,not-a-date,SYNTHETIC
+JOB-G-0051,Demo EV Drive Systems,Automation Engineer,Nagpur,Automotive,2026/09/20,SYNTHETIC
+JOB-G-0052,Demo Software Solutions,PLC Technician,Mumbai,Information Technology,2026-08-17,SYNTHETIC
+JOB-G-0053,Demo Digital Services,Robotics Technician,Aurangabad,Information Technology,2026-08-21,SYNTHETIC
+JOB-G-0054,Demo Cloud Systems,Software Developer,Thane,Information Technology,2026-08-25,SYNTHETIC
+JOB-G-0055,Demo Automation Works,EV Technician,Pune,Advanced Manufacturing,2026-08-29,FAKE
+JOB-G-0056,Demo Robotics Industries,Automation Engineer,Nashik,Advanced Manufacturing,2026-09-03,PRODUCTION
+JOB-G-0057,Demo Precision Manufacturing,PLC Technician,Nagpur,Advanced Manufacturing,2026-09-07,LIVE
+JOB-G-0001,Demo Automation Works,Automation Engineer,Pune,Advanced Manufacturing,2026-01-15,SYNTHETIC
+JOB-G-0002,Demo Robotics Industries,PLC Technician,Nashik,Advanced Manufacturing,2026-01-20,SYNTHETIC
+JOB-G-0058,Demo Precision Manufacturing,Robotics Technician,Nagpur,Advanced Manufacturing,2026-01-26,SYNTHETIC

@@ -1,10 +1,20 @@
 // =====================================================================
-// KAUSHAL DRISHTI — Prisma Schema (Phase 1)
+// KAUSHAL DRISHTI — Prisma Schema (Phase 1 + Phase 2)
 // Maharashtra Skill Intelligence & Policy Decision Platform
 // ---------------------------------------------------------------------
 // Adapted for SQLite: no native enums (String + app-level validation),
 // no native UUID (cuid), no PostGIS (Float lat/long, geospatial-ready
 // for future PostgreSQL/PostGIS migration without logical changes).
+//
+// Phase 2 additions:
+//   - Extended DataSource (provider, geography_level, frequency, is_active)
+//   - UploadedFile (file metadata + checksums)
+//   - IngestionBatch (per-import summary + quality score)
+//   - IngestionRecord (raw record tracking + provenance + fingerprint)
+//   - IngestionError (per-record validation errors/warnings)
+//   - AuditLog (ingestion audit events)
+//   - Entity-specific evidence tables: JobPosting, EmployerSurvey,
+//     IndustryConsultation, SectorGrowth, PlacementOutcome, TechnologyTrend
 // =====================================================================
 
 generator client {
@@ -53,8 +63,11 @@ model District {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  employers    Employer[]
-  institutions Institution[]
+  employers       Employer[]
+  institutions    Institution[]
+  jobPostings     JobPosting[]      @relation("JobPostingDistrict")
+  employerSurveys EmployerSurvey[]  @relation("EmployerSurveyDistrict")
+  placementOutcomes PlacementOutcome[] @relation("PlacementOutcomeDistrict")
 
   @@index([stateCode])
   @@map("districts")
@@ -72,9 +85,13 @@ model Sector {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  employers  Employer[]  @relation("EmployerSector")
-  jobRoles   JobRole[]   @relation("JobRoleSector")
-  courses    Course[]    @relation("CourseSector")
+  employers             Employer[]              @relation("EmployerSector")
+  jobRoles              JobRole[]               @relation("JobRoleSector")
+  courses               Course[]                @relation("CourseSector")
+  jobPostings           JobPosting[]            @relation("JobPostingSector")
+  industryConsultations IndustryConsultation[]  @relation("IndustryConsultationSector")
+  sectorGrowth          SectorGrowth[]           @relation("SectorGrowthSector")
+  technologyTrends      TechnologyTrend[]        @relation("TechnologyTrendSector")
 
   @@map("sectors")
 }
@@ -108,6 +125,8 @@ model JobRole {
   sector      Sector?       @relation("JobRoleSector", fields: [sectorId], references: [id])
   roleSkills RoleSkill[]
   employerRoles EmployerRole[]
+  jobPostings  JobPosting[]
+  employerSurveys EmployerSurvey[]
 
   @@map("job_roles")
 }
@@ -147,6 +166,7 @@ model Institution {
 
   district          District?          @relation(fields: [districtId], references: [id])
   courseInstitutions CourseInstitution[]
+  placementOutcomes PlacementOutcome[]
 
   @@index([districtId])
   @@map("institutions")
@@ -169,6 +189,7 @@ model Course {
   qualification Qualification?   @relation(fields: [qualificationId], references: [id])
   courseSkills CourseSkill[]
   courseInstitutions CourseInstitution[]
+  placementOutcomes PlacementOutcome[]
 
   @@index([sectorId])
   @@index([qualificationId])
@@ -195,6 +216,8 @@ model Employer {
   industrySector Sector?       @relation("EmployerSector", fields: [industrySectorId], references: [id])
   district       District?     @relation(fields: [districtId], references: [id])
   employerRoles  EmployerRole[]
+  jobPostings    JobPosting[]
+  employerSurveys EmployerSurvey[]
 
   @@index([industrySectorId])
   @@index([districtId])
@@ -265,17 +288,383 @@ model EmployerRole {
 model DataSource {
   id            String    @id @default(cuid())
   name          String
-  // JOB_POSTING | EMPLOYER_SURVEY | INDUSTRY_CONSULTATION | SECTOR_GROWTH |
-  // PLACEMENT_OUTCOME | TECHNOLOGY_TREND | TRAINING_PROVIDER | GOVERNMENT
+  // JOB_POSTINGS | EMPLOYER_SURVEY | INDUSTRY_CONSULTATION | SECTOR_GROWTH |
+  // PLACEMENT_OUTCOME | TECHNOLOGY_TREND | TRAINING_DATA | COURSE_DATA |
+  // INSTITUTION_DATA | TRAINER_DATA | EQUIPMENT_DATA | OTHER
   sourceType    String    @map("source_type")
   description   String?
+  // Provider abstraction: SyntheticDataProvider | CSVDataProvider |
+  // JSONDataProvider | ManualEntryProvider | (future: OfficialGovernmentProvider)
+  providerName  String?   @map("provider_name")
   sourceUrl     String?   @map("source_url")
+  // External reference code/identifier from the originating system
+  sourceReference String? @map("source_reference")
   // REAL | SYNTHETIC | MODELLED | DEMO | UNKNOWN
   dataStatus    String    @default("DEMO") @map("data_status")
+  // STATE | DIVISION | DISTRICT | TALUKA | INSTITUTION | EMPLOYER | NATIONAL | OTHER
+  geographyLevel String? @map("geography_level")
+  // DAILY | WEEKLY | MONTHLY | QUARTERLY | ANNUAL | ADHOC
+  updateFrequency String? @map("update_frequency")
   lastUpdatedAt DateTime? @map("last_updated_at")
+  isActive      Boolean   @default(true) @map("is_active")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
+  batches              IngestionBatch[]
+  ingestionRecords     IngestionRecord[]
+  jobPostings          JobPosting[]            @relation("JobPostingSource")
+  employerSurveys      EmployerSurvey[]        @relation("EmployerSurveySource")
+  industryConsultations IndustryConsultation[]  @relation("IndustryConsultationSource")
+  sectorGrowth          SectorGrowth[]           @relation("SectorGrowthSource")
+  placementOutcomes    PlacementOutcome[]      @relation("PlacementOutcomeSource")
+  technologyTrends     TechnologyTrend[]        @relation("TechnologyTrendSource")
+
   @@index([dataStatus])
+  @@index([sourceType])
+  @@index([isActive])
   @@map("data_sources")
+}
+
+// =====================================================================
+// PHASE 2 — DATA & EVIDENCE INGESTION LAYER
+// =====================================================================
+
+// ---------------------------------------------------------------------
+// Uploaded file metadata (physical file lives in storage/ abstraction)
+// ---------------------------------------------------------------------
+
+model UploadedFile {
+  id           String   @id @default(cuid())
+  fileName     String   @map("file_name")
+  // Original client filename (sanitized)
+  fileType     String   @map("file_type")
+  // Storage key under storage/ (e.g. "ingestion/2026/09/<cuid>.csv")
+  storageKey   String   @unique @map("storage_key")
+  sizeBytes    Int      @map("size_bytes")
+  // SHA-256 hex
+  checksum     String   @unique
+  uploadedBy   String?  @map("uploaded_by")
+  uploadedAt   DateTime @default(now()) @map("uploaded_at")
+
+  batches IngestionBatch[]
+
+  @@index([checksum])
+  @@map("uploaded_files")
+}
+
+// ---------------------------------------------------------------------
+// Ingestion batch — one per import operation
+// ---------------------------------------------------------------------
+
+model IngestionBatch {
+  id               String    @id @default(cuid())
+  // Human-readable batch ID, e.g. ING-2026-0001
+  batchCode        String    @unique @map("batch_code")
+  dataSourceId     String    @map("data_source_id")
+  uploadedFileId   String?   @map("uploaded_file_id")
+  fileName         String?   @map("file_name")
+  // csv | json | manual | synthetic
+  fileType         String    @default("csv") @map("file_type")
+  // REPLACE | APPEND | UPSERT
+  importMode       String    @default("UPSERT") @map("import_mode")
+  recordsReceived  Int       @default(0) @map("records_received")
+  recordsAccepted  Int       @default(0) @map("records_accepted")
+  recordsRejected  Int       @default(0) @map("records_rejected")
+  recordsDuplicate Int       @default(0) @map("records_duplicate")
+  recordsWarning   Int       @default(0) @map("records_warning")
+  // UPLOADED | VALIDATING | PROCESSING | COMPLETED |
+  // COMPLETED_WITH_WARNINGS | FAILED | CANCELLED
+  status           String    @default("UPLOADED")
+  startedAt        DateTime  @default(now()) @map("started_at")
+  completedAt      DateTime? @map("completed_at")
+  errorSummary     String?   @map("error_summary")
+  // Deterministic quality score 0-100
+  qualityScore     Int?      @map("quality_score")
+  createdBy        String?   @map("created_by")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  dataSource     DataSource     @relation(fields: [dataSourceId], references: [id])
+  uploadedFile   UploadedFile?  @relation(fields: [uploadedFileId], references: [id])
+  records        IngestionRecord[]
+  errors         IngestionError[]
+  jobPostings          JobPosting[]            @relation("JobPostingBatch")
+  employerSurveys      EmployerSurvey[]        @relation("EmployerSurveyBatch")
+  industryConsultations IndustryConsultation[]  @relation("IndustryConsultationBatch")
+  sectorGrowth          SectorGrowth[]           @relation("SectorGrowthBatch")
+  placementOutcomes    PlacementOutcome[]      @relation("PlacementOutcomeBatch")
+  technologyTrends     TechnologyTrend[]        @relation("TechnologyTrendBatch")
+
+  @@index([dataSourceId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("ingestion_batches")
+}
+
+// ---------------------------------------------------------------------
+// Raw record tracking — preserves source identity + provenance
+// ---------------------------------------------------------------------
+
+model IngestionRecord {
+  id              String    @id @default(cuid())
+  sourceId        String    @map("source_id")
+  batchId         String    @map("batch_id")
+  // Original ID from the source system (e.g. JOB-00017)
+  sourceRecordId  String?   @map("source_record_id")
+  sourceTimestamp DateTime? @map("source_timestamp")
+  ingestedAt      DateTime  @default(now()) @map("ingested_at")
+  // REAL | SYNTHETIC | MODELLED | DEMO | UNKNOWN (inherited from source)
+  dataStatus      String    @default("DEMO") @map("data_status")
+  // job_posting | employer_survey | industry_consultation | sector_growth |
+  // placement_outcome | technology_trend
+  entityType      String    @map("entity_type")
+  // ID of the normalized stored record (FK to entity-specific table)
+  normalizedId    String?   @map("normalized_id")
+  // ACCEPTED | REJECTED | POSSIBLE_DUPLICATE | DUPLICATE
+  qualityStatus   String    @default("ACCEPTED") @map("quality_status")
+  // Compound fingerprint for dedup (sha256 of key fields)
+  fingerprint     String?
+  // Original record preserved as JSON
+  rawJson         String    @map("raw_json")
+
+  source          DataSource      @relation(fields: [sourceId], references: [id])
+  batch           IngestionBatch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, sourceRecordId])
+  @@index([batchId])
+  @@index([sourceId])
+  @@index([entityType])
+  @@index([normalizedId])
+  @@index([fingerprint])
+  @@map("ingestion_records")
+}
+
+// ---------------------------------------------------------------------
+// Ingestion errors / warnings — per-record quality issues
+// ---------------------------------------------------------------------
+
+model IngestionError {
+  id              String   @id @default(cuid())
+  batchId         String   @map("batch_id")
+  // 1-based row number in the source file
+  rowNumber       Int      @map("row_number")
+  field           String?
+  problem         String
+  // ERROR | WARNING | INFO
+  severity        String   @default("ERROR")
+  suggestedAction String?  @map("suggested_action")
+  recordPreview   String?  @map("record_preview")
+
+  batch           IngestionBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([batchId])
+  @@index([severity])
+  @@map("ingestion_errors")
+}
+
+// ---------------------------------------------------------------------
+// Audit log — ingestion + admin actions
+// ---------------------------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?  @map("user_id")
+  userEmail  String?  @map("user_email")
+  // UPLOADED_DATASET | VALIDATED_DATASET | CONFIRMED_IMPORT | CREATED_SOURCE |
+  // UPDATED_SOURCE | DELETED_SOURCE | LOGIN | LOGOUT
+  action     String
+  resource   String?
+  status     String   @default("SUCCESS")
+  details    String?
+  timestamp  DateTime @default(now())
+
+  @@index([action])
+  @@index([timestamp])
+  @@index([userId])
+  @@map("audit_logs")
+}
+
+// =====================================================================
+// Entity-specific evidence tables (normalized storage)
+// Each links back to IngestionRecord for full provenance.
+// =====================================================================
+
+model JobPosting {
+  id              String    @id @default(cuid())
+  sourceId        String    @map("source_id")
+  batchId         String?    @map("batch_id")
+  sourceRecordId  String?   @map("source_record_id")
+  // Free-text employer name from source (pre-resolution)
+  employerName    String    @map("employer_name")
+  employerId      String?   @map("employer_id")
+  roleTitle       String    @map("role_title")
+  jobRoleId       String?   @map("job_role_id")
+  districtId      String?   @map("district_id")
+  districtName    String?   @map("district_name")
+  sectorId        String?   @map("sector_id")
+  postedAt        DateTime? @map("posted_at")
+  dataStatus      String    @default("DEMO") @map("data_status")
+  rawJson         String?   @map("raw_json")
+  ingestedAt      DateTime  @default(now()) @map("ingested_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  source          DataSource      @relation("JobPostingSource", fields: [sourceId], references: [id])
+  batch           IngestionBatch? @relation("JobPostingBatch", fields: [batchId], references: [id])
+  employer        Employer?       @relation(fields: [employerId], references: [id])
+  jobRole         JobRole?        @relation(fields: [jobRoleId], references: [id])
+  district        District?       @relation("JobPostingDistrict", fields: [districtId], references: [id])
+  sector          Sector?         @relation("JobPostingSector", fields: [sectorId], references: [id])
+
+  @@index([sourceId])
+  @@index([batchId])
+  @@index([districtId])
+  @@index([jobRoleId])
+  @@index([postedAt])
+  @@map("job_postings")
+}
+
+model EmployerSurvey {
+  id              String    @id @default(cuid())
+  sourceId        String    @map("source_id")
+  batchId         String?    @map("batch_id")
+  sourceRecordId  String?   @map("source_record_id")
+  employerName    String    @map("employer_name")
+  employerId      String?   @map("employer_id")
+  roleTitle       String?   @map("role_title")
+  jobRoleId       String?   @map("job_role_id")
+  districtId      String?   @map("district_id")
+  responseDate    DateTime? @map("response_date")
+  // 1-5 satisfaction
+  satisfactionScore Int?    @map("satisfaction_score")
+  hiringIntent     String?  @map("hiring_intent")
+  skillGapsReported String? @map("skill_gaps_reported")
+  dataStatus      String    @default("DEMO") @map("data_status")
+  rawJson         String?   @map("raw_json")
+  ingestedAt      DateTime  @default(now()) @map("ingested_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  source          DataSource      @relation("EmployerSurveySource", fields: [sourceId], references: [id])
+  batch           IngestionBatch? @relation("EmployerSurveyBatch", fields: [batchId], references: [id])
+  employer        Employer?       @relation(fields: [employerId], references: [id])
+  jobRole         JobRole?        @relation(fields: [jobRoleId], references: [id])
+  district        District?       @relation("EmployerSurveyDistrict", fields: [districtId], references: [id])
+
+  @@index([sourceId])
+  @@index([batchId])
+  @@index([employerId])
+  @@map("employer_surveys")
+}
+
+model IndustryConsultation {
+  id              String    @id @default(cuid())
+  sourceId        String    @map("source_id")
+  batchId         String?    @map("batch_id")
+  sourceRecordId  String?   @map("source_record_id")
+  sectorId        String?   @map("sector_id")
+  sectorName      String?   @map("sector_name")
+  organization    String
+  consultationDate DateTime? @map("consultation_date")
+  districtId      String?   @map("district_id")
+  keyFindings     String?   @map("key_findings")
+  demandOutlook   String?   @map("demand_outlook")
+  dataStatus      String    @default("DEMO") @map("data_status")
+  rawJson         String?   @map("raw_json")
+  ingestedAt      DateTime  @default(now()) @map("ingested_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  source          DataSource      @relation("IndustryConsultationSource", fields: [sourceId], references: [id])
+  batch           IngestionBatch? @relation("IndustryConsultationBatch", fields: [batchId], references: [id])
+  sector          Sector?         @relation("IndustryConsultationSector", fields: [sectorId], references: [id])
+
+  @@index([sourceId])
+  @@index([batchId])
+  @@index([sectorId])
+  @@map("industry_consultations")
+}
+
+model SectorGrowth {
+  id              String    @id @default(cuid())
+  sourceId        String    @map("source_id")
+  batchId         String?    @map("batch_id")
+  sourceRecordId  String?   @map("source_record_id")
+  sectorId        String?   @map("sector_id")
+  sectorName      String    @map("sector_name")
+  geography       String
+  // e.g. "2025-Q3" or "FY2026"
+  period          String
+  growthRatePct   Float?    @map("growth_rate_pct")
+  outlook         String?
+  dataStatus      String    @default("DEMO") @map("data_status")
+  rawJson         String?   @map("raw_json")
+  ingestedAt      DateTime  @default(now()) @map("ingested_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  source          DataSource      @relation("SectorGrowthSource", fields: [sourceId], references: [id])
+  batch           IngestionBatch? @relation("SectorGrowthBatch", fields: [batchId], references: [id])
+  sector          Sector?         @relation("SectorGrowthSector", fields: [sectorId], references: [id])
+
+  @@index([sourceId])
+  @@index([batchId])
+  @@index([sectorId])
+  @@map("sector_growth")
+}
+
+model PlacementOutcome {
+  id              String    @id @default(cuid())
+  sourceId        String    @map("source_id")
+  batchId         String?    @map("batch_id")
+  sourceRecordId  String?   @map("source_record_id")
+  courseId        String?   @map("course_id")
+  courseName      String?   @map("course_name")
+  institutionId   String?   @map("institution_id")
+  institutionName String?   @map("institution_name")
+  districtId      String?   @map("district_id")
+  period          String
+  totalCandidates Int       @map("total_candidates")
+  placedCount     Int       @map("placed_count")
+  placementRate   Float?    @map("placement_rate")
+  avgSalary       Float?    @map("avg_salary")
+  dataStatus      String    @default("DEMO") @map("data_status")
+  rawJson         String?   @map("raw_json")
+  ingestedAt      DateTime  @default(now()) @map("ingested_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  source          DataSource      @relation("PlacementOutcomeSource", fields: [sourceId], references: [id])
+  batch           IngestionBatch? @relation("PlacementOutcomeBatch", fields: [batchId], references: [id])
+  course          Course?         @relation(fields: [courseId], references: [id])
+  institution     Institution?    @relation(fields: [institutionId], references: [id])
+  district        District?       @relation("PlacementOutcomeDistrict", fields: [districtId], references: [id])
+
+  @@index([sourceId])
+  @@index([batchId])
+  @@index([courseId])
+  @@index([institutionId])
+  @@map("placement_outcomes")
+}
+
+model TechnologyTrend {
+  id              String    @id @default(cuid())
+  sourceId        String    @map("source_id")
+  batchId         String?   @map("batch_id")
+  sourceRecordId  String?   @map("source_record_id")
+  technology      String
+  sectorId        String?   @map("sector_id")
+  sectorName      String?   @map("sector_name")
+  trendDirection  String    @map("trend_direction")
+  // 1-5
+  impactLevel     Int?      @map("impact_level")
+  timeHorizon     String?   @map("time_horizon")
+  notes           String?
+  dataStatus      String    @default("DEMO") @map("data_status")
+  rawJson         String?   @map("raw_json")
+  ingestedAt      DateTime  @default(now()) @map("ingested_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  source          DataSource      @relation("TechnologyTrendSource", fields: [sourceId], references: [id])
+  batch           IngestionBatch? @relation("TechnologyTrendBatch", fields: [batchId], references: [id])
+  sector          Sector?         @relation("TechnologyTrendSector", fields: [sectorId], references: [id])
+
+  @@index([sourceId])
+  @@index([batchId])
+  @@index([sectorId])
+  @@map("technology_trends")
 }

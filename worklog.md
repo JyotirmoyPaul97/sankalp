@@ -103,3 +103,161 @@ Verification (Agent Browser end-to-end):
 
 Stage Summary:
 - Phase 1 COMPLETE and browser-verified. Server running on :3000 (persistent double-fork daemon). All acceptance items PASS or ADAPTED (documented).
+
+# =====================================================================
+# PHASE 2 — DATA & EVIDENCE INGESTION LAYER
+# =====================================================================
+
+Phase 2 builds the trusted data & evidence ingestion layer on top of Phase 1.
+Goal: Source → Provenance → Validation → Quality → Storage → Audit, BEFORE
+any intelligence. No NLP/AI/ML/gap-analysis (those are Phase 3+).
+
+
+---
+Task ID: p2-2
+Agent: test-dataset-generator (subagent)
+Task: Generate synthetic test CSV datasets A-G for ingestion pipeline testing
+
+Work Log:
+- Read existing worklog.md to understand Phase 1 (seeded districts/sectors/job roles) and Phase 2 (ingestion layer) context
+- Created /home/z/my-project/data/synthetic/ directory
+- Authored deterministic Python generator (_generate_datasets.py) covering the JOB_POSTINGS schema:
+  source_record_id, employer, role, district, sector, posted_at, data_status
+- Generated all 7 CSVs with cyclic, deterministic test data (Demo <Name> employer prefix, 2026 dates spread 2026-01-15 .. 2026-09-20)
+- Dataset A: 50 records, 100% valid happy path (all Pune/Nashik/Nagpur, all data_status=SYNTHETIC, unique IDs)
+- Dataset B: 30 records — 10 missing role + 5 missing district + 5 missing posted_at + 10 valid
+- Dataset C: 40 records — 20 unique + 5 exact-duplicate pairs (same source_record_id, byte-identical) + 5 compound-duplicate pairs (different IDs, identical employer+role+district+posted_at fingerprint)
+- Dataset D: 25 records — 8 malformed dates covering distinct failure modes (2026-13-45, not-a-date, 2026/09/20, 32-01-2026, 2026-02-30, 2026-00-15, 2026-04-31, 2026-13-01) + 17 valid
+- Dataset E: 25 records — 8 unknown districts (Mumbai/Aurangabad/Thane) + 17 valid
+- Dataset F: 25 records — 8 invalid data_status (FAKE/PRODUCTION/LIVE/TEST) + 17 valid (alternating DEMO/SYNTHETIC)
+- Dataset G: 60 records — 45 valid + 3 missing role + 3 invalid dates + 3 unknown districts + 3 invalid status + 3 duplicate rows (2 exact + 1 compound) — ~25% reject rate
+- Wrote README.md documenting synthetic-data disclaimer, schema, valid value universe, and per-dataset scenarios
+- Programmatically verified: all 7 headers exact-match spec; all 255 rows have exactly 7 columns; missing-field / bad-district / bad-status / duplicate counts match the per-dataset design invariants
+
+Stage Summary:
+- Files created under /home/z/my-project/data/synthetic/:
+  - dataset_a_valid.csv            (50 records)
+  - dataset_b_missing_fields.csv   (30 records)
+  - dataset_c_duplicates.csv        (40 records)
+  - dataset_d_invalid_dates.csv     (25 records)
+  - dataset_e_unknown_district.csv  (25 records)
+  - dataset_f_invalid_status.csv    (25 records)
+  - dataset_g_mixed.csv            (60 records)
+  - README.md                       (data + schema documentation)
+  - _generate_datasets.py           (deterministic generator, re-runnable)
+- Total: 255 synthetic JOB_POSTINGS rows across 7 datasets, ready for ingestion-pipeline test harness.
+
+---
+Task ID: p2-1
+Agent: GLM (main)
+Task: Extend Prisma schema for Phase 2 (ingestion + provenance + audit)
+
+Work Log:
+- Extended DataSource with providerName, sourceReference, geographyLevel, updateFrequency, isActive
+- Added UploadedFile (file metadata + SHA-256 checksum)
+- Added IngestionBatch (per-import summary, status, quality score, batch code ING-YYYY-NNNN)
+- Added IngestionRecord (raw record tracking: sourceId+batchId+sourceRecordId+fingerprint+rawJson+normalizedId)
+- Added IngestionError (per-record issues: rowNumber+field+problem+severity+suggestedAction)
+- Added AuditLog (ingestion + admin events)
+- Added 6 entity-specific evidence tables: JobPosting, EmployerSurvey, IndustryConsultation, SectorGrowth, PlacementOutcome, TechnologyTrend — each linked back to source+batch for full provenance
+- Added back-relations to District/Sector/Employer/JobRole/Course/Institution/DataSource/IngestionBatch
+- db:push succeeded (SQLite, 25 new tables/relations)
+
+Stage Summary:
+- Schema ready. ~15 new models + 30+ indexes. Geospatial-ready, portable to PostgreSQL/PostGIS.
+
+---
+Task ID: p2-2
+Agent: test-dataset-generator (subagent)
+Task: Generate synthetic test CSV datasets A-G for ingestion pipeline testing
+
+Work Log:
+- Generated 7 test CSV datasets in data/synthetic/ (A=valid 50, B=missing-fields 30, C=duplicates 40, D=invalid-dates 25, E=unknown-district 25, F=invalid-status 25, G=mixed 60 — 255 rows total)
+- Each follows the exact CSV header: source_record_id,employer,role,district,sector,posted_at,data_status
+- Dataset A is 100% valid happy path; G has ~25% reject rate
+- All data clearly labelled SYNTHETIC DEMONSTRATION DATA
+
+Stage Summary:
+- 8 files in data/synthetic/ (7 CSVs + README + deterministic generator script)
+
+---
+Task ID: p2-3 to p2-5
+Agent: GLM (main)
+Task: Storage abstraction + ingestion service lib + API routes
+
+Work Log:
+- src/lib/storage.ts: safe filenames, SHA-256, storage/ dir, file-type allow-list (.csv/.json), blocked extensions (.exe/.sh/.py/.js/.php…), 25 MB limit, path-traversal guard
+- src/lib/ingestion/vocab.ts: controlled vocabularies (source types, data statuses, geography, frequency, batch status, severity, entity types)
+- src/lib/ingestion/normalize.ts: whitespace/title-case/date/enum/int/float normalization (NO semantic/ML normalization — that is Phase 3)
+- src/lib/ingestion/validate.ts: Zod-equivalent validators per entity (completeness, validity, referential integrity) + compound fingerprint for dedup
+- src/lib/ingestion/dedupe.ts: exact (sourceId+sourceRecordId) + compound (fingerprint) deduplication against DB
+- src/lib/ingestion/quality.ts: deterministic quality score = 0.35·completeness + 0.30·validity + 0.20·uniqueness + 0.15·consistency (NO ML)
+- src/lib/ingestion/parser.ts: minimal RFC-4180 CSV parser + JSON parser (no external deps)
+- src/lib/ingestion/providers.ts: SyntheticDataProvider, CSVDataProvider, JSONDataProvider, ManualEntryProvider (extension point for OfficialGovernmentProvider)
+- src/lib/ingestion/pipeline.ts: two-phase orchestrator — previewAndValidate() + confirmAndStoreFromRecords() with $transaction + batch inserts
+- API routes: /api/v1/ingestion/upload (multipart, admin-only), /confirm, /batches, /batches/[id], /api/v1/data-quality/[batchId], /api/v1/records/[entity], /api/v1/audit-logs, PATCH/GET /api/v1/data-sources/[id]
+- Extended /api/v1/meta with dataHealth block (activeSources, recentImports, totalIngested, avgQuality, per-entity counts)
+- requireAdmin() added to src/lib/auth.ts (STATE_ADMIN + AUDITOR only)
+
+Stage Summary:
+- Full ingestion pipeline operational. All admin routes JWT-protected.
+
+---
+Task ID: p2-6
+Agent: GLM (main)
+Task: Large synthetic seed running through ingestion pipeline
+
+Work Log:
+- prisma/seed-phase2.ts: idempotent seed that wipes Phase 2 tables, extends employer catalogue to 30+, creates 8 data sources (6 evidence-type sources + DEMO + inactive real placeholder), generates internally-consistent records and runs them through previewAndValidate() + confirmAndStoreFromRecords()
+- Counts: 120 job postings, 55 surveys, 24 consultations, 32 sector growth, 110 placements, 34 tech trends + 50 from Dataset A CSV = 425 ingested records across 7 batches
+- Each batch carries a quality score (100 for clean synthetic, 87 for Dataset A which had warnings)
+- Provenance fully wired: every JobPosting/.../TechnologyTrend links back to source + batch; IngestionRecord preserves raw JSON + fingerprint
+
+Stage Summary:
+- bun run db:seed:phase2 succeeds. DB now has 8 sources, 7 batches, 425 records, 45 validation errors, 7 audit logs.
+
+---
+Task ID: p2-7 to p2-8
+Agent: GLM (main)
+Task: Data Operations frontend + Overview Data Health section
+
+Work Log:
+- New sidebar group "Data Operations": Upload Dataset, Import Batches, Data Quality, Records Explorer, Provenance, Audit Logs
+- upload-view.tsx: 5-step stepper (Select Source → Upload File → Preview → Confirm → Result) with quality score bars + sample issues table
+- import-batches-view.tsx: batch list + BatchDetailView (provenance sample + validation issues table)
+- data-quality-view.tsx: per-batch quality dashboard (4 dimensions with progress bars + top problem fields)
+- records-explorer-view.tsx: generic explorer across all 6 evidence tables with entity/search/status filters
+- provenance-view.tsx: Source → Batch → Record chain visualization
+- audit-logs-view.tsx: ingestion/admin audit trail with action filter
+- data-sources-view.tsx: rewritten as functional page with create/edit Dialog (provider, geography, frequency, status, active toggle)
+- admin-view.tsx: added Data Operations quick-link grid (7 cards)
+- overview-view.tsx: added DataHealthSection (4 metric cards + evidence breakdown bars, all from /api/v1/meta.dataHealth)
+- topbar.tsx: registered 6 new view titles
+- app-shell.tsx: registered 6 new views + dynamic "batch-detail:<id>" routing
+
+Stage Summary:
+- 6 new views + 2 rewritten views. All use existing design system (government palette, StatusPill, EvidencePanel, DataTable).
+
+---
+Task ID: p2-9
+Agent: GLM (main)
+Task: Lint + Agent Browser E2E verification of full ingestion flow
+
+Work Log:
+- Lint: 0 errors, 0 warnings
+- E2E verified via Agent Browser (11 screenshots in docs/screenshots/p2-*.png):
+  1. Login as Demo State Admin → Overview shows Data Health section (8 sources, 7 recent imports, 425 records ingested, 98% avg quality, evidence breakdown bars)
+  2. Upload Dataset → stepper Step 1 (select source) → Step 2 (file upload)
+  3. Uploaded dataset_b_missing_fields.csv → pipeline detected missing role fields (ERROR) + unknown employers (WARNING) correctly
+  4. Preview showed quality score, sample issues table, "Import 15 valid records" button
+  5. Confirmed import → Result: "Import Successful, Batch ID ING-2026-0008"
+  6. Import Batches list shows ING-2026-0008
+  7. Data Quality view renders per-dimension scores
+  8. Records Explorer shows ingested records
+  9. Audit Logs show CONFIRMED_IMPORT events
+  10. Batch detail (clicking a row) shows provenance sample + validation issues
+  11. Happy-path: re-uploading Dataset A correctly detected exact duplicates (dedup working) — proves (sourceId, sourceRecordId) uniqueness constraint
+- Console: 0 errors throughout
+
+Stage Summary:
+- Phase 2 COMPLETE and browser-verified. Full vertical slice works: Source → Upload → Validate → Preview → Confirm → Store → Batch → Quality → Explorer → Audit.
