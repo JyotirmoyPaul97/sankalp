@@ -61,7 +61,7 @@ const GROUPS: NavGroup[] = [
       { id: "market-trends", label: "Market Trends", icon: <LineChart className="size-4" />, phase: 4, active: true },
       { id: "evidence-convergence", label: "Evidence Convergence", icon: <Gauge className="size-4" />, phase: 4, active: true },
       { id: "skills", label: "Skills", icon: <Sparkles className="size-4" />, phase: 1, active: true },
-      { id: "skill-intelligence", label: "Skill Intelligence", icon: <Network className="size-4" />, phase: 3, active: true },
+      { id: "skill-intelligence", label: "Skill Intelligence", icon: <Building2 className="size-4" />, phase: 3, active: true },
       { id: "competency-framework", label: "Competency Framework", icon: <Layers3 className="size-4" />, phase: 3, active: true },
     ],
   },
@@ -139,12 +139,13 @@ function getGroupsForRole(role: string | undefined): NavGroup[] {
       { id: "command", label: "Command", items: [
         { id: "overview", label: "Command Centre", icon: <LayoutDashboard className="size-4" />, phase: 9, active: true },
         { id: "district-twin", label: "District Digital Twin", icon: <Building className="size-4" />, phase: 8, active: true },
+        { id: "skill-graph", label: "Skill Intelligence Graph", icon: <Network className="size-4" />, phase: 10, active: true },
       ]},
       { id: "intelligence", label: "Intelligence", items: [
         { id: "labour-market", label: "Labour Market", icon: <TrendingUp className="size-4" />, phase: 4, active: true },
         { id: "emerging-radar", label: "Emerging Radar", icon: <Radar className="size-4" />, phase: 4, active: true },
         { id: "skills", label: "Skills", icon: <Sparkles className="size-4" />, phase: 1, active: true },
-        { id: "skill-intelligence", label: "Skill Intelligence", icon: <Network className="size-4" />, phase: 3, active: true },
+        { id: "skill-intelligence", label: "Skill Intelligence", icon: <Building2 className="size-4" />, phase: 3, active: true },
         { id: "competency-framework", label: "Competency Framework", icon: <Layers3 className="size-4" />, phase: 3, active: true },
       ]},
       { id: "decision-support", label: "Decision Support", items: [
@@ -161,6 +162,8 @@ function getGroupsForRole(role: string | undefined): NavGroup[] {
         { id: "outcomes", label: "District Outcomes", icon: <Activity className="size-4" />, phase: 8, active: true },
       ]},
       { id: "system", label: "System", items: [
+        { id: "data-governance", label: "Data Governance", icon: <Settings className="size-4" />, phase: 10, active: true },
+        { id: "system-health", label: "System Health", icon: <Activity className="size-4" />, phase: 10, active: true },
         { id: "data-sources", label: "Data Sources", icon: <Database className="size-4" />, phase: 2, active: true },
         { id: "admin", label: "Administration", icon: <Settings className="size-4" />, phase: 1, active: true },
       ]},

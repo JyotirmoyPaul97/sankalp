@@ -132,7 +132,7 @@ export async function GET() {
   return ok({
     service: "kaushal-drishti",
     tagline: "From Labour-Market Evidence to Better Skill Decisions.",
-    phase: "phase-9",
+    phase: "phase-10",
     environment: process.env.APP_ENV || "development",
     dataDisclaimer: "Demo Environment — Synthetic Data",
     phases,

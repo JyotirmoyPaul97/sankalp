@@ -30,6 +30,8 @@ import { GapIntelligenceView, GapDetailView, DistrictGapView, ClusterGapView, Ga
 import { DeliveryCapabilityView } from "./views/delivery-capability-view";
 import { CandidateIntelligenceView } from "./views/candidate-intelligence-view";
 import { DistrictTwinView, PolicySandboxView as PolicySandboxDashboard, DistrictOutcomesView } from "./views/district-twin-view";
+import { CopilotPanel } from "./copilot-panel";
+import { SkillGraphView, DataGovernanceView, SystemHealthView } from "./views/skill-graph-view";
 
 const VIEW_REGISTRY: Record<string, React.ComponentType> = {
   overview: OverviewView,
@@ -49,6 +51,9 @@ const VIEW_REGISTRY: Record<string, React.ComponentType> = {
   "delivery-capability": DeliveryCapabilityView,
   "candidate-intelligence": CandidateIntelligenceView,
   "district-twin": DistrictTwinView,
+  "skill-graph": SkillGraphView,
+  "data-governance": DataGovernanceView,
+  "system-health": SystemHealthView,
   "policy-sandbox": PolicySandboxDashboard,
   "district-plans": PolicySandboxDashboard,
   outcomes: DistrictOutcomesView,
@@ -119,13 +124,16 @@ export function AppShell() {
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <span>KAUSHAL DRISHTI · Phase 1 Foundation</span>
+              <span>KAUSHAL DRISHTI · Maharashtra Skill Intelligence & Planning Platform</span>
               <span className="hidden sm:inline">·</span>
               <span className="hidden sm:inline">Maharashtra Skill Intelligence Platform</span>
             </div>
           </div>
         </footer>
       </div>
+
+      {/* Intelligence Copilot — floating panel */}
+      <CopilotPanel />
     </div>
   );
 }
