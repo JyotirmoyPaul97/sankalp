@@ -172,6 +172,7 @@ export interface PlatformMeta {
   counts: Record<string, number>;
   dataHealth?: DataHealth;
   knowledgeHealth?: KnowledgeHealth;
+  marketHealth?: MarketHealth;
 }
 
 export interface AuthUser {
@@ -408,4 +409,115 @@ export interface KnowledgeHealth {
   skillClusters: number;
   roleCompetencies: number;
   courseCompetencies: number;
+}
+
+// =====================================================================
+// PHASE 4 — Labour-Market Intelligence types
+// =====================================================================
+
+export interface MarketIntelligenceObject {
+  scope: string;
+  geographyId: string | null;
+  geographyName: string | null;
+  sectorId: string | null;
+  sectorName: string | null;
+  jobRoleId: string | null;
+  roleTitle: string | null;
+  skillId: string | null;
+  skillName: string | null;
+  period: string;
+  signalStrength: number;
+  signalLabel: "NONE" | "LOW" | "MEDIUM" | "HIGH";
+  trendDirection: string;
+  evidenceCount: number;
+  sourceDiversity: number;
+  sampleSize: number;
+  uniqueEmployers: number;
+  uniquePostings: number;
+  proficiencyDistribution: Record<string, number> | null;
+  confidence: number;
+  confidenceLevel: "HIGH" | "MEDIUM" | "LOW" | "INSUFFICIENT";
+  convergence: "CONVERGING" | "MIXED" | "LIMITED_EVIDENCE" | "INSUFFICIENT_DATA";
+  sourceBreakdown: { sourceType: string; signalValue: number; direction: string; employers: number }[];
+  dataStatus: string;
+  dataFreshness: string;
+  lastRefreshed: string;
+  methodology: string;
+  topRoles?: { name: string; signal: number }[];
+  topSkills?: { name: string; signal: number }[];
+  topSectors?: { name: string; signal: number }[];
+}
+
+export interface MarketDemandRole {
+  role: { id: string; title: string; sector: string | null; competencyCount: number };
+  demandSignal: string;
+  signalStrength: number;
+  trend: string;
+  confidence: string;
+  evidenceCount: number;
+  sourceDiversity: number;
+  uniqueEmployers: number;
+  uniquePostings: number;
+  geographicCoverage: string;
+}
+
+export interface MarketDemandSkill {
+  skill: { id: string; name: string; canonicalName: string; category: string | null; roleLinkages: number; courseLinkages: number };
+  demandSignal: string;
+  signalStrength: number;
+  trend: string;
+  requiredProficiency: Record<string, number> | null;
+  confidence: string;
+  evidenceCount: number;
+  sourceDiversity: number;
+  uniqueEmployers: number;
+  districtCount: number;
+  clusterCount: number;
+  sectorCount: number;
+}
+
+export interface EmergingSkillEntry {
+  skillId: string;
+  skillName: string;
+  emergenceStatus: "EARLY_SIGNAL" | "EMERGING" | "ACCELERATING" | "INSUFFICIENT_EVIDENCE";
+  signalStrength: number;
+  recentActivity: number;
+  trendVelocity: number;
+  persistence: number;
+  sourceDiversity: number;
+  technologyLink: string | null;
+  firstObserved: string | null;
+  confidence: number;
+  evidenceCount: number;
+}
+
+export interface ConvergenceReport {
+  jobPosting: { signal: number; direction: string };
+  employerSurvey: { signal: number; direction: string };
+  industryConsultation: { signal: number; direction: string };
+  sectorGrowth: { signal: number; direction: string };
+  technologyTrend: { signal: number; direction: string };
+  placementOutcome: { signal: number; direction: string };
+  overall: string;
+  sourceDiversity: number;
+  evidenceCount: number;
+  uniqueEmployers: number;
+  confidence: number;
+}
+
+export interface TrendPoint {
+  period: string;
+  signalValue: number;
+  evidenceCount: number;
+  direction: string;
+}
+
+export interface MarketHealth {
+  divisions: number;
+  economicClusters: number;
+  marketSignals: number;
+  demandSnapshots: number;
+  emergingSignals: number;
+  skillSectorPresence: number;
+  sectorGrowthProfiles: number;
 }

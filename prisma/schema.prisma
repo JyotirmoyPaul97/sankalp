@@ -89,6 +89,7 @@ model District {
   placementOutcomes PlacementOutcome[] @relation("PlacementOutcomeDistrict")
   economicClusters EconomicCluster[]
   marketSignals    MarketSignal[]
+  labourContext    DistrictLabourContext[]
 
   @@index([stateCode])
   @@index([divisionId])
@@ -156,6 +157,9 @@ model Sector {
   technologyTrends      TechnologyTrend[]        @relation("TechnologyTrendSector")
   economicClusters      EconomicCluster[]        @relation("EconomicClusterSector")
   marketSignals         MarketSignal[]
+  demandSnapshots       DemandSnapshot[]
+  sectorGrowthProfiles  SectorGrowthProfile[]
+  skillSectorPresence   SkillSectorPresence[]
 
   @@map("sectors")
 }
@@ -176,6 +180,10 @@ model Skill {
   relationsFrom SkillRelation[] @relation("SkillRelationFrom")
   relationsTo   SkillRelation[] @relation("SkillRelationTo")
   clusterMembers SkillClusterMember[]
+  marketSignals  MarketSignal[]
+  demandSnapshots DemandSnapshot[]
+  sectorPresence SkillSectorPresence[]
+  emergingSignal  EmergingSkillSignal?
 
   @@index([category])
   @@map("skills")
@@ -273,6 +281,8 @@ model JobRole {
   employerRoles EmployerRole[]
   jobPostings  JobPosting[]
   employerSurveys EmployerSurvey[]
+  marketSignals  MarketSignal[]
+  demandSnapshots DemandSnapshot[]
 
   @@map("job_roles")
 }
@@ -365,7 +375,6 @@ model Employer {
   jobPostings    JobPosting[]
   employerSurveys EmployerSurvey[]
   clusters       EmployerCluster[]
-  marketSignals  MarketSignal[]
 
   @@index([industrySectorId])
   @@index([districtId])
@@ -665,11 +674,16 @@ model JobPosting {
   jobRole         JobRole?        @relation(fields: [jobRoleId], references: [id])
   district        District?       @relation("JobPostingDistrict", fields: [districtId], references: [id])
   sector          Sector?         @relation("JobPostingSector", fields: [sectorId], references: [id])
+  economicCluster EconomicCluster? @relation(fields: [economicClusterId], references: [id])
+
+  economicClusterId String? @map("economic_cluster_id")
 
   @@index([sourceId])
   @@index([batchId])
   @@index([districtId])
   @@index([jobRoleId])
+  @@index([sectorId])
+  @@index([economicClusterId])
   @@index([postedAt])
   @@map("job_postings")
 }
@@ -819,4 +833,238 @@ model TechnologyTrend {
   @@index([batchId])
   @@index([sectorId])
   @@map("technology_trends")
+}
+
+// =====================================================================
+// PHASE 4 — LABOUR-MARKET & LOCAL ECONOMIC INTELLIGENCE
+// =====================================================================
+
+// Configurable evidence-source weights. NOT scientifically validated —
+// documented as "initial system configuration, subject to validation".
+model EvidenceWeight {
+  id             String  @id @default(cuid())
+  sourceType     String  @unique @map("source_type") // JOB_POSTING | EMPLOYER_SURVEY | ...
+  weight         Float   @default(1.0)
+  reliability    Float   @default(0.5) // 0-1
+  description    String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("evidence_weights")
+}
+
+// Per-period market signal — never overwritten (temporal versioning).
+// One row per (source_type, entity_scope, period) combination.
+model MarketSignal {
+  id            String   @id @default(cuid())
+  sourceType    String   @map("source_type") // JOB_POSTING | EMPLOYER_SURVEY | ...
+  sourceId      String?  @map("source_id")   // DataSource id (provenance)
+
+  districtId    String?  @map("district_id")
+  clusterId     String?  @map("cluster_id")
+  sectorId      String?  @map("sector_id")
+
+  jobRoleId     String?  @map("job_role_id")
+  skillId       String?  @map("skill_id")
+
+  periodStart   DateTime @map("period_start")
+  periodEnd     DateTime @map("period_end")
+  periodLabel   String   @map("period_label") // e.g. "2026-09"
+
+  signalValue   Float    @default(0) @map("signal_value")
+  signalUnit    String   @default("count") @map("signal_unit")
+  direction     String   @default("STABLE") // INCREASING | STABLE | DECREASING | UNKNOWN
+
+  confidence    Float    @default(0) // 0-1
+  sourceDiversity Int    @default(1) @map("source_diversity")
+  sampleSize    Int      @default(0) @map("sample_size")
+  uniqueEmployers Int    @default(0) @map("unique_employers")
+  uniquePostings Int     @default(0) @map("unique_postings")
+
+  dataStatus    String   @default("DEMO") @map("data_status")
+  rawJson       String?  @map("raw_json")
+
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  district      District?        @relation(fields: [districtId], references: [id])
+  cluster       EconomicCluster? @relation(fields: [clusterId], references: [id])
+  sector        Sector?          @relation(fields: [sectorId], references: [id])
+  jobRole       JobRole?         @relation(fields: [jobRoleId], references: [id])
+  skill         Skill?           @relation(fields: [skillId], references: [id])
+
+  @@unique([sourceType, districtId, clusterId, sectorId, jobRoleId, skillId, periodLabel])
+  @@index([sourceType])
+  @@index([districtId])
+  @@index([clusterId])
+  @@index([sectorId])
+  @@index([jobRoleId])
+  @@index([skillId])
+  @@index([periodLabel])
+  @@index([periodStart])
+  @@map("market_signals")
+}
+
+// Aggregated demand snapshot — the main market-intelligence object.
+model DemandSnapshot {
+  id            String   @id @default(cuid())
+
+  // Geography scope: STATE | DISTRICT | CLUSTER
+  scope         String   @default("DISTRICT")
+  geographyId   String?  @map("geography_id") // district or cluster id
+  geographyName String?  @map("geography_name")
+
+  sectorId      String?  @map("sector_id")
+  jobRoleId     String?  @map("job_role_id")
+  skillId       String?  @map("skill_id")
+
+  period        String   // e.g. "2026-09"
+
+  signalStrength Float   @default(0) @map("signal_strength") // 0-100 normalised
+  trendDirection String  @default("UNKNOWN") @map("trend_direction")
+  confidence     Float   @default(0)
+
+  evidenceCount  Int     @default(0) @map("evidence_count")
+  sourceDiversity Int    @default(0) @map("source_diversity")
+  sampleSize     Int     @default(0) @map("sample_size")
+
+  uniqueEmployerCount Int @default(0) @map("unique_employer_count")
+  uniquePostingCount   Int @default(0) @map("unique_posting_count")
+
+  // Proficiency distribution (JSON to keep schema simple in SQLite)
+  proficiencyDistribution String? @map("proficiency_distribution") // {"AWARENESS":10,"WORKING":55,...}
+
+  dataStatus    String   @default("DEMO") @map("data_status")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  sector   Sector?  @relation(fields: [sectorId], references: [id])
+  jobRole  JobRole? @relation(fields: [jobRoleId], references: [id])
+  skill    Skill?   @relation(fields: [skillId], references: [id])
+
+  @@index([scope, geographyId])
+  @@index([sectorId])
+  @@index([jobRoleId])
+  @@index([skillId])
+  @@index([period])
+  @@map("demand_snapshots")
+}
+
+// Market profile — aggregated summaries per scope.
+model MarketProfile {
+  id            String   @id @default(cuid())
+  scope         String   // STATE | DISTRICT | CLUSTER | SECTOR
+  scopeId       String?  @map("scope_id")
+
+  topRoles      String?  @map("top_roles")      // JSON array
+  topSkills     String?  @map("top_skills")     // JSON array
+  topSectors    String?  @map("top_sectors")
+  emergingSkills String? @map("emerging_skills")
+  trendSummary  String?  @map("trend_summary")
+  evidenceSummary String? @map("evidence_summary")
+
+  employerCount Int      @default(0) @map("employer_count")
+  clusterCount   Int      @default(0) @map("cluster_count")
+  avgConfidence  Float    @default(0) @map("avg_confidence")
+  dataFreshness  String?  @map("data_freshness")
+  dataStatus     String   @default("DEMO") @map("data_status")
+
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@unique([scope, scopeId])
+  @@map("market_profiles")
+}
+
+// Sector growth profile — aggregated sector-growth intelligence.
+model SectorGrowthProfile {
+  id            String   @id @default(cuid())
+  sectorId      String?  @map("sector_id")
+  sectorName    String   @map("sector_name")
+  geography     String   // e.g. "Maharashtra" or "Pune"
+  period        String
+
+  observedGrowth Float?  @map("observed_growth") // %
+  growthDirection String @default("STABLE") @map("growth_direction") // INCREASING | STABLE | DECREASING | INSUFFICIENT_DATA
+  changeOverPeriod Float? @map("change_over_period")
+  confidence    Float    @default(0)
+  evidenceCount Int      @default(0) @map("evidence_count")
+  dataStatus    String   @default("DEMO") @map("data_status")
+
+  sector        Sector?  @relation(fields: [sectorId], references: [id])
+
+  @@index([sectorId])
+  @@index([geography])
+  @@index([period])
+  @@map("sector_growth_profiles")
+}
+
+// Skill cross-sector presence — transferable skill visibility.
+model SkillSectorPresence {
+  id            String   @id @default(cuid())
+  skillId       String   @map("skill_id")
+  sectorId      String   @map("sector_id")
+
+  signalStrength Float   @default(0) @map("signal_strength")
+  evidenceCount Int      @default(0) @map("evidence_count")
+  confidence    Float    @default(0)
+
+  skill         Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  sector        Sector  @relation(fields: [sectorId], references: [id], onDelete: Cascade)
+
+  @@unique([skillId, sectorId])
+  @@index([skillId])
+  @@index([sectorId])
+  @@map("skill_sector_presence")
+}
+
+// Emerging skill radar entry.
+model EmergingSkillSignal {
+  id            String   @id @default(cuid())
+  skillId       String   @unique @map("skill_id")
+
+  emergenceStatus String @default("INSUFFICIENT_EVIDENCE") @map("emergence_status") // EARLY_SIGNAL | EMERGING | ACCELERATING | INSUFFICIENT_EVIDENCE
+  signalStrength Float   @default(0) @map("signal_strength") // 0-100
+  recentActivity Float   @default(0) @map("recent_activity")
+  trendVelocity Float   @default(0) @map("trend_velocity")
+  persistence   Float   @default(0) // 0-1
+  sourceDiversity Int   @default(0) @map("source_diversity")
+  technologyLink String? @map("technology_link")
+  firstObserved DateTime? @map("first_observed")
+  confidence    Float    @default(0)
+  evidenceCount Int      @default(0) @map("evidence_count")
+
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  skill         Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@index([emergenceStatus])
+  @@index([signalStrength])
+  @@map("emerging_skill_signals")
+}
+
+// District labour context — demographic foundation (all optional).
+// NEVER fabricate. NULL when evidence is unavailable.
+model DistrictLabourContext {
+  id            String   @id @default(cuid())
+  districtId    String   @map("district_id")
+  observationPeriod String @map("observation_period")
+
+  population             Int?  @map("population")
+  workingAgePopulation   Int?  @map("working_age_population")
+  labourForceSize        Int?  @map("labour_force_size")
+  educationProfile       String? @map("education_profile") // JSON
+  urbanRuralContext      String? @map("urban_rural_context")
+  migrationSignal        String? @map("migration_signal")
+  sectorConcentration    String? @map("sector_concentration") // JSON
+
+  dataSourceId  String?  @map("data_source_id")
+  confidence    Float    @default(0)
+  dataStatus    String   @default("UNKNOWN") @map("data_status")
+
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  district      District  @relation(fields: [districtId], references: [id], onDelete: Cascade)
+
+  @@unique([districtId, observationPeriod])
+  @@index([districtId])
+  @@map("district_labour_context")
 }

@@ -38,6 +38,7 @@ export async function GET() {
   let counts: Record<string, number> = {};
   let dataHealth: Record<string, number> = {};
   let knowledgeHealth: Record<string, number> = {};
+  let marketHealth: Record<string, number> = {};
   try {
     counts = {
       districts: await db.district.count(),
@@ -55,6 +56,14 @@ export async function GET() {
       skillClusters: await db.skillCluster.count(),
       roleCompetencies: await db.roleSkill.count(),
       courseCompetencies: await db.courseSkill.count(),
+      // Phase 4 market-intelligence counts
+      divisions: await db.division.count(),
+      economicClusters: await db.economicCluster.count(),
+      marketSignals: await db.marketSignal.count(),
+      demandSnapshots: await db.demandSnapshot.count(),
+      emergingSignals: await db.emergingSkillSignal.count(),
+      skillSectorPresence: await db.skillSectorPresence.count(),
+      sectorGrowthProfiles: await db.sectorGrowthProfile.count(),
     };
     // Phase 2 data-health metrics for the Overview page
     const activeSources = await db.dataSource.count({ where: { isActive: true } });
@@ -97,16 +106,26 @@ export async function GET() {
       roleCompetencies: counts.roleCompetencies,
       courseCompetencies: counts.courseCompetencies,
     };
+    marketHealth = {
+      divisions: counts.divisions,
+      economicClusters: counts.economicClusters,
+      marketSignals: counts.marketSignals,
+      demandSnapshots: counts.demandSnapshots,
+      emergingSignals: counts.emergingSignals,
+      skillSectorPresence: counts.skillSectorPresence,
+      sectorGrowthProfiles: counts.sectorGrowthProfiles,
+    };
   } catch {
     counts = {};
     dataHealth = {};
     knowledgeHealth = {};
+    marketHealth = {};
   }
 
   return ok({
     service: "kaushal-drishti",
     tagline: "From Labour-Market Evidence to Better Skill Decisions.",
-    phase: "phase-3",
+    phase: "phase-4",
     environment: process.env.APP_ENV || "development",
     dataDisclaimer: "Demo Environment — Synthetic Data",
     phases,
@@ -115,5 +134,6 @@ export async function GET() {
     counts,
     dataHealth,
     knowledgeHealth,
+    marketHealth,
   });
 }

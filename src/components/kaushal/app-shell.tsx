@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/
 import { OverviewView } from "./views/overview-view";
 import { DistrictsView } from "./views/districts-view";
 import { DistrictProfileView } from "./views/district-profile-view";
-import { LabourMarketView } from "./views/labour-market-view";
+import { LabourMarketView, RoleDemandDetailView, SkillDemandDetailView, EmergingRadarView, EvidenceConvergenceView, MarketTrendsView } from "./views/labour-market-view";
 import { SkillsView } from "./views/skills-view";
 import { TrainingView } from "./views/training-view";
 import { CoursesView } from "./views/courses-view";
@@ -32,6 +32,9 @@ const VIEW_REGISTRY: Record<string, React.ComponentType> = {
   districts: DistrictsView,
   "district-profile": DistrictProfileView,
   "labour-market": LabourMarketView,
+  "emerging-radar": EmergingRadarView,
+  "market-trends": MarketTrendsView,
+  "evidence-convergence": EvidenceConvergenceView,
   skills: SkillsView,
   "skill-intelligence": SkillIntelligenceView,
   "competency-framework": CompetencyFrameworkView,
@@ -56,10 +59,14 @@ export function AppShell() {
   const sidebarOpen = useNav((s) => s.sidebarOpen);
   const setSidebar = useNav((s) => s.setSidebar);
 
-  // Handle "batch-detail:<id>" dynamic view
+  // Handle dynamic views: batch-detail:<id>, role-demand:<id>, skill-demand:<id>
   let ViewComponent: React.ComponentType;
   if (activeView.startsWith("batch-detail:")) {
     ViewComponent = BatchDetailView;
+  } else if (activeView.startsWith("role-demand:")) {
+    ViewComponent = RoleDemandDetailView;
+  } else if (activeView.startsWith("skill-demand:")) {
+    ViewComponent = SkillDemandDetailView;
   } else {
     ViewComponent = VIEW_REGISTRY[activeView] ?? OverviewView;
   }

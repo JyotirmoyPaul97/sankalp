@@ -26,6 +26,9 @@ import {
   FileSearch,
   Network,
   Layers3,
+  Radar,
+  LineChart,
+  Gauge,
 } from "lucide-react";
 
 interface NavItem {
@@ -48,7 +51,10 @@ const GROUPS: NavGroup[] = [
     label: "Intelligence",
     items: [
       { id: "overview", label: "Overview", icon: <LayoutDashboard className="size-4" />, phase: 1, active: true },
-      { id: "labour-market", label: "Labour Market", icon: <TrendingUp className="size-4" />, phase: 4, active: false },
+      { id: "labour-market", label: "Labour Market", icon: <TrendingUp className="size-4" />, phase: 4, active: true },
+      { id: "emerging-radar", label: "Emerging Radar", icon: <Radar className="size-4" />, phase: 4, active: true },
+      { id: "market-trends", label: "Market Trends", icon: <LineChart className="size-4" />, phase: 4, active: true },
+      { id: "evidence-convergence", label: "Evidence Convergence", icon: <Gauge className="size-4" />, phase: 4, active: true },
       { id: "skills", label: "Skills", icon: <Sparkles className="size-4" />, phase: 1, active: true },
       { id: "skill-intelligence", label: "Skill Intelligence", icon: <Network className="size-4" />, phase: 3, active: true },
       { id: "competency-framework", label: "Competency Framework", icon: <Layers3 className="size-4" />, phase: 3, active: true },

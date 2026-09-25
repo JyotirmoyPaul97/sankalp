@@ -11,6 +11,7 @@ import {
   Database,
   ArrowRight,
   Network,
+  TrendingUp,
 } from "lucide-react";
 import { PageHeader, SectionLabel } from "@/components/kaushal/page-header";
 import { MetricCard } from "@/components/kaushal/metric-card";
@@ -149,6 +150,9 @@ export function OverviewView() {
       {/* Knowledge Foundation section (Phase 3) */}
       <KnowledgeFoundationSection />
 
+      {/* Market Intelligence section (Phase 4) */}
+      <MarketIntelligenceSection />
+
       {/* Phase roadmap */}
       <section className="space-y-3">
         <SectionLabel>Phase Roadmap</SectionLabel>
@@ -157,7 +161,8 @@ export function OverviewView() {
             { p: "Phase 1", t: "Foundation & Data Model", d: "Entities, taxonomy, provenance, RBAC, dashboard shell.", active: true },
             { p: "Phase 2", t: "Data & Evidence Ingestion", d: "Trusted ingestion layer: CSV/JSON, validation, dedupe, quality scoring, provenance, audit.", active: true },
             { p: "Phase 3", t: "Knowledge + Competency Foundation", d: "Skill knowledge graph, aliases, relations, clusters, role/course competency profiles.", active: true },
-            { p: "Phase 4", t: "Labour-Market Intelligence", d: "Job-posting signals, employer surveys, sector growth.", active: false },
+            { p: "Phase 4", t: "Labour-Market Intelligence", d: "Demand signals, trends, emerging radar, evidence convergence, cluster intelligence, confidence.", active: true },
+            { p: "Phase 5", t: "Training Supply Intelligence", d: "Course capacity, trainer/equipment analysis (planned).", active: false },
             { p: "Phase 7", t: "Employer Validation", d: "Structured employer demand-validation workflows.", active: false },
             { p: "Phase 9", t: "District Action Plans", d: "Generate district-level training plans from evidence.", active: false },
             { p: "Phase 11", t: "Policy Simulation Engine", d: "Compare policy interventions before implementation.", active: false },
@@ -285,6 +290,50 @@ function KnowledgeFoundationSection() {
           <StatusPill tone="info" dot>NO ML</StatusPill>
           <StatusPill tone="attention" dot>NO demand intelligence (Phase 4)</StatusPill>
           <StatusPill tone="attention" dot>NO gap analysis (later phase)</StatusPill>
+        </div>
+      </EvidencePanel>
+    </section>
+  );
+}
+
+function MarketIntelligenceSection() {
+  const { data: meta } = useFetch<PlatformMeta>("/api/v1/meta");
+  const setActiveView = useNav((s) => s.setActiveView);
+  const mh = meta?.marketHealth;
+  if (!mh) return null;
+
+  const metrics = [
+    { label: "Market Signals", value: mh.marketSignals, hint: "per-period aggregates", tone: "info" as const, view: "labour-market" },
+    { label: "Demand Snapshots", value: mh.demandSnapshots, hint: "aggregated objects", tone: "default" as const, view: "labour-market" },
+    { label: "Economic Clusters", value: mh.economicClusters, hint: `${mh.divisions} divisions`, tone: "default" as const, view: "labour-market" },
+    { label: "Emerging Signals", value: mh.emergingSignals, hint: "radar entries", tone: "attention" as const, view: "emerging-radar" },
+  ];
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center justify-between">
+        <SectionLabel>Market Intelligence</SectionLabel>
+        <span className="text-[11px] text-muted-foreground">Phase 4 — observed market signals, not recommendations</span>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {metrics.map((m) => (
+          <button key={m.label} onClick={() => setActiveView(m.view)} className="text-left transition-transform hover:-translate-y-0.5">
+            <MetricCard label={m.label} value={m.value} hint={m.hint} tone={m.tone} icon={<TrendingUp className="size-4" />} />
+          </button>
+        ))}
+      </div>
+      <EvidencePanel title="Labour-Market Intelligence Engine" source="Phase 4" lastUpdated="live">
+        <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+          Phase 4 builds the labour-market intelligence engine: it aggregates Phase 2 evidence (job postings, surveys, consultations, sector growth, tech trends) through the Phase 3 semantic layer (canonical skills/roles) into per-period Market Signals. The engine computes demand strength, trend direction, emerging-skill radar, evidence convergence, and confidence — all explainable, never converting observations into claims.
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusPill tone="positive" dot>Demand signals</StatusPill>
+          <StatusPill tone="info" dot>Trends (12 periods)</StatusPill>
+          <StatusPill tone="attention" dot>Emerging radar</StatusPill>
+          <StatusPill tone="info" dot>Evidence convergence</StatusPill>
+          <StatusPill tone="attention" dot>NO forecasting</StatusPill>
+          <StatusPill tone="attention" dot>NO gap analysis</StatusPill>
+          <StatusPill tone="attention" dot>NO recommendations</StatusPill>
         </div>
       </EvidencePanel>
     </section>

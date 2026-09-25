@@ -394,3 +394,21 @@ NO forecasting, NO gap analysis, NO recommendations (later phases).
 Pipeline: RAW EVIDENCE → PHASE 2 PROVENANCE → PHASE 3 CANONICAL ENTITY
 → JOB ROLE → COMPETENCY → SKILL → PROFICIENCY → LOCATION → MARKET SIGNAL
 
+
+---
+Task ID: p4-1 to p4-6
+Agent: GLM (main)
+Task: Phase 4 — Labour-Market & Local Economic Intelligence Engine (Part 1 + Part 2)
+
+Work Log:
+- Schema: added Division, EconomicCluster, EmployerCluster (m2m), MarketSignal, DemandSnapshot, MarketProfile, SectorGrowthProfile, SkillSectorPresence, EmergingSkillSignal, DistrictLabourContext, EvidenceWeight. Extended JobPosting with economicClusterId. db:push succeeded.
+- Service lib (src/lib/intelligence/market.ts): computeMarketSignals() scans JobPosting + EmployerSurvey evidence → aggregates into per-period MarketSignal rows (never overwritten — temporal versioning). getMarketIntelligence() assembles the single Market Intelligence Object. computeDemandSnapshots() builds the aggregated demand objects. computeEmergingSkills() radar. computeSkillSectorPresence() cross-sector. getTrendSeries() time-series. getEvidenceConvergence() per-source profile. computeConfidence() = f(diversity, sample, employers). Fixed trend computation to aggregate per-period sums for stable direction.
+- Configurable evidence weights (EvidenceWeight table, defaults documented as "initial system configuration — subject to validation").
+- APIs: /api/v1/market-demand/{roles,skills,proficiency,sectors,districts,clusters,trends,emerging-skills,convergence,market-profile/[scope]/[id],aspiration-context,refresh} (12 endpoints). Admin-only refresh.
+- Seed (seed-phase4.ts): 4 divisions, 10 districts, 11 economic clusters, 178→242 employers, 978 job postings across 12 monthly periods (with increasing trend), 210 surveys, 55 consultations, 110 sector obs, 110 tech obs, 10 district labour context (mostly NULL = data unavailable). Then triggered market-signal computation: 3031 market signals, 2088 demand snapshots, 10 emerging signals, 28 skill-sector presence.
+- Frontend: LabourMarketView (dashboard with role+skill demand tables, district/sector filters), RoleDemandDetailView (competencies + evidence), SkillDemandDetailView (historical trend + convergence), EmergingRadarView (radar cards), EvidenceConvergenceView (per-source bars + MIXED EVIDENCE handling), MarketTrendsView (12-period bar chart with INSUFFICIENT_DATA handling). Updated sidebar (4 new nav items), topbar, overview (MarketIntelligenceSection with 4 metric cards).
+- Fixed crash: Radix Select doesn't accept empty string value — used "ALL"/"_none" pattern.
+- E2E verified via Agent Browser (7 screenshots): login → overview → labour market dashboard → role detail → skill detail → emerging radar → evidence convergence → market trends. 0 console errors.
+
+Stage Summary:
+- Phase 4 COMPLETE and browser-verified. Full Pune→Cluster→Role→Skill demo works. All market intelligence is OBSERVED SIGNALS — no recommendations, no forecasting, no gap analysis.
