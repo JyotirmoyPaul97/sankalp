@@ -521,3 +521,87 @@ export interface MarketHealth {
   skillSectorPresence: number;
   sectorGrowthProfiles: number;
 }
+
+// =====================================================================
+// PHASE 5 PART 2 — Demand-Supply Gap Intelligence types
+// =====================================================================
+
+export interface GapSignal {
+  id: string;
+  districtId: string | null;
+  clusterId: string | null;
+  sectorId: string | null;
+  jobRoleId: string | null;
+  skillId: string | null;
+  period: string;
+  marketDemandSignal: string;
+  marketDemandStrength: number;
+  trainingSupplySignal: string;
+  trainingSupplyStrength: number;
+  demandIndex: number | null;
+  supplyIndex: number | null;
+  coverageStatus: string;
+  proficiencyStatus: string;
+  capacityStatus: string;
+  geographicStatus: string;
+  gapSignal: string;
+  gapType: string | null;
+  gapScore: number;
+  confidence: number;
+  confidenceLevel: string;
+  marketEvidenceCount: number;
+  trainingEvidenceCount: number;
+  sourceDiversity: number;
+  uniqueEmployers: number;
+  trendDirection: string;
+  requiredProficiency: string | null;
+  trainingProficiency: string | null;
+  plannedCapacity: number;
+  enrolledCount: number | null;
+  completedCount: number | null;
+  certifiedCount: number | null;
+  courseCount: number;
+  institutionCount: number;
+  centreCount: number;
+  dataStatus: string;
+  skill?: { id: string; name: string; canonicalName: string } | null;
+  jobRole?: { id: string; title: string } | null;
+  district?: { id: string; name: string } | null;
+  sector?: { id: string; name: string } | null;
+}
+
+export interface DistrictGapSummary {
+  district: { id: string; name: string };
+  totalGaps: number;
+  highGapCount: number;
+  proficiencyMismatchCount: number;
+  geographicGapCount: number;
+  noSupplyCount: number;
+  coveredCount: number;
+  topGaps: { id: string; skill: string; gapSignal: string; gapScore: number; confidence: string; marketDemand: string; trainingSupply: string }[];
+}
+
+export interface ClusterGapSummary {
+  cluster: { id: string; name: string; district: string | null; sector: string | null };
+  totalGaps: number;
+  highGapCount: number;
+  topGapSkills: { id: string; skill: string; gapSignal: string; gapScore: number; confidence: string }[];
+  topGapRoles: { id: string; role: string; gapSignal: string; gapScore: number; confidence: string }[];
+}
+
+export interface GapExplanation {
+  gap: GapSignal;
+  reasons: string[];
+  methodology: string;
+}
+
+export interface GapMatrixRow {
+  role: string;
+  demand: string;
+  supply: string;
+  coverage: string;
+  proficiency: string;
+  gapSignal: string;
+  gapScore: number;
+  confidence: string;
+}

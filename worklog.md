@@ -439,3 +439,28 @@ Work Log:
 
 Stage Summary:
 - Phase 5 Part 1 COMPLETE. Training ecosystem intelligence layer operational. NO gap scoring, NO recommendations (Part 2 / later phases). STOP — waiting for Part 2.
+
+---
+Task ID: p5p2-0
+Agent: GLM (main)
+Task: Phase 5 Part 2 — Gap Engine + Government Intelligence Dashboard
+
+Part 2 connects Phase 4 demand + Phase 5 Part 1 training supply → Demand–Supply Gap Intelligence.
+NO recommendations, NO policy, NO course redesign (later phases). OBSERVATION + LIMITED INTERPRETATION only.
+
+
+---
+Task ID: p5p2-1 to p5p2-5
+Agent: GLM (main)
+Task: Phase 5 Part 2 — Gap Engine + Government Intelligence Dashboard
+
+Work Log:
+- Schema: added DemandSupplyGapSignal model (per district/cluster/sector × role/skill × period) with gapSignal, gapType, gapScore, coverageStatus, proficiencyStatus, capacityStatus, geographicStatus, confidence, confidenceLevel, market/supply metadata. Added back-relations to District/Sector/Skill/JobRole/EconomicCluster. db:push succeeded.
+- Gap engine (src/lib/intelligence/gap.ts): computeGapSignals() — normalizes Phase 4 demand + Phase 5 Part 1 supply into 0-100 indices, classifies across 4 dimensions (coverage/proficiency/capacity/geographic), assigns gapSignal + gapType + gapScore. Gap confidence = weakest critical dimension (min of market + training confidence). getGapsBySkill/Role(), getGapMatrix(), getGapExplanation() (rule-based reasons — no LLM).
+- APIs: /api/v1/gaps, /gaps/{roles,skills,districts,clusters,sectors,matrix,[id]/explanation,refresh} — 9 endpoints. Admin-only refresh.
+- 133 gap signals computed for period 2026-09: HIGH_GAP, MODERATE_GAP, PROFICIENCY_MISMATCH, SUPPLY_PRESENT, LOW_GAP classifications all present.
+- Frontend: GapIntelligenceView (dashboard with top skill+role gap tables, district summary, two-sided market↔supply↔gap banner), GapDetailView (demand evidence + supply evidence + gap dimensions + "Why is this a gap?" explanation drawer), DistrictGapView, ClusterGapView, GapMatrixView (market–training matrix table). Updated sidebar (4 new nav items under Decision Support), topbar, app-shell (dynamic gap-skill:/gap-role: routing).
+- E2E verified via Agent Browser (6 screenshots): login → gap intelligence dashboard → skill gap detail → explanation → district gaps → cluster gaps → market-training matrix. 0 console errors.
+
+Stage Summary:
+- Phase 5 Part 2 COMPLETE and browser-verified. Full demand–supply gap intelligence operational. NO recommendations, NO policy, NO course redesign. OBSERVATION + LIMITED INTERPRETATION only. STOP — Phase 6 not started.

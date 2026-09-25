@@ -92,6 +92,7 @@ model District {
   labourContext    DistrictLabourContext[]
   trainingCentres  TrainingCentre[]  @relation("TrainingCentreDistrict")
   supplySignals    TrainingSupplySignal[]
+  gapSignals       DemandSupplyGapSignal[] @relation("GapDistrict")
 
   @@index([stateCode])
   @@index([divisionId])
@@ -119,6 +120,7 @@ model EconomicCluster {
   employers   EmployerCluster[]
   jobPostings JobPosting[]
   marketSignals MarketSignal[]
+  gapSignals  DemandSupplyGapSignal[] @relation("GapCluster")
 
   @@index([districtId])
   @@index([sectorId])
@@ -163,6 +165,7 @@ model Sector {
   sectorGrowthProfiles  SectorGrowthProfile[]
   skillSectorPresence   SkillSectorPresence[]
   supplySignals         TrainingSupplySignal[]
+  gapSignals            DemandSupplyGapSignal[] @relation("GapSector")
 
   @@map("sectors")
 }
@@ -188,6 +191,7 @@ model Skill {
   sectorPresence SkillSectorPresence[]
   emergingSignal  EmergingSkillSignal?
   supplySignals   TrainingSupplySignal[]
+  gapSignals      DemandSupplyGapSignal[] @relation("GapSkill")
 
   @@index([category])
   @@map("skills")
@@ -289,6 +293,7 @@ model JobRole {
   demandSnapshots DemandSnapshot[]
   courseRoleMappings CourseRoleMapping[]
   supplySignals     TrainingSupplySignal[]
+  gapSignals        DemandSupplyGapSignal[] @relation("GapJobRole")
 
   @@map("job_roles")
 }
@@ -1339,4 +1344,87 @@ model TrainingProfile {
 
   @@unique([scope, scopeId])
   @@map("training_profiles")
+}
+
+// =====================================================================
+// PHASE 5 PART 2 — DEMAND–SUPPLY GAP INTELLIGENCE
+// =====================================================================
+
+model DemandSupplyGapSignal {
+  id              String   @id @default(cuid())
+  districtId      String?  @map("district_id")
+  clusterId       String?  @map("cluster_id")
+  sectorId        String?  @map("sector_id")
+  jobRoleId       String?  @map("job_role_id")
+  skillId         String?  @map("skill_id")
+
+  period          String
+
+  marketDemandSignal String   @default("NONE") @map("market_demand_signal") // NONE|LOW|MEDIUM|HIGH
+  marketDemandStrength Float  @default(0) @map("market_demand_strength") // 0-100
+  trainingSupplySignal String @default("NONE") @map("training_supply_signal") // NONE|LOW|MEDIUM|HIGH
+  trainingSupplyStrength Float @default(0) @map("training_supply_strength") // 0-100
+
+  demandIndex     Float?   @map("demand_index")
+  supplyIndex     Float?   @map("supply_index")
+
+  // WELL_COVERED | PARTIALLY_COVERED | LIMITED_COVERAGE | NO_IDENTIFIED_SUPPLY | INSUFFICIENT_DATA
+  coverageStatus  String   @default("INSUFFICIENT_DATA") @map("coverage_status")
+  // ALIGNED | LOWER_THAN_MARKET | HIGHER_THAN_MARKET | MIXED | UNKNOWN | INSUFFICIENT_DATA
+  proficiencyStatus String @default("UNKNOWN") @map("proficiency_status")
+  // ADEQUATE | LIMITED | WEAK | NO_CAPACITY | UNKNOWN
+  capacityStatus   String  @default("UNKNOWN") @map("capacity_status")
+  // LOCAL | NEARBY | REGIONAL | OUTSIDE_TARGET_GEOGRAPHY | UNKNOWN
+  geographicStatus String @default("UNKNOWN") @map("geographic_status")
+
+  // LOW_GAP | MODERATE_GAP | HIGH_GAP | SUPPLY_PRESENT | SUPPLY_LIMITED | NO_IDENTIFIED_SUPPLY | PROFICIENCY_MISMATCH | GEOGRAPHIC_GAP | INSUFFICIENT_DATA
+  gapSignal       String   @default("INSUFFICIENT_DATA") @map("gap_signal")
+  gapType         String?  @map("gap_type") // MARKET_GAP | CAPACITY_GAP | PROFICIENCY_GAP | GEOGRAPHIC_GAP | TRAINING_COVERAGE_GAP
+
+  // Numerical gap signal (0-100) — documented as "Training Gap Signal", NOT "exact shortage"
+  gapScore       Float    @default(0) @map("gap_score")
+
+  confidence     Float    @default(0)
+  // HIGH | MEDIUM | LOW | INSUFFICIENT
+  confidenceLevel String  @default("INSUFFICIENT") @map("confidence_level")
+
+  marketEvidenceCount  Int @default(0) @map("market_evidence_count")
+  trainingEvidenceCount Int @default(0) @map("training_evidence_count")
+  sourceDiversity       Int @default(0) @map("source_diversity")
+
+  // Market-side metadata
+  uniqueEmployers   Int  @default(0) @map("unique_employers")
+  trendDirection    String @default("UNKNOWN") @map("trend_direction")
+  requiredProficiency String? @map("required_proficiency")
+  trainingProficiency  String? @map("training_proficiency")
+
+  // Supply-side metadata
+  plannedCapacity   Int  @default(0) @map("planned_capacity")
+  enrolledCount     Int? @map("enrolled_count")
+  completedCount    Int? @map("completed_count")
+  certifiedCount    Int? @map("certified_count")
+  courseCount        Int  @default(0) @map("course_count")
+  institutionCount  Int  @default(0) @map("institution_count")
+  centreCount       Int  @default(0) @map("centre_count")
+
+  dataStatus      String   @default("DEMO") @map("data_status")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  district        District? @relation("GapDistrict", fields: [districtId], references: [id])
+  cluster         EconomicCluster? @relation("GapCluster", fields: [clusterId], references: [id])
+  sector          Sector? @relation("GapSector", fields: [sectorId], references: [id])
+  jobRole         JobRole? @relation("GapJobRole", fields: [jobRoleId], references: [id])
+  skill           Skill? @relation("GapSkill", fields: [skillId], references: [id])
+
+  @@unique([districtId, clusterId, sectorId, jobRoleId, skillId, period])
+  @@index([districtId])
+  @@index([clusterId])
+  @@index([sectorId])
+  @@index([jobRoleId])
+  @@index([skillId])
+  @@index([period])
+  @@index([gapSignal])
+  @@map("demand_supply_gap_signals")
 }

@@ -26,6 +26,7 @@ import { ProvenanceView } from "./views/provenance-view";
 import { AuditLogsView } from "./views/audit-logs-view";
 import { SkillIntelligenceView } from "./views/skill-intelligence-view";
 import { CompetencyFrameworkView } from "./views/competency-framework-view";
+import { GapIntelligenceView, GapDetailView, DistrictGapView, ClusterGapView, GapMatrixView } from "./views/gap-intelligence-view";
 
 const VIEW_REGISTRY: Record<string, React.ComponentType> = {
   overview: OverviewView,
@@ -38,6 +39,10 @@ const VIEW_REGISTRY: Record<string, React.ComponentType> = {
   skills: SkillsView,
   "skill-intelligence": SkillIntelligenceView,
   "competency-framework": CompetencyFrameworkView,
+  "gap-intelligence": GapIntelligenceView,
+  "gap-districts": DistrictGapView,
+  "gap-clusters": ClusterGapView,
+  "gap-matrix": GapMatrixView,
   training: TrainingView,
   courses: CoursesView,
   "employer-validation": EmployerValidationView,
@@ -59,7 +64,7 @@ export function AppShell() {
   const sidebarOpen = useNav((s) => s.sidebarOpen);
   const setSidebar = useNav((s) => s.setSidebar);
 
-  // Handle dynamic views: batch-detail:<id>, role-demand:<id>, skill-demand:<id>
+  // Handle dynamic views: batch-detail:<id>, role-demand:<id>, skill-demand:<id>, gap-skill:<id>, gap-role:<id>
   let ViewComponent: React.ComponentType;
   if (activeView.startsWith("batch-detail:")) {
     ViewComponent = BatchDetailView;
@@ -67,6 +72,8 @@ export function AppShell() {
     ViewComponent = RoleDemandDetailView;
   } else if (activeView.startsWith("skill-demand:")) {
     ViewComponent = SkillDemandDetailView;
+  } else if (activeView.startsWith("gap-skill:") || activeView.startsWith("gap-role:")) {
+    ViewComponent = GapDetailView;
   } else {
     ViewComponent = VIEW_REGISTRY[activeView] ?? OverviewView;
   }
