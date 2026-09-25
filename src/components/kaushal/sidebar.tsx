@@ -32,6 +32,8 @@ import {
   GitCompareArrows,
   Truck,
   User,
+  Building,
+  Activity,
 } from "lucide-react";
 
 interface NavItem {
@@ -80,9 +82,10 @@ const GROUPS: NavGroup[] = [
       { id: "gap-districts", label: "District Gaps", icon: <Building2 className="size-4" />, phase: 5, active: true },
       { id: "gap-clusters", label: "Cluster Gaps", icon: <Building2 className="size-4" />, phase: 5, active: true },
       { id: "gap-matrix", label: "Market–Training Matrix", icon: <Gauge className="size-4" />, phase: 5, active: true },
+      { id: "district-twin", label: "District Digital Twin", icon: <Building className="size-4" />, phase: 8, active: true },
+      { id: "policy-sandbox", label: "Policy Sandbox", icon: <FlaskConical className="size-4" />, phase: 8, active: true },
+      { id: "district-plans", label: "District Plans", icon: <ClipboardList className="size-4" />, phase: 8, active: true },
       { id: "districts", label: "District Intelligence", icon: <Building2 className="size-4" />, phase: 1, active: true },
-      { id: "policy-sandbox", label: "Policy Sandbox", icon: <FlaskConical className="size-4" />, phase: 11, active: false },
-      { id: "district-plans", label: "District Plans", icon: <ClipboardList className="size-4" />, phase: 9, active: false },
     ],
   },
   {
@@ -97,7 +100,7 @@ const GROUPS: NavGroup[] = [
     id: "outcomes",
     label: "Outcomes",
     items: [
-      { id: "outcomes", label: "Outcomes", icon: <Target className="size-4" />, phase: 12, active: false },
+      { id: "outcomes", label: "District Outcomes", icon: <Activity className="size-4" />, phase: 8, active: true },
     ],
   },
   {

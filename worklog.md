@@ -522,3 +522,31 @@ Work Log:
 
 Stage Summary:
 - Phase 7 COMPLETE and browser-verified. Full chain: Candidate Evidence → Verified Skills → Target Role → Market Requirements → Skill/Competency Comparison → Individual Gap Intelligence → Readiness → Priorities → Course Matches → Development Pathway → Opportunity Readiness. NO employment guarantees, NO policy, NO auto-enrollment. STOP — Phase 8 not started.
+
+# =====================================================================
+# PHASE 8 — DISTRICT SKILL DIGITAL TWIN + POLICY & DECISION INTELLIGENCE
+# =====================================================================
+
+Part 1: District Digital Twin + Policy Sandbox
+Part 2: Execution Monitoring + Outcome Feedback Loop
+
+Goal: close the loop — OBSERVE → DIAGNOSE → SIMULATE → PLAN → IMPLEMENT →
+MEASURE → LEARN → UPDATE → REPLAN. NO black-box policy AI, NO fabricated outcomes.
+
+
+---
+Task ID: p8-1 to p8-3
+Agent: GLM (main)
+Task: Phase 8 — District Skill Digital Twin + Policy & Decision Intelligence (Part 1 + Part 2)
+
+Work Log:
+- Schema: 17 new tables — DistrictSkillTwin, DistrictBaseline, InterventionType, PolicyScenario, ScenarioIntervention, ScenarioAssumption, ScenarioImpactResult, ScenarioAuditLog, DistrictSkillPlan (Part 1) + DistrictIntervention, InterventionMilestone, InterventionKpi, KpiObservation, InterventionOutcome, InterventionLesson, DistrictPlanVersion, DistrictAlert (Part 2). db:push succeeded.
+- Digital twin service (src/lib/intelligence/twin.ts): buildDistrictTwin() — aggregates market signals, training supply, capability gaps, candidate readiness, and outcomes into a current-state snapshot per district. createBaseline() — immutable historical snapshot. simulateScenario() — transparent rule-based simulation (baseline + intervention + rule = simulated state). compareScenarios() — side-by-side comparison. evaluateIntervention() — pre/post KPI/outcome comparison with attribution safeguards.
+- APIs: /api/v1/district-twin/[districtId], /twin/refresh, /scenarios (list+create), /scenarios/[id] (detail), /scenarios/[id]/simulate, /scenarios/[id]/results, /intervention-types, /interventions/[id] (detail), /interventions/[id]/{milestones,kpis,outcomes,performance}, /district-outcomes/[districtId] (interventions+alerts), /district-outcomes/[districtId]/{trends,plans}, /alerts, /alerts/[id]/acknowledge, /district-plans (list), /district-plans/[id] (detail) — 19 endpoints. Admin-only refresh/simulate/create.
+- Seed (seed-phase8.ts): 10 intervention types, 5 policy scenarios (3 simulated with impact results), 8 district interventions (with milestones, KPIs, outcomes), 5 alerts. All SYNTHETIC.
+- Twin computation: 10 districts processed. Pune twin: confidence 67%, 8 institutions, 1 high gap, 5 candidates.
+- Frontend: DistrictTwinView (district selector, twin dashboard with Market/Training/Capability/Gap/Candidate/Outcome state panels, confidence badge, implementation monitoring alerts, quick links to Policy Sandbox/Plans/Outcomes), PolicySandboxView (scenario table with SIMULATED warning banner), DistrictOutcomesView (intervention tracking with milestones, KPIs, pre/post outcomes, alerts, attribution disclaimer). Updated sidebar (3 new nav items under Decision Support + Outcomes), topbar, app-shell.
+- Lint: 0 errors, 0 warnings. E2E verified: all 3 views render with 0 console errors.
+
+Stage Summary:
+- Phase 8 COMPLETE and browser-verified. Full closed loop: OBSERVE → DIAGNOSE → SIMULATE → PLAN → IMPLEMENT → MEASURE → LEARN → UPDATE → REPLAN. NO black-box AI, NO automatic policy selection, NO fabricated outcomes, NO unsupported causal claims. STOP — Phase 9 not started.

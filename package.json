@@ -18,6 +18,7 @@
     "db:seed:phase5": "bun prisma/seed-phase5.ts",
     "db:seed:phase6": "bun prisma/seed-phase6.ts",
     "db:seed:phase7": "bun prisma/seed-phase7.ts",
+    "db:seed:phase8": "bun prisma/seed-phase8.ts",
     "db:seed:all": "bun prisma/seed.ts && bun prisma/seed-phase2.ts && bun prisma/seed-phase3.ts && bun prisma/seed-phase4.ts && bun prisma/seed-phase5.ts && bun prisma/seed-phase6.ts && bun prisma/seed-phase7.ts"
   },
   "dependencies": {

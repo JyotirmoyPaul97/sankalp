@@ -96,6 +96,12 @@ model District {
   roleRequirementProfiles RoleRequirementProfile[]
   candidates         Candidate[]
   candidateTargetProfiles CandidateTargetProfile[]
+  districtSkillTwin      DistrictSkillTwin?
+  districtBaselines      DistrictBaseline[]
+  policyScenarios        PolicyScenario[]
+  districtSkillPlans      DistrictSkillPlan[]
+  districtInterventions   DistrictIntervention[]
+  districtAlerts          DistrictAlert[]
 
   @@index([stateCode])
   @@index([divisionId])
@@ -2300,4 +2306,358 @@ model CandidateOpportunityReadiness {
 
   @@unique([candidateId, targetRoleId])
   @@map("candidate_opportunity_readiness")
+}
+
+// =====================================================================
+// PHASE 8 PART 1 — DISTRICT DIGITAL TWIN + POLICY SANDBOX
+// =====================================================================
+
+model DistrictSkillTwin {
+  id              String   @id @default(cuid())
+  districtId      String   @unique @map("district_id")
+  observationPeriod String  @map("observation_period")
+
+  marketStateSnapshot   String? @map("market_state_snapshot")  // JSON
+  trainingStateSnapshot String? @map("training_state_snapshot") // JSON
+  capabilityStateSnapshot String? @map("capability_state_snapshot") // JSON
+  candidateStateSnapshot String? @map("candidate_state_snapshot") // JSON
+  outcomeStateSnapshot  String? @map("outcome_state_snapshot")  // JSON
+
+  overallDataConfidence Float  @default(0) @map("overall_data_confidence")
+  dataStatus      String   @default("SYNTHETIC") @map("data_status")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  district        District  @relation(fields: [districtId], references: [id])
+
+  @@map("district_skill_twins")
+}
+
+model DistrictBaseline {
+  id              String   @id @default(cuid())
+  districtId      String   @map("district_id")
+  observationPeriod String  @map("observation_period")
+  marketSnapshot  String?  @map("market_snapshot")  // JSON
+  trainingSnapshot String? @map("training_snapshot") // JSON
+  capabilitySnapshot String? @map("capability_snapshot") // JSON
+  candidateSnapshot String? @map("candidate_snapshot") // JSON
+  outcomeSnapshot String?  @map("outcome_snapshot") // JSON
+  dataStatus      String   @default("SYNTHETIC") @map("data_status")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  district        District  @relation(fields: [districtId], references: [id])
+  scenarios       PolicyScenario[]
+  districtPlans   DistrictSkillPlan[]
+
+  @@unique([districtId, observationPeriod])
+  @@index([districtId])
+  @@map("district_baselines")
+}
+
+model InterventionType {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  code            String   @unique
+  description     String?
+  category        String?  // COURSE | TRAINER | EQUIPMENT | CENTRE | INDUSTRY | ASSESSMENT
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  scenarioInterventions ScenarioIntervention[]
+  districtInterventions  DistrictIntervention[]
+
+  @@map("intervention_types")
+}
+
+model PolicyScenario {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  districtId      String   @map("district_id")
+  baselineId      String?  @map("baseline_id")
+  createdBy       String?  @map("created_by")
+  // DRAFT | SIMULATED | REVIEWED | ARCHIVED
+  status          String   @default("DRAFT")
+  dataStatus      String   @default("SYNTHETIC") @map("data_status")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  district        District  @relation(fields: [districtId], references: [id])
+  baseline        DistrictBaseline? @relation(fields: [baselineId], references: [id])
+  interventions   ScenarioIntervention[]
+  assumptions     ScenarioAssumption[]
+  impactResults   ScenarioImpactResult[]
+  auditLogs       ScenarioAuditLog[]
+  districtPlan    DistrictSkillPlan?
+
+  @@index([districtId])
+  @@map("policy_scenarios")
+}
+
+model ScenarioIntervention {
+  id              String   @id @default(cuid())
+  scenarioId      String   @map("scenario_id")
+  interventionTypeId String @map("intervention_type_id")
+  targetCourseId  String?  @map("target_course_id")
+  targetRoleId    String?  @map("target_role_id")
+  targetSkillId   String?  @map("target_skill_id")
+  targetCompetencyId String? @map("target_competency_id")
+  targetClusterId String?  @map("target_cluster_id")
+  targetCentreId  String?  @map("target_centre_id")
+  quantity        Int?
+  capacityChange  Int?     @map("capacity_change")
+  implementationStart DateTime? @map("implementation_start")
+  implementationEnd   DateTime? @map("implementation_end")
+  assumptions     String?  // JSON
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  scenario        PolicyScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  interventionType InterventionType @relation(fields: [interventionTypeId], references: [id])
+
+  @@index([scenarioId])
+  @@map("scenario_interventions")
+}
+
+model ScenarioAssumption {
+  id              String   @id @default(cuid())
+  scenarioId      String   @map("scenario_id")
+  name            String
+  value           String
+  unit            String?
+  source          String   @default("USER_DEFINED")
+  confidence      Float    @default(0.5)
+  isUserInput     Boolean  @default(true) @map("is_user_input")
+  description     String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  scenario        PolicyScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@index([scenarioId])
+  @@map("scenario_assumptions")
+}
+
+model ScenarioImpactResult {
+  id              String   @id @default(cuid())
+  scenarioId      String   @map("scenario_id")
+  targetDimension String   @map("target_dimension")
+  targetId        String?  @map("target_id")
+  baselineValue   String   @map("baseline_value")
+  simulatedValue  String   @map("simulated_value")
+  delta           String?
+  metric          String
+  unit            String?
+  confidence      Float    @default(0.5)
+  assumptionCount Int      @default(0) @map("assumption_count")
+  dataStatus      String   @default("SIMULATED") @map("data_status")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  scenario        PolicyScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@index([scenarioId])
+  @@map("scenario_impact_results")
+}
+
+model ScenarioAuditLog {
+  id              String   @id @default(cuid())
+  scenarioId      String   @map("scenario_id")
+  userId          String?  @map("user_id")
+  userEmail       String?  @map("user_email")
+  action          String
+  baselineVersion String?  @map("baseline_version")
+  modelVersion    String?  @map("model_version")
+  details         String?
+  timestamp       DateTime @default(now())
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  scenario        PolicyScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+
+  @@index([scenarioId])
+  @@map("scenario_audit_logs")
+}
+
+model DistrictSkillPlan {
+  id              String   @id @default(cuid())
+  districtId      String   @map("district_id")
+  planningPeriod  String   @map("planning_period")
+  baselineId      String?  @map("baseline_id")
+  scenarioId      String?  @unique @map("scenario_id")
+  priorityDomain  String?  @map("priority_domain")
+  objectives      String?  // JSON
+  evidenceSummary String?  @map("evidence_summary")
+  // DRAFT | ACTIVE | UNDER_REVIEW | COMPLETED | ARCHIVED
+  status          String   @default("DRAFT")
+  dataStatus      String   @default("SYNTHETIC") @map("data_status")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  district        District  @relation(fields: [districtId], references: [id])
+  scenario        PolicyScenario? @relation(fields: [scenarioId], references: [id])
+  baseline        DistrictBaseline? @relation(fields: [baselineId], references: [id])
+  interventions   DistrictIntervention[]
+  versions        DistrictPlanVersion[]
+
+  @@index([districtId])
+  @@map("district_skill_plans")
+}
+
+// =====================================================================
+// PHASE 8 PART 2 — EXECUTION MONITORING + OUTCOME FEEDBACK LOOP
+// =====================================================================
+
+model DistrictIntervention {
+  id              String   @id @default(cuid())
+  districtPlanId  String?  @map("district_plan_id")
+  scenarioId      String?  @unique @map("scenario_id")
+  interventionTypeId String @map("intervention_type_id")
+  districtId      String   @map("district_id")
+  targetCourseId  String?  @map("target_course_id")
+  targetSkillId   String?  @map("target_skill_id")
+  targetRoleId    String?  @map("target_role_id")
+  plannedStart    DateTime? @map("planned_start")
+  plannedEnd      DateTime? @map("planned_end")
+  actualStart     DateTime? @map("actual_start")
+  actualEnd       DateTime? @map("actual_end")
+  // PLANNED | APPROVED | IN_PROGRESS | COMPLETED | PAUSED | CANCELLED | UNKNOWN
+  status          String   @default("PLANNED")
+  owner           String?
+  notes           String?
+  dataStatus      String   @default("SYNTHETIC") @map("data_status")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  districtPlan    DistrictSkillPlan? @relation(fields: [districtPlanId], references: [id])
+  interventionType InterventionType @relation(fields: [interventionTypeId], references: [id])
+  district        District  @relation(fields: [districtId], references: [id])
+  milestones      InterventionMilestone[]
+  kpis           InterventionKpi[]
+  outcomes       InterventionOutcome[]
+  lessons        InterventionLesson[]
+
+  @@index([districtId])
+  @@map("district_interventions")
+}
+
+model InterventionMilestone {
+  id              String   @id @default(cuid())
+  interventionId  String   @map("intervention_id")
+  name            String
+  plannedDate     DateTime @map("planned_date")
+  actualDate      DateTime? @map("actual_date")
+  // PENDING | IN_PROGRESS | COMPLETED | DELAYED | CANCELLED
+  status          String   @default("PENDING")
+  evidenceId      String?  @map("evidence_id")
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  intervention    DistrictIntervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+
+  @@index([interventionId])
+  @@map("intervention_milestones")
+}
+
+model InterventionKpi {
+  id              String   @id @default(cuid())
+  interventionId  String   @map("intervention_id")
+  metricName      String   @map("metric_name")
+  metricType      String   @map("metric_type") // CAPACITY | ENROLLMENT | COMPLETION | etc.
+  baselineValue   String   @map("baseline_value")
+  baselinePeriod  String   @map("baseline_period")
+  targetValue     String?  @map("target_value")
+  targetPeriod    String?  @map("target_period")
+  unit            String?
+  confidence      Float    @default(0.5)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  intervention    DistrictIntervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+  observations   KpiObservation[]
+
+  @@index([interventionId])
+  @@map("intervention_kpis")
+}
+
+model KpiObservation {
+  id              String   @id @default(cuid())
+  kpiId           String   @map("kpi_id")
+  observationPeriod String @map("observation_period")
+  observedValue   String   @map("observed_value")
+  confidence      Float    @default(0.5)
+  dataStatus      String   @default("SYNTHETIC") @map("data_status")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  kpi             InterventionKpi @relation(fields: [kpiId], references: [id], onDelete: Cascade)
+
+  @@index([kpiId])
+  @@map("kpi_observations")
+}
+
+model InterventionOutcome {
+  id              String   @id @default(cuid())
+  interventionId  String   @map("intervention_id")
+  outcomeType     String   @map("outcome_type") // CAPACITY_CHANGE | TRAINING_COVERAGE_CHANGE | etc.
+  baselineValue   String   @map("baseline_value")
+  observedValue   String   @map("observed_value")
+  change          String?
+  observationPeriod String @map("observation_period")
+  confidence      Float    @default(0.5)
+  interpretation  String?
+  dataStatus      String   @default("SYNTHETIC") @map("data_status")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  intervention    DistrictIntervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+
+  @@index([interventionId])
+  @@map("intervention_outcomes")
+}
+
+model InterventionLesson {
+  id              String   @id @default(cuid())
+  interventionId  String   @map("intervention_id")
+  observation     String
+  evidence        String?
+  confidence      Float    @default(0.5)
+  createdBy       String?  @map("created_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  intervention    DistrictIntervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+
+  @@index([interventionId])
+  @@map("intervention_lessons")
+}
+
+model DistrictPlanVersion {
+  id              String   @id @default(cuid())
+  districtPlanId  String   @map("district_plan_id")
+  version         Int      @default(1)
+  baselineId      String?  @map("baseline_id")
+  reasonForRevision String? @map("reason_for_revision")
+  createdBy       String?  @map("created_by")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  districtPlan    DistrictSkillPlan @relation(fields: [districtPlanId], references: [id], onDelete: Cascade)
+
+  @@index([districtPlanId])
+  @@map("district_plan_versions")
+}
+
+model DistrictAlert {
+  id              String   @id @default(cuid())
+  districtId      String?  @map("district_id")
+  interventionId  String?  @map("intervention_id")
+  alertType       String   @map("alert_type")
+  district        District? @relation(fields: [districtId], references: [id])
+  // INFO | NOTICE | WARNING | CRITICAL
+  severity         String   @default("INFO")
+  evidence        String?
+  timestamp       DateTime @default(now())
+  // ACTIVE | ACKNOWLEDGED | RESOLVED
+  status          String   @default("ACTIVE")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([districtId])
+  @@index([severity])
+  @@map("district_alerts")
 }

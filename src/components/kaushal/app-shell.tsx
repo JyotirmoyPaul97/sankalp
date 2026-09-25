@@ -29,6 +29,7 @@ import { CompetencyFrameworkView } from "./views/competency-framework-view";
 import { GapIntelligenceView, GapDetailView, DistrictGapView, ClusterGapView, GapMatrixView } from "./views/gap-intelligence-view";
 import { DeliveryCapabilityView } from "./views/delivery-capability-view";
 import { CandidateIntelligenceView } from "./views/candidate-intelligence-view";
+import { DistrictTwinView, PolicySandboxView as PolicySandboxDashboard, DistrictOutcomesView } from "./views/district-twin-view";
 
 const VIEW_REGISTRY: Record<string, React.ComponentType> = {
   overview: OverviewView,
@@ -47,12 +48,13 @@ const VIEW_REGISTRY: Record<string, React.ComponentType> = {
   "gap-matrix": GapMatrixView,
   "delivery-capability": DeliveryCapabilityView,
   "candidate-intelligence": CandidateIntelligenceView,
+  "district-twin": DistrictTwinView,
+  "policy-sandbox": PolicySandboxDashboard,
+  "district-plans": PolicySandboxDashboard,
+  outcomes: DistrictOutcomesView,
   training: TrainingView,
   courses: CoursesView,
   "employer-validation": EmployerValidationView,
-  "policy-sandbox": PolicySandboxView,
-  "district-plans": DistrictPlansView,
-  outcomes: OutcomesView,
   "data-sources": DataSourcesView,
   admin: AdminView,
   upload: UploadView,
