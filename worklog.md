@@ -382,3 +382,15 @@ Work Log:
 
 Stage Summary:
 - Phase 3 COMPLETE and browser-verified. Skill knowledge graph + competency foundation operational.
+
+# =====================================================================
+# PHASE 4 — LABOUR MARKET INTELLIGENCE
+# =====================================================================
+
+Goal: UNDERSTAND THE MARKET. Build the single Market Intelligence Object
+for any (District, Cluster, Sector, Role, Skill) from Phase 1-3 evidence.
+NO forecasting, NO gap analysis, NO recommendations (later phases).
+
+Pipeline: RAW EVIDENCE → PHASE 2 PROVENANCE → PHASE 3 CANONICAL ENTITY
+→ JOB ROLE → COMPETENCY → SKILL → PROFICIENCY → LOCATION → MARKET SIGNAL
+
