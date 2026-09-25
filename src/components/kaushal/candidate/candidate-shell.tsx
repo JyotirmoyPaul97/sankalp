@@ -19,6 +19,7 @@ import { MarketContextView } from "./views/market-context-view";
 import { ProfileView } from "./views/profile-view";
 import { OneSkillView } from "./views/one-skill-view";
 import { CopilotPanel } from "../copilot-panel";
+import { MaharashtraIntelligenceBackground } from "@/components/kaushal/maharashtra-background";
 
 const VIEW_REGISTRY: Record<string, React.ComponentType> = {
   "c-overview": CandidateHome,
@@ -55,7 +56,12 @@ export function CandidateShell() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-muted/30">
+    <div className="min-h-screen w-full bg-muted/30 relative">
+      {/* Subtle workspace background — Maharashtra intelligence network */}
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden opacity-[0.06]">
+        <MaharashtraIntelligenceBackground variant="candidate" />
+      </div>
+
       {/* Desktop sidebar */}
       <div className="hidden lg:block fixed inset-y-0 left-0 w-64 z-40">
         <CandidateSidebar />
@@ -82,7 +88,7 @@ export function CandidateShell() {
           <div className="mx-auto w-full max-w-6xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] text-muted-foreground">
             <div className="flex items-center gap-2">
               <span className="size-1.5 rounded-full bg-status-attention" />
-              <span>Prototype · Synthetic Demonstration Data. Evidence-based readiness — NOT employment guarantees.</span>
+              <span>Synthetic demonstration data · Evidence-based readiness, not employment guarantees.</span>
             </div>
             <span>KAUSHAL DRISHTI · Candidate Skill Intelligence</span>
           </div>

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, AlertCircle, AlertTriangle, Info, XCircle, Clock, ShieldCheck, FileText, Award, Briefcase, TrendingUp } from "lucide-react";
+import { CheckCircle2, AlertCircle, AlertTriangle, Info, XCircle, Clock, ShieldCheck, FileText, Award, Briefcase, TrendingUp, ChevronRight } from "lucide-react";
 
 // ---------------------------------------------------------------------
 // 1. VisualBar — animated horizontal bar for demand/supply/gap comparison
@@ -541,6 +541,178 @@ export function DistrictTwinVisual({ district, layers }: { district: string; lay
           <StatusBadge status="SYNTHETIC" />
           <span>Period: 2026-09</span>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// 14. SkillDecisionLoop — the signature KAUSHAL DRISHTI visual
+// INDUSTRY DEMAND → ROLE → SKILLS → TRAINING CAPABILITY → SKILL GAP →
+// CANDIDATE EVIDENCE → INTERVENTION → OUTCOME ↺
+// ---------------------------------------------------------------------
+
+interface SkillDecisionLoopProps {
+  size?: "sm" | "md" | "lg";
+  activeStep?: number;
+  onStepClick?: (index: number) => void;
+  className?: string;
+}
+
+const LOOP_STEPS = [
+  { label: "Industry Demand", short: "Demand", tone: "attention", color: "#f59e0b" },
+  { label: "Role", short: "Role", tone: "info", color: "#3b82f6" },
+  { label: "Skills", short: "Skills", tone: "info", color: "#6366f1" },
+  { label: "Training Capability", short: "Training", tone: "info", color: "#0ea5e9" },
+  { label: "Skill Gap", short: "Gap", tone: "critical", color: "#ef4444" },
+  { label: "Candidate Evidence", short: "Evidence", tone: "positive", color: "#10b981" },
+  { label: "Intervention", short: "Action", tone: "info", color: "#8b5cf6" },
+  { label: "Outcome", short: "Outcome", tone: "positive", color: "#22c55e" },
+];
+
+export function SkillDecisionLoop({ size = "md", activeStep, onStepClick, className }: SkillDecisionLoopProps) {
+  const dim = size === "sm" ? 220 : size === "lg" ? 420 : 320;
+  const cx = dim / 2;
+  const cy = dim / 2;
+  const radius = dim / 2 - 28;
+  const stepAngle = (2 * Math.PI) / LOOP_STEPS.length;
+  const positions = LOOP_STEPS.map((_, i) => {
+    const a = -Math.PI / 2 + i * stepAngle;
+    return { x: cx + radius * Math.cos(a), y: cy + radius * Math.sin(a) };
+  });
+
+  return (
+    <div className={cn("flex items-center justify-center", className)}>
+      <svg viewBox={`0 0 ${dim} ${dim}`} className="w-full h-auto max-w-full" style={{ maxHeight: dim }}>
+        <defs>
+          <radialGradient id="loop-bg" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="hsl(var(--primary) / 0.05)" />
+            <stop offset="100%" stopColor="transparent" />
+          </radialGradient>
+        </defs>
+        <circle cx={cx} cy={cy} r={radius} fill="url(#loop-bg)" stroke="hsl(var(--border))" strokeWidth="1" strokeDasharray="2 3" opacity="0.5" />
+        {/* arrows between steps */}
+        {positions.map((p, i) => {
+          const next = positions[(i + 1) % positions.length];
+          const mx = (p.x + next.x) / 2;
+          const my = (p.y + next.y) / 2;
+          const dx = next.x - p.x;
+          const dy = next.y - p.y;
+          const len = Math.sqrt(dx * dx + dy * dy);
+          const nx = dx / len;
+          const ny = dy / len;
+          const startGap = { x: p.x + nx * 16, y: p.y + ny * 16 };
+          const endGap = { x: next.x - nx * 16, y: next.y - ny * 16 };
+          const isActive = activeStep === i;
+          return (
+            <g key={i}>
+              <line x1={startGap.x} y1={startGap.y} x2={endGap.x} y2={endGap.y} stroke={isActive ? "hsl(var(--primary))" : "hsl(var(--border))"} strokeWidth={isActive ? 1.5 : 0.8} opacity={isActive ? 0.9 : 0.4} />
+              {/* arrowhead */}
+              <polygon points={`${endGap.x},${endGap.y} ${endGap.x - nx * 4 - ny * 3},${endGap.y - ny * 4 + nx * 3} ${endGap.x - nx * 4 + ny * 3},${endGap.y - ny * 4 - nx * 3}`} fill={isActive ? "hsl(var(--primary))" : "hsl(var(--border))"} opacity={isActive ? 0.9 : 0.5} />
+              <circle cx={mx} cy={my} r="0.5" fill="hsl(var(--muted-foreground))" opacity="0.3" />
+            </g>
+          );
+        })}
+        {/* loop-back arrow (outcome → demand) */}
+        <text x={cx} y={cy - 4} textAnchor="middle" fontSize={size === "sm" ? 7 : size === "lg" ? 11 : 9} fill="hsl(var(--foreground))" fontWeight="700" letterSpacing="0.5">SKILL</text>
+        <text x={cx} y={cy + 6} textAnchor="middle" fontSize={size === "sm" ? 7 : size === "lg" ? 11 : 9} fill="hsl(var(--foreground))" fontWeight="700" letterSpacing="0.5">DECISION</text>
+        <text x={cx} y={cy + 16} textAnchor="middle" fontSize={size === "sm" ? 7 : size === "lg" ? 11 : 9} fill="hsl(var(--foreground))" fontWeight="700" letterSpacing="0.5">LOOP</text>
+        {/* step nodes */}
+        {LOOP_STEPS.map((s, i) => {
+          const p = positions[i];
+          const isActive = activeStep === i;
+          return (
+            <g key={i} style={{ cursor: onStepClick ? "pointer" : "default" }} onClick={() => onStepClick?.(i)}>
+              <circle cx={p.x} cy={p.y} r={isActive ? 16 : 13} fill={isActive ? s.color : "hsl(var(--card))"} stroke={s.color} strokeWidth="2" opacity={isActive ? 1 : 0.9} />
+              <text x={p.x} y={p.y + 1} textAnchor="middle" fontSize={size === "sm" ? 6 : 8} fill={isActive ? "#fff" : "hsl(var(--foreground))"} fontWeight="700">{i + 1}</text>
+              <text x={p.x} y={p.y + (p.y < cy ? -20 : 26)} textAnchor="middle" fontSize={size === "sm" ? 6 : size === "lg" ? 9 : 7.5} fill="hsl(var(--foreground))" fontWeight={isActive ? 700 : 500}>{s.label}</text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// 15. PrioritySignal — compact priority intelligence card
+// ---------------------------------------------------------------------
+
+interface PrioritySignalProps {
+  title: string;
+  market: string;
+  training: string;
+  cause?: string;
+  action?: string;
+  onClick?: () => void;
+}
+
+export function PrioritySignal({ title, market, training, cause, action, onClick }: PrioritySignalProps) {
+  return (
+    <button onClick={onClick} className="text-left w-full rounded-lg border bg-card p-4 space-y-2 hover:border-primary/40 hover:shadow-md transition-all">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-semibold">{title}</p>
+        <ChevronRight className="size-4 text-muted-foreground" />
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-[11px]">
+        <div><span className="text-muted-foreground">Market:</span> <span className="font-medium">{market}</span></div>
+        <div><span className="text-muted-foreground">Training:</span> <span className="font-medium">{training}</span></div>
+      </div>
+      {cause ? <p className="text-[11px] text-muted-foreground leading-snug"><span className="text-foreground/70 font-medium">Cause:</span> {cause}</p> : null}
+      {action ? <p className="text-[11px] text-primary leading-snug"><span className="font-medium">→ {action}</span></p> : null}
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------
+// 16. DeliveryGapVisual — "Can this centre deliver what the market needs?"
+// ---------------------------------------------------------------------
+
+interface DeliveryGapVisualProps {
+  role: string;
+  demand: "HIGH" | "MEDIUM" | "LOW";
+  course: "FULL" | "PARTIAL" | "NONE";
+  trainer: "READY" | "MEDIUM" | "LOW";
+  equipment: "READY" | "MEDIUM" | "LOW";
+  capacity: "SUFFICIENT" | "LIMITED" | "INSUFFICIENT";
+  result: "DELIVERY GAP" | "PARTIAL DELIVERY" | "READY TO DELIVER";
+}
+
+const TONE_MAP: Record<string, "positive" | "info" | "attention" | "critical"> = {
+  HIGH: "attention", MEDIUM: "info", LOW: "neutral" as never,
+  FULL: "positive", PARTIAL: "attention", NONE: "critical",
+  READY: "positive", SUFFICIENT: "positive", LIMITED: "attention", INSUFFICIENT: "critical",
+  LOW: "critical",
+};
+
+export function DeliveryGapVisual({ role, demand, course, trainer, equipment, capacity, result }: DeliveryGapVisualProps) {
+  const rows = [
+    { label: "Market Demand", value: demand, tone: TONE_MAP[demand] ?? "info" },
+    { label: "Course Coverage", value: course, tone: TONE_MAP[course] ?? "info" },
+    { label: "Trainer Readiness", value: trainer, tone: TONE_MAP[trainer] ?? "info" },
+    { label: "Equipment Readiness", value: equipment, tone: TONE_MAP[equipment] ?? "info" },
+    { label: "Training Capacity", value: capacity, tone: TONE_MAP[capacity] ?? "info" },
+  ];
+  const resultTone = result === "DELIVERY GAP" ? "critical" : result === "PARTIAL DELIVERY" ? "attention" : "positive";
+  return (
+    <div className="rounded-lg border bg-card p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Can this centre deliver what the market needs?</p>
+          <h3 className="text-lg font-bold">{role}</h3>
+        </div>
+      </div>
+      <div className="space-y-2">
+        {rows.map((r) => (
+          <div key={r.label} className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground w-36 shrink-0">{r.label}</span>
+            <div className="flex-1"><VisualBar value={r.tone === "positive" ? 90 : r.tone === "info" ? 60 : r.tone === "attention" ? 40 : 15} tone={r.tone as never} height="sm" showValue={false} /></div>
+            <span className={cn("text-xs font-bold w-28 text-right", r.tone === "positive" ? "text-status-positive" : r.tone === "critical" ? "text-status-critical" : r.tone === "attention" ? "text-status-attention" : "text-status-info")}>{r.value}</span>
+          </div>
+        ))}
+      </div>
+      <div className={cn("rounded-md p-3 text-center border", resultTone === "critical" ? "border-status-critical/40 bg-status-critical/10" : resultTone === "attention" ? "border-status-attention/40 bg-status-attention/10" : "border-status-positive/40 bg-status-positive/10")}>
+        <p className={cn("text-sm font-bold", resultTone === "critical" ? "text-status-critical" : resultTone === "attention" ? "text-status-attention" : "text-status-positive")}>{result}</p>
       </div>
     </div>
   );

@@ -1,0 +1,412 @@
+     1→"use client";
+     2→
+     3→import * as React from "react";
+     4→import { ArrowRight, GitCompareArrows, MapPin, Building2, AlertTriangle, CheckCircle2, TrendingUp, GraduationCap } from "lucide-react";
+     5→import { PageHeader, SectionLabel } from "@/components/kaushal/page-header";
+     6→import { EvidencePanel } from "@/components/kaushal/evidence-panel";
+     7→import { StatusPill } from "@/components/kaushal/status-pill";
+     8→import { MetricCard } from "@/components/kaushal/metric-card";
+     9→import { DataTable, type Column } from "@/components/kaushal/data-table";
+    10→import { LoadingState, ErrorState } from "@/components/kaushal/states";
+    11→import { useFetch } from "@/hooks/use-fetch";
+    12→import { useNav } from "@/store/app-store";
+    13→import {
+    14→  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+    15→} from "@/components/ui/select";
+    16→import { Label } from "@/components/ui/label";
+    17→import type { GapSignal, DistrictGapSummary, ClusterGapSummary, GapMatrixRow, Paginated, District, Sector } from "@/types/domain";
+    18→
+    19→const SIGNAL_TONE: Record<string, "positive" | "info" | "attention" | "critical" | "neutral"> = {
+    20→  HIGH_GAP: "critical", MODERATE_GAP: "attention", LOW_GAP: "positive",
+    21→  SUPPLY_PRESENT: "positive", SUPPLY_LIMITED: "attention", NO_IDENTIFIED_SUPPLY: "critical",
+    22→  PROFICIENCY_MISMATCH: "attention", GEOGRAPHIC_GAP: "attention", INSUFFICIENT_DATA: "neutral",
+    23→};
+    24→const DEMAND_TONE: Record<string, "positive" | "info" | "attention" | "neutral"> = {
+    25→  HIGH: "attention", MEDIUM: "info", LOW: "neutral", NONE: "neutral",
+    26→};
+    27→
+    28→export function GapIntelligenceView() {
+    29→  const setActiveView = useNav((s) => s.setActiveView);
+    30→  const [districtId, setDistrictId] = React.useState<string>("");
+    31→  const [sectorId, setSectorId] = React.useState<string>("");
+    32→
+    33→  const { data: districtsData } = useFetch<Paginated<District>>("/api/v1/districts?pageSize=100");
+    34→  const { data: sectorsData } = useFetch<Paginated<Sector>>("/api/v1/sectors?pageSize=100");
+    35→
+    36→  const filterQ = `${districtId ? `&districtId=${districtId}` : ""}${sectorId ? `&sectorId=${sectorId}` : ""}`;
+    37→  const skillsFetch = useFetch<{ skills: GapSignal[] }>(`/api/v1/gaps/skills?${filterQ.slice(1)}`);
+    38→  const rolesFetch = useFilterableGaps(`/api/v1/gaps/roles?${filterQ.slice(1)}`);
+    39→  const districtsFetch = useFetch<{ districts: DistrictGapSummary[] }>("/api/v1/gaps/districts");
+    40→
+    41→  const topSkillGaps = (skillsFetch.data?.skills ?? []).filter((g) => g.gapScore > 0).slice(0, 10);
+    42→  const topRoleGaps = (rolesFetch.data?.roles ?? []).filter((g) => g.gapScore > 0).slice(0, 10);
+    43→
+    44→  return (
+    45→    <div className="space-y-6">
+    46→      <PageHeader
+    47→        title="Training Supply & Gap Intelligence"
+    48→        description="Compare observed labour-market demand with the training ecosystem that currently serves it. OBSERVATION + LIMITED INTERPRETATION — not recommendations."
+    49→        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
+    50→      />
+    51→
+    52→      {/* Two-sided model banner */}
+    53→      <div className="rounded-lg border bg-card p-4 flex flex-col md:flex-row items-center justify-between gap-3">
+    54→        <div className="flex items-center gap-3">
+    55→          <TrendingUp className="size-6 text-primary" />
+    56→          <div><p className="text-sm font-medium">MARKET DEMAND</p><p className="text-xs text-muted-foreground">Market demand signals</p></div>
+    57→        </div>
+    58→        <ArrowRight className="size-5 text-muted-foreground rotate-90 md:rotate-0" />
+    59→        <div className="flex items-center gap-3">
+    60→          <GraduationCap className="size-6 text-primary" />
+    61→          <div><p className="text-sm font-medium">TRAINING SUPPLY</p><p className="text-xs text-muted-foreground">Training capacity data</p></div>
+    62→        </div>
+    63→        <ArrowRight className="size-5 text-muted-foreground rotate-90 md:rotate-0" />
+    64→        <div className="flex items-center gap-3">
+    65→          <GitCompareArrows className="size-6 text-primary" />
+    66→          <div><p className="text-sm font-medium">GAP INTELLIGENCE</p><p className="text-xs text-muted-foreground">Where mismatches appear</p></div>
+    67→        </div>
+    68→      </div>
+    69→
+    70→      {/* Filters */}
+    71→      <div className="grid sm:grid-cols-2 gap-3">
+    72→        <div className="space-y-1.5">
+    73→          <Label>District</Label>
+    74→          <Select value={districtId || "ALL"} onValueChange={(v) => setDistrictId(v === "ALL" ? "" : v)}>
+    75→            <SelectTrigger><SelectValue placeholder="All districts" /></SelectTrigger>
+    76→            <SelectContent>
+    77→              <SelectItem value="ALL">All districts</SelectItem>
+    78→              {(districtsData?.items ?? []).map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+    79→            </SelectContent>
+    80→          </Select>
+    81→        </div>
+    82→        <div className="space-y-1.5">
+    83→          <Label>Sector</Label>
+    84→          <Select value={sectorId || "ALL"} onValueChange={(v) => setSectorId(v === "ALL" ? "" : v)}>
+    85→            <SelectTrigger><SelectValue placeholder="All sectors" /></SelectTrigger>
+    86→            <SelectContent>
+    87→              <SelectItem value="ALL">All sectors</SelectItem>
+    88→              {(sectorsData?.items ?? []).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+    89→            </SelectContent>
+    90→          </Select>
+    91→        </div>
+    92→      </div>
+    93→
+    94→      {/* Top Gap Signals */}
+    95→      <section className="space-y-3">
+    96→        <SectionLabel>Observed Training Gap Signals — Skills</SectionLabel>
+    97→        {skillsFetch.loading ? <LoadingState /> : skillsFetch.error ? <ErrorState message={skillsFetch.error.message} /> : (
+    98→          <GapTable gaps={topSkillGaps} onSelect={(id) => setActiveView(`gap-skill:${id}`)} />
+    99→        )}
+   100→      </section>
+   101→
+   102→      <section className="space-y-3">
+   103→        <SectionLabel>Observed Training Gap Signals — Roles</SectionLabel>
+   104→        {rolesFetch.loading ? <LoadingState /> : rolesFetch.error ? <ErrorState message={rolesFetch.error.message} /> : (
+   105→          <GapTable gaps={topRoleGaps} onSelect={(id) => setActiveView(`gap-role:${id}`)} />
+   106→        )}
+   107→      </section>
+   108→
+   109→      {/* District gap summary */}
+   110→      <section className="space-y-3">
+   111→        <SectionLabel>District Gap Summary</SectionLabel>
+   112→        {districtsFetch.loading ? <LoadingState /> : (
+   113→          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+   114→            {(districtsFetch.data?.districts ?? []).slice(0, 6).map((d) => (
+   115→              <button key={d.district.id} onClick={() => setDistrictId(d.district.id)} className="text-left rounded-lg border bg-card p-4 space-y-2 hover:border-primary/40 hover:bg-accent/30 transition-colors">
+   116→                <div className="flex items-center justify-between">
+   117→                  <span className="text-sm font-medium">{d.district.name}</span>
+   118→                  <MapPin className="size-4 text-muted-foreground" />
+   119→                </div>
+   120→                <div className="grid grid-cols-2 gap-1 text-xs">
+   121→                  <div><span className="text-muted-foreground">High gaps:</span> <span className="text-status-critical font-medium">{d.highGapCount}</span></div>
+   122→                  <div><span className="text-muted-foreground">Prof. mismatch:</span> <span className="text-status-attention font-medium">{d.proficiencyMismatchCount}</span></div>
+   123→                  <div><span className="text-muted-foreground">No supply:</span> <span className="text-status-critical font-medium">{d.noSupplyCount}</span></div>
+   124→                  <div><span className="text-muted-foreground">Covered:</span> <span className="text-status-positive font-medium">{d.coveredCount}</span></div>
+   125→                </div>
+   126→              </button>
+   127→            ))}
+   128→          </div>
+   129→        )}
+   130→      </section>
+   131→
+   132→      {/* Quick links */}
+   133→      <section className="grid sm:grid-cols-3 gap-3">
+   134→        <button onClick={() => setActiveView("gap-matrix")} className="text-left rounded-lg border bg-card p-4 space-y-1.5 hover:border-primary/40 hover:bg-accent/30 transition-colors">
+   135→          <div className="flex items-center gap-2 text-primary"><GitCompareArrows className="size-4" /><span className="text-sm font-medium">Market–Training Matrix</span></div>
+   136→          <p className="text-xs text-muted-foreground">Side-by-side comparison of demand vs supply per role.</p>
+   137→        </button>
+   138→        <button onClick={() => setActiveView("gap-districts")} className="text-left rounded-lg border bg-card p-4 space-y-1.5 hover:border-primary/40 hover:bg-accent/30 transition-colors">
+   139→          <div className="flex items-center gap-2 text-primary"><MapPin className="size-4" /><span className="text-sm font-medium">District Gap View</span></div>
+   140→          <p className="text-xs text-muted-foreground">Geographic gap distribution across districts.</p>
+   141→        </button>
+   142→        <button onClick={() => setActiveView("gap-clusters")} className="text-left rounded-lg border bg-card p-4 space-y-1.5 hover:border-primary/40 hover:bg-accent/30 transition-colors">
+   143→          <div className="flex items-center gap-2 text-primary"><Building2 className="size-4" /><span className="text-sm font-medium">Cluster Gap View</span></div>
+   144→          <p className="text-xs text-muted-foreground">Local economic cluster gap intelligence.</p>
+   145→        </button>
+   146→      </section>
+   147→    </div>
+   148→  );
+   149→}
+   150→
+   151→function useFilterableGaps(path: string) {
+   152→  const [data, setData] = React.useState<{ roles: GapSignal[] } | null>(null);
+   153→  const [loading, setLoading] = React.useState(true);
+   154→  const [error, setError] = React.useState<{ message: string } | null>(null);
+   155→  React.useEffect(() => {
+   156→    if (!path) return;
+   157→    let cancelled = false;
+   158→    setLoading(true);
+   159→    fetch(path)
+   160→      .then((r) => r.json())
+   161→      .then((d) => { if (!cancelled && d.success) { setData(d.data); setLoading(false); } })
+   162→      .catch((e) => { if (!cancelled) { setError({ message: e.message }); setLoading(false); } });
+   163→    return () => { cancelled = true; };
+   164→  }, [path]);
+   165→  return { data, loading, error };
+   166→}
+   167→
+   168→function GapTable({ gaps, onSelect }: { gaps: GapSignal[]; onSelect: (id: string) => void }) {
+   169→  const cols: Column<GapSignal>[] = [
+   170→    { key: "entity", header: "Skill / Role", cell: (g) => (
+   171→      <div><p className="text-sm font-medium">{g.skill?.name ?? g.jobRole?.title ?? "—"}</p>{g.district ? <p className="text-[11px] text-muted-foreground">{g.district.name}</p> : null}</div>
+   172→    )},
+   173→    { key: "demand", header: "Demand", cell: (g) => <StatusPill tone={DEMAND_TONE[g.marketDemandSignal] ?? "neutral"} dot>{g.marketDemandSignal}</StatusPill>, width: "90px" },
+   174→    { key: "supply", header: "Supply", cell: (g) => <StatusPill tone={DEMAND_TONE[g.trainingSupplySignal] ?? "neutral"} dot>{g.trainingSupplySignal}</StatusPill>, width: "90px" },
+   175→    { key: "gap", header: "Gap Signal", cell: (g) => <StatusPill tone={SIGNAL_TONE[g.gapSignal] ?? "neutral"} dot>{g.gapSignal.replace(/_/g, " ")}</StatusPill>, width: "170px" },
+   176→    { key: "score", header: "Gap Score", cell: (g) => (
+   177→      <div className="flex items-center gap-2">
+   178→        <div className="w-12 h-1.5 rounded-full bg-muted overflow-hidden"><div className={`h-full ${g.gapScore >= 50 ? "bg-status-critical" : g.gapScore >= 25 ? "bg-status-attention" : "bg-status-positive"}`} style={{ width: `${g.gapScore}%` }} /></div>
+   179→        <span className="text-xs tabular-nums">{Math.round(g.gapScore)}</span>
+   180→      </div>
+   181→    ), width: "100px" },
+   182→    { key: "prof", header: "Proficiency", cell: (g) => g.proficiencyStatus !== "UNKNOWN" && g.proficiencyStatus !== "INSUFFICIENT_DATA" ? <StatusPill tone={g.proficiencyStatus === "ALIGNED" ? "positive" : "attention"} dot>{g.proficiencyStatus.replace(/_/g, " ")}</StatusPill> : <span className="text-xs text-muted-foreground">—</span>, width: "140px" },
+   183→    { key: "conf", header: "Confidence", cell: (g) => <StatusPill tone={g.confidenceLevel === "HIGH" ? "positive" : g.confidenceLevel === "MEDIUM" ? "info" : "attention"} dot>{g.confidenceLevel}</StatusPill>, width: "100px" },
+   184→  ];
+   185→  return <DataTable columns={cols} rows={gaps} rowKey={(g) => g.id} onRowClick={(g) => onSelect(g.id)} emptyMessage="No gap signals." />;
+   186→}
+   187→
+   188→// ---------------------------------------------------------------------
+   189→// Gap Detail view (skill or role)
+   190→// ---------------------------------------------------------------------
+   191→
+   192→export function GapDetailView() {
+   193→  const activeView = useNav((s) => s.activeView);
+   194→  const setActiveView = useNav((s) => s.setActiveView);
+   195→  const [showExplanation, setShowExplanation] = React.useState(false);
+   196→
+   197→  const isSkill = activeView.startsWith("gap-skill:");
+   198→  const gapId = activeView.split(":")[1];
+   199→
+   200→  const { data, loading, error } = useFetch<{ gap: GapSignal; reasons: string[]; methodology: string }>(
+   201→    gapId ? `/api/v1/gaps/${gapId}/explanation` : null,
+   202→    [gapId],
+   203→  );
+   204→
+   205→  if (loading && !data) return <LoadingState label="Loading gap detail…" />;
+   206→  if (error) return <ErrorState message={error.message} />;
+   207→  if (!data) return <ErrorState title="Gap not found" />;
+   208→
+   209→  const gap = data.gap;
+   210→  const entityName = gap.skill?.name ?? gap.jobRole?.title ?? "—";
+   211→
+   212→  return (
+   213→    <div className="space-y-6">
+   214→      <button onClick={() => setActiveView("gap-intelligence")} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+   215→        <ArrowRight className="size-4 rotate-180" /> Back to Gap Intelligence
+   216→      </button>
+   217→      <PageHeader
+   218→        title={`${entityName} — Gap Analysis`}
+   219→        description={`Observed demand–supply gap for ${entityName}. Evidence-backed, not a recommendation.`}
+   220→        badge={<StatusPill tone={SIGNAL_TONE[gap.gapSignal] ?? "neutral"} dot>{gap.gapSignal.replace(/_/g, " ")}</StatusPill>}
+   221→      />
+   222→
+   223→      {/* Market vs Supply metrics */}
+   224→      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+   225→        <MetricCard label="Market Demand" value={<StatusPill tone={DEMAND_TONE[gap.marketDemandSignal] ?? "neutral"} dot>{gap.marketDemandSignal}</StatusPill>} hint={`Strength: ${Math.round(gap.marketDemandStrength)}/100`} tone="info" />
+   226→        <MetricCard label="Training Supply" value={<StatusPill tone={DEMAND_TONE[gap.trainingSupplySignal] ?? "neutral"} dot>{gap.trainingSupplySignal}</StatusPill>} hint={`Strength: ${Math.round(gap.trainingSupplyStrength)}/100`} tone="default" />
+   227→        <MetricCard label="Gap Score" value={Math.round(gap.gapScore)} hint="/100 (Training Gap Signal)" tone={gap.gapScore >= 50 ? "critical" : gap.gapScore >= 25 ? "attention" : "positive"} />
+   228→        <MetricCard label="Confidence" value={<StatusPill tone={gap.confidenceLevel === "HIGH" ? "positive" : gap.confidenceLevel === "MEDIUM" ? "info" : "attention"} dot>{gap.confidenceLevel}</StatusPill>} />
+   229→      </div>
+   230→
+   231→      {/* Two-sided evidence */}
+   232→      <div className="grid lg:grid-cols-2 gap-6">
+   233→        <EvidencePanel title="Demand Evidence (Market)" source="Market Intelligence">
+   234→          <div className="space-y-2 text-sm">
+   235→            <div className="flex justify-between"><span className="text-muted-foreground">Demand signal</span><StatusPill tone={DEMAND_TONE[gap.marketDemandSignal] ?? "neutral"} dot>{gap.marketDemandSignal}</StatusPill></div>
+   236→            <div className="flex justify-between"><span className="text-muted-foreground">Demand strength</span><span className="tabular-nums">{Math.round(gap.marketDemandStrength)}/100</span></div>
+   237→            <div className="flex justify-between"><span className="text-muted-foreground">Unique employers</span><span className="tabular-nums">{gap.uniqueEmployers}</span></div>
+   238→            <div className="flex justify-between"><span className="text-muted-foreground">Evidence count</span><span className="tabular-nums">{gap.marketEvidenceCount}</span></div>
+   239→            <div className="flex justify-between"><span className="text-muted-foreground">Trend</span><StatusPill tone={gap.trendDirection === "INCREASING" ? "positive" : gap.trendDirection === "DECREASING" ? "critical" : "neutral"} dot>{gap.trendDirection}</StatusPill></div>
+   240→            <div className="flex justify-between"><span className="text-muted-foreground">Required proficiency</span><span className="font-medium">{gap.requiredProficiency ?? "—"}</span></div>
+   241→            <div className="flex justify-between"><span className="text-muted-foreground">Source diversity</span><span className="tabular-nums">{gap.sourceDiversity}</span></div>
+   242→            <div className="flex justify-between"><span className="text-muted-foreground">Data status</span><StatusPill tone="attention" dot>{gap.dataStatus}</StatusPill></div>
+   243→          </div>
+   244→        </EvidencePanel>
+   245→
+   246→        <EvidencePanel title="Supply Evidence (Training)" source="Training Intelligence">
+   247→          <div className="space-y-2 text-sm">
+   248→            <div className="flex justify-between"><span className="text-muted-foreground">Supply signal</span><StatusPill tone={DEMAND_TONE[gap.trainingSupplySignal] ?? "neutral"} dot>{gap.trainingSupplySignal}</StatusPill></div>
+   249→            <div className="flex justify-between"><span className="text-muted-foreground">Supply strength</span><span className="tabular-nums">{Math.round(gap.trainingSupplyStrength)}/100</span></div>
+   250→            <div className="flex justify-between"><span className="text-muted-foreground">Course count</span><span className="tabular-nums">{gap.courseCount}</span></div>
+   251→            <div className="flex justify-between"><span className="text-muted-foreground">Institutions</span><span className="tabular-nums">{gap.institutionCount}</span></div>
+   252→            <div className="flex justify-between"><span className="text-muted-foreground">Centres</span><span className="tabular-nums">{gap.centreCount}</span></div>
+   253→            <div className="flex justify-between"><span className="text-muted-foreground">Planned capacity</span><span className="tabular-nums">{gap.plannedCapacity}</span></div>
+   254→            <div className="flex justify-between"><span className="text-muted-foreground">Enrolled</span><span className="tabular-nums">{gap.enrolledCount ?? "—"}</span></div>
+   255→            <div className="flex justify-between"><span className="text-muted-foreground">Completed</span><span className="tabular-nums">{gap.completedCount ?? "—"}</span></div>
+   256→            <div className="flex justify-between"><span className="text-muted-foreground">Certified</span><span className="tabular-nums">{gap.certifiedCount ?? "—"}</span></div>
+   257→            <div className="flex justify-between"><span className="text-muted-foreground">Training proficiency</span><span className="font-medium">{gap.trainingProficiency ?? "—"}</span></div>
+   258→          </div>
+   259→        </EvidencePanel>
+   260→      </div>
+   261→
+   262→      {/* Gap dimensions */}
+   263→      <EvidencePanel title="Gap Dimensions" source="Gap Intelligence Engine">
+   264→        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+   265→          {[
+   266→            { k: "Coverage", v: gap.coverageStatus },
+   267→            { k: "Proficiency", v: gap.proficiencyStatus },
+   268→            { k: "Capacity", v: gap.capacityStatus },
+   269→            { k: "Geographic", v: gap.geographicStatus },
+   270→          ].map((d) => (
+   271→            <div key={d.k} className="rounded-md border p-3 space-y-1">
+   272→              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{d.k}</p>
+   273→              <StatusPill tone={d.v.includes("WELL") || d.v === "ALIGNED" || d.v === "ADEQUATE" || d.v === "LOCAL" ? "positive" : d.v.includes("NO") || d.v.includes("INSUFFICIENT") ? "neutral" : "attention"} dot>{d.v.replace(/_/g, " ")}</StatusPill>
+   274→            </div>
+   275→          ))}
+   276→        </div>
+   277→      </EvidencePanel>
+   278→
+   279→      {/* Explanation */}
+   280→      <EvidencePanel title="Why is this classified as a gap?" source="Rule-based explanation">
+   281→        <button onClick={() => setShowExplanation(!showExplanation)} className="text-sm text-primary hover:underline">
+   282→          {showExplanation ? "Hide" : "Show"} explanation
+   283→        </button>
+   284→        {showExplanation ? (
+   285→          <ol className="mt-3 space-y-1.5 list-decimal pl-5 text-sm">
+   286→            {data.reasons.map((r, i) => <li key={i} className="text-foreground/80">{r}</li>)}
+   287→          </ol>
+   288→        ) : null}
+   289→        <p className="mt-3 text-[11px] text-muted-foreground">{data.methodology}</p>
+   290→      </EvidencePanel>
+   291→    </div>
+   292→  );
+   293→}
+   294→
+   295→// ---------------------------------------------------------------------
+   296→// District Gap View
+   297→// ---------------------------------------------------------------------
+   298→
+   299→export function DistrictGapView() {
+   300→  const { data, loading, error } = useFetch<{ districts: DistrictGapSummary[] }>("/api/v1/gaps/districts");
+   301→  if (loading) return <LoadingState />;
+   302→  if (error) return <ErrorState message={error.message} />;
+   303→
+   304→  return (
+   305→    <div className="space-y-6">
+   306→      <PageHeader title="District Gap View" description="Geographic distribution of demand–supply gap signals across districts." badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>} />
+   307→      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+   308→        {(data?.districts ?? []).map((d) => (
+   309→          <div key={d.district.id} className="rounded-lg border bg-card p-4 space-y-3">
+   310→            <div className="flex items-center justify-between">
+   311→              <span className="text-sm font-medium">{d.district.name}</span>
+   312→              <MapPin className="size-4 text-muted-foreground" />
+   313→            </div>
+   314→            <div className="grid grid-cols-2 gap-2 text-xs">
+   315→              <div className="rounded border p-2"><p className="text-muted-foreground">High gaps</p><p className="text-status-critical font-semibold tabular-nums">{d.highGapCount}</p></div>
+   316→              <div className="rounded border p-2"><p className="text-muted-foreground">Prof. mismatch</p><p className="text-status-attention font-semibold tabular-nums">{d.proficiencyMismatchCount}</p></div>
+   317→              <div className="rounded border p-2"><p className="text-muted-foreground">No supply</p><p className="text-status-critical font-semibold tabular-nums">{d.noSupplyCount}</p></div>
+   318→              <div className="rounded border p-2"><p className="text-muted-foreground">Covered</p><p className="text-status-positive font-semibold tabular-nums">{d.coveredCount}</p></div>
+   319→            </div>
+   320→            {d.topGaps.length > 0 ? (
+   321→              <div className="space-y-1">
+   322→                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Top gaps</p>
+   323→                {d.topGaps.slice(0, 3).map((g) => (
+   324→                  <div key={g.id} className="flex items-center justify-between text-xs">
+   325→                    <span className="truncate">{g.skill}</span>
+   326→                    <StatusPill tone={SIGNAL_TONE[g.gapSignal] ?? "neutral"} dot>{g.gapSignal.replace(/_/g, " ")}</StatusPill>
+   327→                  </div>
+   328→                ))}
+   329→              </div>
+   330→            ) : null}
+   331→          </div>
+   332→        ))}
+   333→      </div>
+   334→    </div>
+   335→  );
+   336→}
+   337→
+   338→// ---------------------------------------------------------------------
+   339→// Cluster Gap View
+   340→// ---------------------------------------------------------------------
+   341→
+   342→export function ClusterGapView() {
+   343→  const { data, loading, error } = useFetch<{ clusters: ClusterGapSummary[] }>("/api/v1/gaps/clusters");
+   344→  if (loading) return <LoadingState />;
+   345→  if (error) return <ErrorState message={error.message} />;
+   346→
+   347→  return (
+   348→    <div className="space-y-6">
+   349→      <PageHeader title="Cluster Gap View" description="Local economic cluster demand–supply gap intelligence — a major differentiator of KAUSHAL DRISHTI." badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>} />
+   350→      <div className="grid sm:grid-cols-2 gap-3">
+   351→        {(data?.clusters ?? []).map((c) => (
+   352→          <div key={c.cluster.id} className="rounded-lg border bg-card p-4 space-y-3">
+   353→            <div>
+   354→              <p className="text-sm font-medium">{c.cluster.name}</p>
+   355→              <p className="text-[11px] text-muted-foreground">{c.cluster.district} · {c.cluster.sector}</p>
+   356→            </div>
+   357→            <div className="flex items-center gap-2">
+   358→              <StatusPill tone={c.highGapCount > 3 ? "critical" : c.highGapCount > 0 ? "attention" : "positive"} dot>{c.highGapCount} high gaps</StatusPill>
+   359→              <span className="text-xs text-muted-foreground">of {c.totalGaps} total</span>
+   360→            </div>
+   361→            {c.topGapSkills.length > 0 ? (
+   362→              <div className="space-y-1">
+   363→                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Top gap skills</p>
+   364→                {c.topGapSkills.slice(0, 3).map((g) => (
+   365→                  <div key={g.id} className="flex items-center justify-between text-xs">
+   366→                    <span className="truncate">{g.skill}</span>
+   367→                    <StatusPill tone={SIGNAL_TONE[g.gapSignal] ?? "neutral"} dot>{g.gapSignal.replace(/_/g, " ")}</StatusPill>
+   368→                  </div>
+   369→                ))}
+   370→              </div>
+   371→            ) : null}
+   372→          </div>
+   373→        ))}
+   374→      </div>
+   375→    </div>
+   376→  );
+   377→}
+   378→
+   379→// ---------------------------------------------------------------------
+   380→// Market–Training Matrix
+   381→// ---------------------------------------------------------------------
+   382→
+   383→export function GapMatrixView() {
+   384→  const { data, loading, error } = useFetch<{ matrix: GapMatrixRow[] }>("/api/v1/gaps/matrix");
+   385→  if (loading) return <LoadingState />;
+   386→  if (error) return <ErrorState message={error.message} />;
+   387→
+   388→  const cols: Column<GapMatrixRow>[] = [
+   389→    { key: "role", header: "Role", cell: (r) => <span className="text-sm font-medium">{r.role}</span> },
+   390→    { key: "demand", header: "Demand", cell: (r) => <StatusPill tone={DEMAND_TONE[r.demand] ?? "neutral"} dot>{r.demand}</StatusPill>, width: "90px" },
+   391→    { key: "supply", header: "Supply", cell: (r) => <StatusPill tone={DEMAND_TONE[r.supply] ?? "neutral"} dot>{r.supply}</StatusPill>, width: "90px" },
+   392→    { key: "coverage", header: "Coverage", cell: (r) => <span className="text-xs">{r.coverage.replace(/_/g, " ")}</span>, width: "140px" },
+   393→    { key: "proficiency", header: "Proficiency", cell: (r) => <span className="text-xs">{r.proficiency.replace(/_/g, " ")}</span>, width: "140px" },
+   394→    { key: "gap", header: "Gap Signal", cell: (r) => <StatusPill tone={SIGNAL_TONE[r.gapSignal] ?? "neutral"} dot>{r.gapSignal.replace(/_/g, " ")}</StatusPill>, width: "150px" },
+   395→    { key: "score", header: "Gap Score", cell: (r) => (
+   396→      <div className="flex items-center gap-2">
+   397→        <div className="w-12 h-1.5 rounded-full bg-muted overflow-hidden"><div className={`h-full ${r.gapScore >= 50 ? "bg-status-critical" : r.gapScore >= 25 ? "bg-status-attention" : "bg-status-positive"}`} style={{ width: `${r.gapScore}%` }} /></div>
+   398→        <span className="text-xs tabular-nums">{Math.round(r.gapScore)}</span>
+   399→      </div>
+   400→    ), width: "100px" },
+   401→    { key: "conf", header: "Confidence", cell: (r) => <StatusPill tone={r.confidence === "HIGH" ? "positive" : r.confidence === "MEDIUM" ? "info" : "attention"} dot>{r.confidence}</StatusPill>, width: "100px" },
+   402→  ];
+   403→
+   404→  return (
+   405→    <div className="space-y-6">
+   406→      <PageHeader title="Market–Training Matrix" description="Side-by-side comparison of observed demand vs training supply for each role. Filterable by district and sector." badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>} />
+   407→      <DataTable columns={cols} rows={data?.matrix ?? []} rowKey={(r) => `${r.role}-${r.gapSignal}`} emptyMessage="No matrix data." />
+   408→      <p className="text-[11px] text-muted-foreground">Gap signal computed from transparent rules comparing normalized demand (0-100) with normalized supply (0-100). Weights documented as 'initial system configuration — subject to validation.' No workforce-unit estimation.</p>
+   409→    </div>
+   410→  );
+   411→}
+   412→

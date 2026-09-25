@@ -1,0 +1,602 @@
+     1→     1→"use client";
+     2→     2→
+     3→     3→import * as React from "react";
+     4→     4→import { cn } from "@/lib/utils";
+     5→     5→import { CheckCircle2, AlertCircle, AlertTriangle, Info, XCircle, Clock, ShieldCheck, FileText, Award, Briefcase, TrendingUp, ChevronRight } from "lucide-react";
+     6→     6→
+     7→     7→// ---------------------------------------------------------------------
+     8→     8→// 1. VisualBar — animated horizontal bar for demand/supply/gap comparison
+     9→     9→// ---------------------------------------------------------------------
+    10→    10→
+    11→    11→interface VisualBarProps {
+    12→    12→  label: string;
+    13→    13→  value: number;
+    14→    14→  max?: number;
+    15→    15→  tone?: "positive" | "info" | "attention" | "critical" | "neutral";
+    16→    16→  showValue?: boolean;
+    17→    17→  height?: "sm" | "md" | "lg";
+    18→    18→  icon?: React.ReactNode;
+    19→    19→}
+    20→    20→
+    21→    21→const BAR_TONE: Record<string, string> = {
+    22→    22→  positive: "bg-status-positive",
+    23→    23→  info: "bg-status-info",
+    24→    24→  attention: "bg-status-attention",
+    25→    25→  critical: "bg-status-critical",
+    26→    26→  neutral: "bg-muted-foreground",
+    27→    27→};
+    28→    28→
+    29→    29→const BAR_HEIGHT: Record<string, string> = {
+    30→    30→  sm: "h-1.5",
+    31→    31→  md: "h-2.5",
+    32→    32→  lg: "h-4",
+    33→    33→};
+    34→    34→
+    35→    35→export function VisualBar({ label, value, max = 100, tone = "info", showValue = true, height = "md", icon }: VisualBarProps) {
+    36→    36→  const pct = Math.min(100, Math.max(0, (value / max) * 100));
+    37→    37→  const [animatedPct, setAnimatedPct] = React.useState(0);
+    38→    38→
+    39→    39→  React.useEffect(() => {
+    40→    40→    const timer = setTimeout(() => setAnimatedPct(pct), 100);
+    41→    41→    return () => clearTimeout(timer);
+    42→    42→  }, [pct]);
+    43→    43→
+    44→    44→  return (
+    45→    45→    <div className="space-y-1">
+    46→    46→      {label ? (
+    47→    47→        <div className="flex items-center justify-between text-xs">
+    48→    48→          <span className="flex items-center gap-1.5 text-muted-foreground">
+    49→    49→            {icon}
+    50→    50→            {label}
+    51→    51→          </span>
+    52→    52→          {showValue ? <span className="tabular-nums font-medium">{Math.round(value)}</span> : null}
+    53→    53→        </div>
+    54→    54→      ) : null}
+    55→    55→      <div className={cn("w-full rounded-full bg-muted overflow-hidden", BAR_HEIGHT[height])}>
+    56→    56→        <div
+    57→    57→          className={cn("h-full rounded-full transition-all duration-700 ease-out", BAR_TONE[tone])}
+    58→    58→          style={{ width: `${animatedPct}%` }}
+    59→    59→        />
+    60→    60→      </div>
+    61→    61→    </div>
+    62→    62→  );
+    63→    63→}
+    64→    64→
+    65→    65→// ---------------------------------------------------------------------
+    66→    66→// 2. DemandSupplyComparison — side-by-side visual
+    67→    67→// ---------------------------------------------------------------------
+    68→    68→
+    69→    69→interface DemandSupplyComparisonProps {
+    70→    70→  skill: string;
+    71→    71→  demandValue: number;
+    72→    72→  supplyValue: number;
+    73→    73→  demandLabel?: string;
+    74→    74→  supplyLabel?: string;
+    75→    75→  max?: number;
+    76→    76→}
+    77→    77→
+    78→    78→export function DemandSupplyComparison({ skill, demandValue, supplyValue, demandLabel = "Market Demand", supplyLabel = "Training Coverage", max = 100 }: DemandSupplyComparisonProps) {
+    79→    79→  const gap = demandValue - supplyValue;
+    80→    80→  const gapTone = gap > 30 ? "critical" : gap > 10 ? "attention" : "positive";
+    81→    81→
+    82→    82→  return (
+    83→    83→    <div className="rounded-lg border bg-card p-4 space-y-3 shadow-sm">
+    84→    84→      <div className="flex items-center justify-between">
+    85→    85→        <h4 className="text-sm font-semibold">{skill}</h4>
+    86→    86→        <span className={cn("text-xs font-medium", gap > 30 ? "text-status-critical" : gap > 10 ? "text-status-attention" : "text-status-positive")}>
+    87→    87→          {gap > 0 ? `+${Math.round(gap)}` : Math.round(gap)} gap
+    88→    88→        </span>
+    89→    89→      </div>
+    90→    90→      <VisualBar label={demandLabel} value={demandValue} max={max} tone="attention" height="lg" icon={<TrendingUp className="size-3" />} />
+    91→    91→      <VisualBar label={supplyLabel} value={supplyValue} max={max} tone="info" height="lg" icon={<ShieldCheck className="size-3" />} />
+    92→    92→      <div className="flex items-center gap-2 pt-1">
+    93→    93→        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Signal:</span>
+    94→    94→        <span className={cn("text-xs font-medium", `text-status-${gapTone}`)}>
+    95→    95→          {gap > 30 ? "HIGH GAP" : gap > 10 ? "MODERATE GAP" : gap > 0 ? "LOW GAP" : "SUPPLY PRESENT"}
+    96→    96→        </span>
+    97→    97→      </div>
+    98→    98→    </div>
+    99→    99→  );
+   100→   100→}
+   101→   101→
+   102→   102→// ---------------------------------------------------------------------
+   103→   103→// 3. EvidenceChain — visual evidence flow
+   104→   104→// ---------------------------------------------------------------------
+   105→   105→
+   106→   106→interface EvidenceChainItem {
+   107→   107→  icon: React.ReactNode;
+   108→   108→  label: string;
+   109→   109→  detail: string;
+   110→   110→  verified: boolean;
+   111→   111→}
+   112→   112→
+   113→   113→interface EvidenceChainProps {
+   114→   114→  items: EvidenceChainItem[];
+   115→   115→  demonstratedLevel?: string;
+   116→   116→  confidence?: string;
+   117→   117→}
+   118→   118→
+   119→   119→export function EvidenceChain({ items, demonstratedLevel, confidence }: EvidenceChainProps) {
+   120→   120→  return (
+   121→   121→    <div className="rounded-lg border bg-card p-4 space-y-3">
+   122→   122→      <div className="flex items-center gap-2">
+   123→   123→        <FileText className="size-4 text-primary" />
+   124→   124→        <h4 className="text-sm font-semibold">Evidence, Not Claims</h4>
+   125→   125→      </div>
+   126→   126→      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+   127→   127→        {items.map((item, i) => (
+   128→   128→          <div key={i} className={cn("rounded-md border p-2 space-y-1 text-center", item.verified ? "border-status-positive/30 bg-status-positive/5" : "border-muted bg-muted/30")}>
+   129→   129→            <div className={cn("flex justify-center", item.verified ? "text-status-positive" : "text-muted-foreground")}>
+   130→   130→              {item.verified ? <CheckCircle2 className="size-4" /> : <XCircle className="size-4" />}
+   131→   131→            </div>
+   132→   132→            <p className="text-[10px] font-medium">{item.label}</p>
+   133→   133→            <p className="text-[9px] text-muted-foreground">{item.detail}</p>
+   134→   134→          </div>
+   135→   135→        ))}
+   136→   136→      </div>
+   137→   137→      {demonstratedLevel ? (
+   138→   138→        <div className="flex items-center justify-between pt-2 border-t">
+   139→   139→          <div>
+   140→   140→            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Demonstrated</p>
+   141→   141→            <p className="text-sm font-bold">{demonstratedLevel}</p>
+   142→   142→          </div>
+   143→   143→          {confidence ? (
+   144→   144→            <div className="text-right">
+   145→   145→              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Confidence</p>
+   146→   146→              <p className={cn("text-sm font-bold", confidence === "HIGH" ? "text-status-positive" : confidence === "MEDIUM" ? "text-status-info" : "text-status-attention")}>{confidence}</p>
+   147→   147→            </div>
+   148→   148→          ) : null}
+   149→   149→        </div>
+   150→   150→      ) : null}
+   151→   151→    </div>
+   152→   152→  );
+   153→   153→}
+   154→   154→
+   155→   155→// ---------------------------------------------------------------------
+   156→   156→// 4. ProficiencyLadder — visual proficiency comparison
+   157→   157→// ---------------------------------------------------------------------
+   158→   158→
+   159→   159→const PROFICIENCY_LEVELS = ["AWARENESS", "WORKING", "PROFICIENT", "EXPERT"];
+   160→   160→const PROFICIENCY_LABELS: Record<string, string> = {
+   161→   161→  AWARENESS: "Awareness", WORKING: "Working", PROFICIENT: "Proficient", EXPERT: "Expert",
+   162→   162→  BEGINNER: "Beginner", BASIC: "Basic", INTERMEDIATE: "Intermediate", ADVANCED: "Advanced",
+   163→   163→};
+   164→   164→
+   165→   165→interface ProficiencyLadderProps {
+   166→   166→  required?: string;
+   167→   167→  current?: string;
+   168→   168→  showLabels?: boolean;
+   169→   169→}
+   170→   170→
+   171→   171→export function ProficiencyLadder({ required, current, showLabels = true }: ProficiencyLadderProps) {
+   172→   172→  const requiredIdx = required ? PROFICIENCY_LEVELS.indexOf(required) : -1;
+   173→   173→  const currentIdx = current ? PROFICIENCY_LEVELS.indexOf(current) : -1;
+   174→   174→
+   175→   175→  return (
+   176→   176→    <div className="space-y-2">
+   177→   177→      <div className="flex items-end justify-between gap-1">
+   178→   178→        {PROFICIENCY_LEVELS.map((level, i) => {
+   179→   179→          const isRequired = i === requiredIdx;
+   180→   180→          const isCurrent = i === currentIdx;
+   181→   181→          const isBelow = currentIdx >= 0 && i <= currentIdx;
+   182→   182→          const isGap = requiredIdx >= 0 && currentIdx >= 0 && i > currentIdx && i <= requiredIdx;
+   183→   183→
+   184→   184→          return (
+   185→   185→            <div key={level} className="flex-1 flex flex-col items-center gap-1">
+   186→   186→              {showLabels ? (
+   187→   187→                <span className={cn("text-[9px] font-medium", isRequired ? "text-status-critical" : isCurrent ? "text-status-info" : "text-muted-foreground")}>
+   188→   188→                  {PROFICIENCY_LABELS[level] ?? level}
+   189→   189→                </span>
+   190→   190→              ) : null}
+   191→   191→              <div
+   192→   192→                className={cn(
+   193→   193→                  "w-full rounded-t transition-all duration-500",
+   194→   194→                  isBelow ? "bg-status-info" : isGap ? "bg-status-attention/50" : "bg-muted",
+   195→   195→                  isRequired ? "ring-2 ring-status-critical ring-offset-1" : "",
+   196→   196→                )}
+   197→   197→                style={{ height: `${20 + i * 12}px` }}
+   198→   198→              />
+   199→   199→              {isRequired ? <div className="text-[8px] text-status-critical font-bold">REQUIRED</div> : null}
+   200→   200→              {isCurrent && !isRequired ? <div className="text-[8px] text-status-info font-bold">YOU</div> : null}
+   201→   201→            </div>
+   202→   202→          );
+   203→   203→        })}
+   204→   204→      </div>
+   205→   205→    </div>
+   206→   206→  );
+   207→   207→}
+   208→   208→
+   209→   209→// ---------------------------------------------------------------------
+   210→   210→// 5. FlowNode — visual intelligence flow node
+   211→   211→// ---------------------------------------------------------------------
+   212→   212→
+   213→   213→interface FlowNodeProps {
+   214→   214→  icon: React.ReactNode;
+   215→   215→  label: string;
+   216→   216→  detail?: string;
+   217→   217→  active?: boolean;
+   218→   218→  onClick?: () => void;
+   219→   219→}
+   220→   220→
+   221→   221→export function FlowNode({ icon, label, detail, active, onClick }: FlowNodeProps) {
+   222→   222→  return (
+   223→   223→    <button
+   224→   224→      onClick={onClick}
+   225→   225→      disabled={!onClick}
+   226→   226→      className={cn(
+   227→   227→        "flex flex-col items-center gap-1.5 rounded-lg border p-3 text-center transition-all min-w-[120px]",
+   228→   228→        active ? "border-primary bg-primary/5 shadow-md" : "bg-card hover:border-primary/30 hover:shadow-sm",
+   229→   229→        onClick ? "cursor-pointer" : "cursor-default",
+   230→   230→      )}
+   231→   231→    >
+   232→   232→      <div className={cn("rounded-full p-2", active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+   233→   233→        {icon}
+   234→   234→      </div>
+   235→   235→      <span className="text-[11px] font-medium leading-tight">{label}</span>
+   236→   236→      {detail ? <span className="text-[9px] text-muted-foreground leading-tight">{detail}</span> : null}
+   237→   237→    </button>
+   238→   238→  );
+   239→   239→}
+   240→   240→
+   241→   241→// ---------------------------------------------------------------------
+   242→   242→// 6. AnimatedCounter — count-up animation for metrics
+   243→   243→// ---------------------------------------------------------------------
+   244→   244→
+   245→   245→interface AnimatedCounterProps {
+   246→   246→  value: number;
+   247→   247→  duration?: number;
+   248→   248→  className?: string;
+   249→   249→}
+   250→   250→
+   251→   251→export function AnimatedCounter({ value, duration = 1000, className }: AnimatedCounterProps) {
+   252→   252→  const [displayValue, setDisplayValue] = React.useState(0);
+   253→   253→
+   254→   254→  React.useEffect(() => {
+   255→   255→    let startTime: number | null = null;
+   256→   256→    let frameId: number;
+   257→   257→
+   258→   258→    const animate = (timestamp: number) => {
+   259→   259→      if (!startTime) startTime = timestamp;
+   260→   260→      const progress = Math.min((timestamp - startTime) / duration, 1);
+   261→   261→      const eased = 1 - Math.pow(1 - progress, 3);
+   262→   262→      setDisplayValue(Math.round(value * eased));
+   263→   263→      if (progress < 1) {
+   264→   264→        frameId = requestAnimationFrame(animate);
+   265→   265→      }
+   266→   266→    };
+   267→   267→
+   268→   268→    frameId = requestAnimationFrame(animate);
+   269→   269→    return () => cancelAnimationFrame(frameId);
+   270→   270→  }, [value, duration]);
+   271→   271→
+   272→   272→  return <span className={cn("tabular-nums", className)}>{displayValue.toLocaleString()}</span>;
+   273→   273→}
+   274→   274→
+   275→   275→// ---------------------------------------------------------------------
+   276→   276→// 7. StatusBadge — compact data status badge
+   277→   277→// ---------------------------------------------------------------------
+   278→   278→
+   279→   279→const STATUS_CONFIG: Record<string, { tone: string; icon: React.ReactNode; label: string }> = {
+   280→   280→  OBSERVED: { tone: "surface-positive", icon: <CheckCircle2 className="size-2.5" />, label: "OBSERVED" },
+   281→   281→  SYNTHETIC: { tone: "surface-attention", icon: <AlertTriangle className="size-2.5" />, label: "SYNTHETIC" },
+   282→   282→  SIMULATED: { tone: "surface-info", icon: <Info className="size-2.5" />, label: "SIMULATED" },
+   283→   283→  MODELLED: { tone: "surface-info", icon: <TrendingUp className="size-2.5" />, label: "MODELLED" },
+   284→   284→  "USER-DEFINED": { tone: "surface-neutral", icon: <Info className="size-2.5" />, label: "USER-DEFINED" },
+   285→   285→  DEMO: { tone: "surface-attention", icon: <AlertTriangle className="size-2.5" />, label: "DEMO" },
+   286→   286→  UNKNOWN: { tone: "surface-neutral", icon: <Info className="size-2.5" />, label: "UNKNOWN" },
+   287→   287→};
+   288→   288→
+   289→   289→export function StatusBadge({ status, className }: { status: string; className?: string }) {
+   290→   290→  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.UNKNOWN;
+   291→   291→  return (
+   292→   292→    <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-medium", config.tone, className)}>
+   293→   293→      {config.icon}
+   294→   294→      {config.label}
+   295→   295→    </span>
+   296→   296→  );
+   297→   297→}
+   298→   298→
+   299→   299→// ---------------------------------------------------------------------
+   300→   300→// 8. ConfidenceBadge — compact confidence indicator
+   301→   301→// ---------------------------------------------------------------------
+   302→   302→
+   303→   303→const CONFIDENCE_CONFIG: Record<string, { tone: string; dots: number }> = {
+   304→   304→  HIGH: { tone: "surface-positive", dots: 3 },
+   305→   305→  MEDIUM: { tone: "surface-info", dots: 2 },
+   306→   306→  LOW: { tone: "surface-attention", dots: 1 },
+   307→   307→  INSUFFICIENT: { tone: "surface-neutral", dots: 0 },
+   308→   308→};
+   309→   309→
+   310→   310→export function ConfidenceBadge({ confidence, className }: { confidence: string; className?: string }) {
+   311→   311→  const config = CONFIDENCE_CONFIG[confidence] ?? CONFIDENCE_CONFIG.INSUFFICIENT;
+   312→   312→  return (
+   313→   313→    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[9px] font-medium", config.tone, className)} title={`Confidence based on source reliability, freshness, sample size, source diversity and consistency.`}>
+   314→   314→      <span className="flex gap-0.5">
+   315→   315→        {[1, 2, 3].map((n) => (
+   316→   316→          <span key={n} className={cn("size-1.5 rounded-full", n <= config.dots ? "bg-current" : "bg-current/20")} />
+   317→   317→        ))}
+   318→   318→      </span>
+   319→   319→      {confidence}
+   320→   320→    </span>
+   321→   321→  );
+   322→   322→}
+   323→   323→
+   324→   324→// ---------------------------------------------------------------------
+   325→   325→// 9. EvidenceTrace — vertical evidence flow
+   326→   326→// ---------------------------------------------------------------------
+   327→   327→
+   328→   328→interface EvidenceTraceItem {
+   329→   329→  label: string;
+   330→   330→  value: string;
+   331→   331→  icon?: React.ReactNode;
+   332→   332→}
+   333→   333→
+   334→   334→export function EvidenceTrace({ items, finalSignal, confidence }: { items: EvidenceTraceItem[]; finalSignal: string; confidence: string }) {
+   335→   335→  return (
+   336→   336→    <div className="rounded-lg border bg-card p-4 space-y-2">
+   337→   337→      <div className="flex items-center gap-2 mb-2">
+   338→   338→        <FileText className="size-4 text-primary" />
+   339→   339→        <h4 className="text-sm font-semibold">Evidence Trace</h4>
+   340→   340→      </div>
+   341→   341→      <div className="space-y-0">
+   342→   342→        {items.map((item, i) => (
+   343→   343→          <div key={i} className="flex items-start gap-3">
+   344→   344→            <div className="flex flex-col items-center">
+   345→   345→              <div className="flex size-6 items-center justify-center rounded-full bg-muted text-muted-foreground text-[10px]">
+   346→   346→                {item.icon ?? i + 1}
+   347→   347→              </div>
+   348→   348→              {i < items.length - 1 ? <div className="w-px h-6 bg-border" /> : null}
+   349→   349→            </div>
+   350→   350→            <div className="pb-2">
+   351→   351→              <p className="text-[10px] text-muted-foreground">{item.label}</p>
+   352→   352→              <p className="text-xs font-medium">{item.value}</p>
+   353→   353→            </div>
+   354→   354→          </div>
+   355→   355→        ))}
+   356→   356→      </div>
+   357→   357→      <div className="flex items-center justify-between pt-2 border-t">
+   358→   358→        <div>
+   359→   359→          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Demand Signal</p>
+   360→   360→          <p className="text-sm font-bold">{finalSignal}</p>
+   361→   361→        </div>
+   362→   362→        <div className="text-right">
+   363→   363→          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Confidence</p>
+   364→   364→          <ConfidenceBadge confidence={confidence} />
+   365→   365→        </div>
+   366→   366→      </div>
+   367→   367→    </div>
+   368→   368→  );
+   369→   369→}
+   370→   370→
+   371→   371→// ---------------------------------------------------------------------
+   372→   372→// 10. GapMatrix — visual demand-training matrix
+   373→   373→// ---------------------------------------------------------------------
+   374→   374→
+   375→   375→interface GapMatrixRow {
+   376→   376→  skill: string;
+   377→   377→  demand: string;
+   378→   378→  supply: string;
+   379→   379→  gap: string;
+   380→   380→  confidence: string;
+   381→   381→}
+   382→   382→
+   383→   383→const GAP_CELL_TONE: Record<string, string> = {
+   384→   384→  HIGH: "bg-status-critical/20 text-status-critical",
+   385→   385→  MEDIUM: "bg-status-attention/20 text-status-attention",
+   386→   386→  LOW: "bg-status-positive/20 text-status-positive",
+   387→   387→  "NO_IDENTIFIED_SUPPLY": "bg-status-critical/30 text-status-critical",
+   388→   388→  "PROFICIENCY_MISMATCH": "bg-status-attention/20 text-status-attention",
+   389→   389→  "GEOGRAPHIC_GAP": "bg-status-attention/20 text-status-attention",
+   390→   390→  "SUPPLY_PRESENT": "bg-status-positive/20 text-status-positive",
+   391→   391→  "LOW_GAP": "bg-status-positive/20 text-status-positive",
+   392→   392→  "MODERATE_GAP": "bg-status-attention/20 text-status-attention",
+   393→   393→  "HIGH_GAP": "bg-status-critical/20 text-status-critical",
+   394→   394→  "INSUFFICIENT_DATA": "bg-muted text-muted-foreground",
+   395→   395→  "UNKNOWN": "bg-muted text-muted-foreground",
+   396→   396→};
+   397→   397→
+   398→   398→export function GapMatrix({ rows }: { rows: GapMatrixRow[] }) {
+   399→   399→  return (
+   400→   400→    <div className="rounded-lg border overflow-hidden">
+   401→   401→      <div className="overflow-x-auto scroll-thin">
+   402→   402→        <table className="w-full text-xs">
+   403→   403→          <thead className="bg-muted/50">
+   404→   404→            <tr>
+   405→   405→              <th className="text-left p-2 font-semibold uppercase tracking-wider text-[10px] text-muted-foreground">Skill</th>
+   406→   406→              <th className="text-center p-2 font-semibold uppercase tracking-wider text-[10px] text-muted-foreground">Demand</th>
+   407→   407→              <th className="text-center p-2 font-semibold uppercase tracking-wider text-[10px] text-muted-foreground">Supply</th>
+   408→   408→              <th className="text-center p-2 font-semibold uppercase tracking-wider text-[10px] text-muted-foreground">Gap</th>
+   409→   409→              <th className="text-center p-2 font-semibold uppercase tracking-wider text-[10px] text-muted-foreground">Confidence</th>
+   410→   410→            </tr>
+   411→   411→          </thead>
+   412→   412→          <tbody>
+   413→   413→            {rows.map((row, i) => (
+   414→   414→              <tr key={i} className="border-t hover:bg-accent/30 transition-colors">
+   415→   415→                <td className="p-2 font-medium">{row.skill}</td>
+   416→   416→                <td className="p-2 text-center"><span className={cn("inline-block rounded px-1.5 py-0.5 text-[10px] font-medium", GAP_CELL_TONE[row.demand] ?? GAP_CELL_TONE.UNKNOWN)}>{row.demand}</span></td>
+   417→   417→                <td className="p-2 text-center"><span className={cn("inline-block rounded px-1.5 py-0.5 text-[10px] font-medium", GAP_CELL_TONE[row.supply] ?? GAP_CELL_TONE.UNKNOWN)}>{row.supply}</span></td>
+   418→   418→                <td className="p-2 text-center"><span className={cn("inline-block rounded px-1.5 py-0.5 text-[10px] font-medium", GAP_CELL_TONE[row.gap] ?? GAP_CELL_TONE.UNKNOWN)}>{row.gap.replace(/_/g, " ")}</span></td>
+   419→   419→                <td className="p-2 text-center"><ConfidenceBadge confidence={row.confidence} /></td>
+   420→   420→              </tr>
+   421→   421→            ))}
+   422→   422→          </tbody>
+   423→   423→        </table>
+   424→   424→      </div>
+   425→   425→    </div>
+   426→   426→  );
+   427→   427→}
+   428→   428→
+   429→   429→// ---------------------------------------------------------------------
+   430→   430→// 11. ScenarioComparison — before/after visual
+   431→   431→// ---------------------------------------------------------------------
+   432→   432→
+   433→   433→interface ScenarioMetric {
+   434→   434→  label: string;
+   435→   435→  baseline: string;
+   436→   436→  simulated: string;
+   437→   437→  unit?: string;
+   438→   438→}
+   439→   439→
+   440→   440→export function ScenarioComparison({ metrics }: { metrics: ScenarioMetric[] }) {
+   441→   441→  return (
+   442→   442→    <div className="rounded-lg border bg-card p-4 space-y-3">
+   443→   443→      <div className="flex items-center justify-between">
+   444→   444→        <h4 className="text-sm font-semibold">Baseline → Simulated</h4>
+   445→   445→        <StatusBadge status="SIMULATED" />
+   446→   446→      </div>
+   447→   447→      <div className="space-y-2">
+   448→   448→        {metrics.map((m, i) => (
+   449→   449→          <div key={i} className="grid grid-cols-3 items-center gap-2 text-xs">
+   450→   450→            <span className="text-muted-foreground">{m.label}</span>
+   451→   451→            <div className="flex items-center gap-2">
+   452→   452→              <span className="font-medium tabular-nums">{m.baseline}</span>
+   453→   453→              <span className="text-muted-foreground">→</span>
+   454→   454→              <span className="font-bold tabular-nums text-primary">{m.simulated}</span>
+   455→   455→              {m.unit ? <span className="text-[10px] text-muted-foreground">{m.unit}</span> : null}
+   456→   456→            </div>
+   457→   457→            <div className="flex items-center gap-1">
+   458→   458→              <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+   459→   459→                <div className="h-full bg-status-info/30" style={{ width: "100%" }} />
+   460→   460→              </div>
+   461→   461→            </div>
+   462→   462→          </div>
+   463→   463→        ))}
+   464→   464→      </div>
+   465→   465→      <p className="text-[10px] text-muted-foreground italic">SIMULATED RESULT — NOT A FORECAST. Based on explicit user assumptions.</p>
+   466→   466→    </div>
+   467→   467→  );
+   468→   468→}
+   469→   469→
+   470→   470→// ---------------------------------------------------------------------
+   471→   471→// 12. SkillJourneyFlow — visual role-to-outcome journey
+   472→   472→// ---------------------------------------------------------------------
+   473→   473→
+   474→   474→interface SkillJourneyStep {
+   475→   475→  icon: React.ReactNode;
+   476→   476→  label: string;
+   477→   477→  detail: string;
+   478→   478→  tone?: "positive" | "info" | "attention" | "critical" | "neutral";
+   479→   479→}
+   480→   480→
+   481→   481→export function SkillJourneyFlow({ steps }: { steps: SkillJourneyStep[] }) {
+   482→   482→  return (
+   483→   483→    <div className="flex flex-col md:flex-row items-stretch gap-1 overflow-x-auto scroll-thin pb-2">
+   484→   484→      {steps.map((step, i, arr) => (
+   485→   485→        <React.Fragment key={i}>
+   486→   486→          <div className="flex flex-col items-center gap-1.5 rounded-lg border bg-card p-3 text-center min-w-[130px] shadow-sm">
+   487→   487→            <div className={cn(
+   488→   488→              "rounded-full p-2",
+   489→   489→              step.tone === "positive" ? "bg-status-positive/10 text-status-positive" :
+   490→   490→              step.tone === "attention" ? "bg-status-attention/10 text-status-attention" :
+   491→   491→              step.tone === "critical" ? "bg-status-critical/10 text-status-critical" :
+   492→   492→              "bg-muted text-muted-foreground"
+   493→   493→            )}>
+   494→   494→              {step.icon}
+   495→   495→            </div>
+   496→   496→            <span className="text-[11px] font-medium leading-tight">{step.label}</span>
+   497→   497→            <span className="text-[9px] text-muted-foreground leading-tight">{step.detail}</span>
+   498→   498→          </div>
+   499→   499→          {i < arr.length - 1 ? (
+   500→   500→            <div className="flex items-center justify-center self-center shrink-0">
+   501→   501→              <div className={cn("w-px h-8 md:h-px md:w-8", "bg-border")} />
+   502→   502→            </div>
+   503→   503→          ) : null}
+   504→   504→        </React.Fragment>
+   505→   505→      ))}
+   506→   506→    </div>
+   507→   507→  );
+   508→   508→}
+   509→   509→
+   510→   510→// ---------------------------------------------------------------------
+   511→   511→// 13. DistrictTwinVisual — layered district visualization
+   512→   512→// ---------------------------------------------------------------------
+   513→   513→
+   514→   514→export function DistrictTwinVisual({ district, layers }: { district: string; layers: { label: string; icon: React.ReactNode; items: { label: string; value: string | number; tone?: string }[] }[] }) {
+   515→   515→  return (
+   516→   516→    <div className="rounded-lg border bg-card p-4 space-y-4">
+   517→   517→      <div className="text-center">
+   518→   518→        <h3 className="text-lg font-bold">{district}</h3>
+   519→   519→        <p className="text-[10px] text-muted-foreground">District Skill Digital Twin</p>
+   520→   520→      </div>
+   521→   521→      <div className="grid sm:grid-cols-3 gap-3">
+   522→   522→        {layers.map((layer, i) => (
+   523→   523→          <div key={i} className="rounded-md border p-3 space-y-2">
+   524→   524→            <div className="flex items-center gap-2 text-primary">
+   525→   525→              {layer.icon}
+   526→   526→              <span className="text-xs font-semibold">{layer.label}</span>
+   527→   527→            </div>
+   528→   528→            <div className="space-y-1">
+   529→   529→              {layer.items.map((item, j) => (
+   530→   530→                <div key={j} className="flex items-center justify-between text-xs">
+   531→   531→                  <span className="text-muted-foreground">{item.label}</span>
+   532→   532→                  <span className={cn("font-medium", item.tone === "positive" ? "text-status-positive" : item.tone === "critical" ? "text-status-critical" : item.tone === "attention" ? "text-status-attention" : "")}>{item.value}</span>
+   533→   533→                </div>
+   534→   534→              ))}
+   535→   535→            </div>
+   536→   536→          </div>
+   537→   537→        ))}
+   538→   538→      </div>
+   539→   539→      <div className="flex items-center justify-center gap-2 pt-2 border-t">
+   540→   540→        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+   541→   541→          <StatusBadge status="SYNTHETIC" />
+   542→   542→          <span>Period: 2026-09</span>
+   543→   543→        </div>
+   544→   544→      </div>
+   545→   545→    </div>
+   546→   546→  );
+   547→   547→}
+   548→   548→
+   549→   549→// ---------------------------------------------------------------------
+   550→   550→// 14. SkillDecisionLoop — the signature KAUSHAL DRISHTI visual
+   551→   551→// INDUSTRY DEMAND → ROLE → SKILLS → TRAINING CAPABILITY → SKILL GAP →
+   552→   552→// CANDIDATE EVIDENCE → INTERVENTION → OUTCOME ↺
+   553→   553→// ---------------------------------------------------------------------
+   554→   554→
+   555→   555→interface SkillDecisionLoopProps {
+   556→   556→  size?: "sm" | "md" | "lg";
+   557→   557→  activeStep?: number;
+   558→   558→  onStepClick?: (index: number) => void;
+   559→   559→  className?: string;
+   560→   560→}
+   561→   561→
+   562→   562→const LOOP_STEPS = [
+   563→   563→  { label: "Industry Demand", short: "Demand", tone: "attention", color: "#f59e0b" },
+   564→   564→  { label: "Role", short: "Role", tone: "info", color: "#3b82f6" },
+   565→   565→  { label: "Skills", short: "Skills", tone: "info", color: "#6366f1" },
+   566→   566→  { label: "Training Capability", short: "Training", tone: "info", color: "#0ea5e9" },
+   567→   567→  { label: "Skill Gap", short: "Gap", tone: "critical", color: "#ef4444" },
+   568→   568→  { label: "Candidate Evidence", short: "Evidence", tone: "positive", color: "#10b981" },
+   569→   569→  { label: "Intervention", short: "Action", tone: "info", color: "#8b5cf6" },
+   570→   570→  { label: "Outcome", short: "Outcome", tone: "positive", color: "#22c55e" },
+   571→   571→];
+   572→   572→
+   573→   573→export function SkillDecisionLoop({ size = "md", activeStep, onStepClick, className }: SkillDecisionLoopProps) {
+   574→   574→  const dim = size === "sm" ? 220 : size === "lg" ? 420 : 320;
+   575→   575→  const cx = dim / 2;
+   576→   576→  const cy = dim / 2;
+   577→   577→  const radius = dim / 2 - 28;
+   578→   578→  const stepAngle = (2 * Math.PI) / LOOP_STEPS.length;
+   579→   579→  const positions = LOOP_STEPS.map((_, i) => {
+   580→   580→    const a = -Math.PI / 2 + i * stepAngle;
+   581→   581→    return { x: cx + radius * Math.cos(a), y: cy + radius * Math.sin(a) };
+   582→   582→  });
+   583→   583→
+   584→   584→  return (
+   585→   585→    <div className={cn("flex items-center justify-center", className)}>
+   586→   586→      <svg viewBox={`0 0 ${dim} ${dim}`} className="w-full h-auto max-w-full" style={{ maxHeight: dim }}>
+   587→   587→        <defs>
+   588→   588→          <radialGradient id="loop-bg" cx="50%" cy="50%" r="50%">
+   589→   589→            <stop offset="0%" stopColor="hsl(var(--primary) / 0.05)" />
+   590→   590→            <stop offset="100%" stopColor="transparent" />
+   591→   591→          </radialGradient>
+   592→   592→        </defs>
+   593→   593→        <circle cx={cx} cy={cy} r={radius} fill="url(#loop-bg)" stroke="hsl(var(--border))" strokeWidth="1" strokeDasharray="2 3" opacity="0.5" />
+   594→   594→        {/* arrows between steps */}
+   595→   595→        {positions.map((p, i) => {
+   596→   596→          const next = positions[(i + 1) % positions.length];
+   597→   597→          const mx = (p.x + next.x) / 2;
+   598→   598→          const my = (p.y + next.y) / 2;
+   599→   599→          const dx = next.x - p.x;
+   600→   600→          const dy = next.y - p.y;
+
+[showing lines 1-600 of 720; use offset=601 with limit to continue reading]

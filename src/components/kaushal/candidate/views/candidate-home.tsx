@@ -63,9 +63,6 @@ export function CandidateHome() {
             <h2 className="text-2xl font-bold tracking-tight">Your Skill Intelligence Overview</h2>
             <p className="text-sm text-muted-foreground">Capability first. Jobs later. Every level below is backed by evidence.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <StatusPill tone="attention" dot>Synthetic Demonstration</StatusPill>
-          </div>
         </div>
         <div className="grid sm:grid-cols-3 gap-3">
           <div className="rounded-lg border bg-card p-4 space-y-1.5">

@@ -117,7 +117,7 @@ export function UploadView() {
     <div className="space-y-6">
       <PageHeader
         title="Upload Dataset"
-        description="Ingest CSV or JSON evidence into a registered data source. Admin-only — protected by JWT."
+        description="Ingest CSV or JSON evidence into a registered data source. Administrator access required."
         badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 

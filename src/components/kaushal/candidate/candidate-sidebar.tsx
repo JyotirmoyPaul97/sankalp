@@ -81,16 +81,8 @@ export function CandidateSidebar({ onNavigate }: SidebarProps) {
       </nav>
 
       <div className="border-t border-sidebar-border px-4 py-3 space-y-2 shrink-0">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] uppercase tracking-wider text-sidebar-foreground/50">Environment</span>
-          <span className="text-[11px] font-mono text-sidebar-foreground/70">Prototype</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="size-1.5 rounded-full bg-status-attention" />
-          <span className="text-[10px] text-sidebar-foreground/55 leading-snug">Synthetic demonstration data only.</span>
-        </div>
         {user ? (
-          <div className="flex items-center justify-between pt-1 border-t border-sidebar-border/60">
+          <div className="flex items-center justify-between pt-1">
             <div className="min-w-0">
               <p className="text-xs font-medium truncate">{user.name}</p>
               <p className="text-[10px] text-sidebar-foreground/55 truncate">{user.email}</p>

@@ -48,15 +48,14 @@ const VIEW_TITLES: Record<string, string> = {
   "candidate-intelligence": "Candidate Skill Intelligence",
   "district-twin": "District Digital Twin",
   "skill-graph": "Skill Intelligence Graph",
-  "data-governance": "Data Governance Centre",
+  "data-governance": "Data Stewardship",
   "system-health": "System Health",
   outcomes: "District Skill Outcomes",
   training: "Training Ecosystem",
-  courses: "Courses",
-  "employer-validation": "Employer Validation",
+  courses: "Curriculum & Course Coverage",
+  "employer-validation": "Industry Demand & Employer Validation",
   "policy-sandbox": "Policy Sandbox",
   "district-plans": "District Plans",
-  outcomes: "Outcomes",
   "data-sources": "Data Sources",
   admin: "Administration",
   upload: "Upload Dataset",
@@ -119,7 +118,7 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
         className="hidden sm:inline-flex items-center gap-1.5 surface-attention border-transparent font-medium"
       >
         <span className="size-1.5 rounded-full bg-status-attention" />
-        DEMO / SYNTHETIC DATA
+        SYNTHETIC DATA
       </Badge>
 
       {/* Theme toggle */}

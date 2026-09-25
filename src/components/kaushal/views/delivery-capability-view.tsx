@@ -1,22 +1,27 @@
 "use client";
 
 import * as React from "react";
-import { ArrowRight, GraduationCap, Wrench, Users, Building2, CheckCircle2, AlertTriangle, Gauge } from "lucide-react";
+import {
+  ArrowRight, GraduationCap, Wrench, Users, Building2,
+  CheckCircle2, AlertTriangle, BookOpen,
+} from "lucide-react";
 import { PageHeader, SectionLabel } from "@/components/kaushal/page-header";
-import { EvidencePanel } from "@/components/kaushal/evidence-panel";
 import { StatusPill } from "@/components/kaushal/status-pill";
 import { MetricCard } from "@/components/kaushal/metric-card";
 import { DataTable, type Column } from "@/components/kaushal/data-table";
 import { LoadingState, ErrorState } from "@/components/kaushal/states";
-import { VisualBar, ScenarioComparison, StatusBadge, ConfidenceBadge } from "@/components/kaushal/visual-components";
+import {
+  DeliveryGapVisual, StatusBadge,
+} from "@/components/kaushal/visual-components";
+import { MaharashtraIntelligenceBackground } from "@/components/kaushal/maharashtra-background";
 import { useFetch } from "@/hooks/use-fetch";
+import { useNav } from "@/store/app-store";
 
 const READINESS_TONE: Record<string, "positive" | "info" | "attention" | "critical" | "neutral"> = {
   READY: "positive", PARTIALLY_READY: "attention", LIMITED_READINESS: "critical", INSUFFICIENT_DATA: "neutral",
   COURSE_DELIVERY_READY: "positive", ALIGNED: "positive", AVAILABLE: "positive", ADEQUATE: "positive",
-  PARTIAL: "attention", PARTIALLY_READY: "attention", PARTIALLY_OPERATIONAL: "attention",
-  LIMITED: "critical", LIMITED_READINESS: "critical", LOWER_THAN_REQUIRED: "critical",
-  INSUFFICIENT_DATA: "neutral",
+  PARTIAL: "attention", PARTIALLY_OPERATIONAL: "attention",
+  LIMITED: "critical", LOWER_THAN_REQUIRED: "critical",
 };
 const ALIGN_TONE: Record<string, "positive" | "info" | "attention" | "neutral"> = {
   STRONGLY_ALIGNED: "positive", ALIGNED: "positive", FULL_COVERAGE: "positive",
@@ -26,69 +31,78 @@ const ALIGN_TONE: Record<string, "positive" | "info" | "attention" | "neutral"> 
 };
 
 export function DeliveryCapabilityView() {
+  const setActiveView = useNav((s) => s.setActiveView);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Subtle workspace background */}
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-xl opacity-[0.05]">
+        <MaharashtraIntelligenceBackground variant="training" />
+      </div>
+
       <PageHeader
-        title="Training Delivery Capability"
+        title="Can This Centre Deliver What the Market Needs?"
         description="Assess whether training centres have the curriculum, trainers, equipment and capacity required to deliver market-relevant skills. Diagnostic — not recommendations."
         badge={<StatusBadge status="SYNTHETIC" />}
       />
 
-      {/* Visual capability chain */}
-      <div className="rounded-lg border bg-card p-4 space-y-4">
-        <div className="flex items-center gap-2"><Gauge className="size-4 text-primary" /><h3 className="text-sm font-semibold">Capability Chain: Market Demand → Centre Readiness</h3></div>
-        <div className="grid sm:grid-cols-5 gap-3">
-          <div className="space-y-1">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Market Demand</p>
-            <VisualBar label="PLC Programming" value={88} tone="attention" height="sm" />
-            <VisualBar label="Industrial IoT" value={95} tone="critical" height="sm" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Curriculum</p>
-            <VisualBar label="PLC Programming" value={72} tone="info" height="sm" />
-            <VisualBar label="Industrial IoT" value={30} tone="critical" height="sm" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Trainer</p>
-            <VisualBar label="PLC Programming" value={65} tone="info" height="sm" />
-            <VisualBar label="Industrial IoT" value={20} tone="critical" height="sm" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Equipment</p>
-            <VisualBar label="PLC Programming" value={80} tone="positive" height="sm" />
-            <VisualBar label="Industrial IoT" value={25} tone="critical" height="sm" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Capacity</p>
-            <VisualBar label="PLC Programming" value={55} tone="attention" height="sm" />
-            <VisualBar label="Industrial IoT" value={15} tone="critical" height="sm" />
-          </div>
-        </div>
-        <div className="flex items-center gap-2 pt-2 border-t">
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Result:</span>
-          <StatusPill tone="attention" dot>PARTIALLY READY</StatusPill>
-          <ConfidenceBadge confidence="MEDIUM" />
-        </div>
-      </div>
+      {/* Delivery Gap Visual — the headline */}
+      <DeliveryGapVisual
+        role="PLC Technician"
+        demand="HIGH"
+        course="PARTIAL"
+        trainer="MEDIUM"
+        equipment="LOW"
+        capacity="INSUFFICIENT"
+        result="DELIVERY GAP"
+      />
 
-      {/* Chain banner */}
-      <div className="rounded-lg border bg-card p-4 flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
-        {[
-          { icon: <Gauge className="size-5 text-primary" />, label: "Course Relevance", desc: "Delivery Capability" },
-          { icon: <GraduationCap className="size-5 text-primary" />, label: "Curriculum", desc: "Coverage + freshness" },
-          { icon: <Users className="size-5 text-primary" />, label: "Trainers", desc: "Proficiency + capacity" },
-          { icon: <Wrench className="size-5 text-primary" />, label: "Equipment", desc: "Availability + condition" },
-          { icon: <Building2 className="size-5 text-primary" />, label: "Centre Readiness", desc: "Combined delivery" },
-        ].map((s, i) => (
-          <React.Fragment key={s.label}>
-            <div className="flex flex-col items-center gap-1 text-center">
-              {s.icon}
-              <p className="text-sm font-medium">{s.label}</p>
-              <p className="text-[10px] text-muted-foreground">{s.desc}</p>
-            </div>
-            {i < 4 ? <ArrowRight className="size-4 text-muted-foreground" /> : null}
-          </React.Fragment>
-        ))}
+      {/* 4 navigation buttons */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <button
+          onClick={() => setActiveView("courses")}
+          className="text-left rounded-lg border bg-card p-4 space-y-2 hover:border-primary/40 hover:bg-accent/30 transition-colors"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex size-9 items-center justify-center rounded-md bg-primary/10 text-primary"><BookOpen className="size-4" /></div>
+            <ArrowRight className="size-4 text-muted-foreground" />
+          </div>
+          <p className="text-sm font-semibold">View Curriculum</p>
+          <p className="text-[11px] text-muted-foreground leading-snug">Course coverage + freshness per role</p>
+        </button>
+        <button
+          onClick={() => setActiveView("competency-framework")}
+          className="text-left rounded-lg border bg-card p-4 space-y-2 hover:border-primary/40 hover:bg-accent/30 transition-colors"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex size-9 items-center justify-center rounded-md bg-primary/10 text-primary"><Users className="size-4" /></div>
+            <ArrowRight className="size-4 text-muted-foreground" />
+          </div>
+          <p className="text-sm font-semibold">View Trainer</p>
+          <p className="text-[11px] text-muted-foreground leading-snug">Competency framework + proficiency expectations</p>
+        </button>
+        <button
+          onClick={() => setActiveView("training")}
+          className="text-left rounded-lg border bg-card p-4 space-y-2 hover:border-primary/40 hover:bg-accent/30 transition-colors"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex size-9 items-center justify-center rounded-md bg-primary/10 text-primary"><Wrench className="size-4" /></div>
+            <ArrowRight className="size-4 text-muted-foreground" />
+          </div>
+          <p className="text-sm font-semibold">View Equipment</p>
+          <p className="text-[11px] text-muted-foreground leading-snug">Institution + centre equipment availability</p>
+        </button>
+        <button
+          onClick={() => setActiveView("gap-intelligence")}
+          className="text-left rounded-lg border bg-card p-4 space-y-2 hover:border-primary/40 hover:bg-accent/30 transition-colors"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex size-9 items-center justify-center rounded-md bg-primary/10 text-primary"><Building2 className="size-4" /></div>
+            <ArrowRight className="size-4 text-muted-foreground" />
+          </div>
+          <p className="text-sm font-semibold">View Capacity</p>
+          <p className="text-[11px] text-muted-foreground leading-snug">Training capacity + gap signals</p>
+        </button>
       </div>
 
       <CourseRelevanceSection />
@@ -112,7 +126,7 @@ function CourseRelevanceSection() {
   ];
   return (
     <section className="space-y-3">
-      <SectionLabel>Course Relevance Signals</SectionLabel>
+      <SectionLabel>Curriculum Coverage — Course Relevance Signals</SectionLabel>
       {loading ? <LoadingState /> : error ? <ErrorState message={error.message} /> : (
         <DataTable columns={cols} rows={(data?.courses ?? []).slice(0, 15)} rowKey={(r) => r.id} emptyMessage="No relevance profiles." />
       )}
@@ -168,7 +182,7 @@ function DeliveryGapsSection() {
       {loading ? <LoadingState /> : error ? <ErrorState message={error.message} /> : (
         <DataTable columns={cols} rows={(data?.gaps ?? []).slice(0, 15)} rowKey={(g) => g.id} emptyMessage="No capability gaps." />
       )}
-      <p className="text-[11px] text-muted-foreground">Each gap signal compares curriculum alignment, trainer proficiency, equipment availability, and capacity. Dimensions kept separate — never collapsed into one opaque score. Diagnostic intelligence only — NO procurement recommendations.</p>
+      <p className="text-[11px] text-muted-foreground">Each gap signal compares curriculum alignment, trainer proficiency, equipment availability, and capacity. Dimensions kept separate — never collapsed into one opaque score.</p>
     </section>
   );
 }

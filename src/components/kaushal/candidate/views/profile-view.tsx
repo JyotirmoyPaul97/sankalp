@@ -38,7 +38,6 @@ export function ProfileView() {
               <p className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="size-3" />{c.email}</p>
             </div>
           </div>
-          <StatusPill tone="attention" dot>Synthetic Demonstration</StatusPill>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
           <div className="flex items-center gap-2"><GraduationCap className="size-3.5 text-muted-foreground" /><div><p className="text-[9px] uppercase tracking-wider text-muted-foreground">Education</p><p className="font-medium">{c.educationLevel ?? "—"}</p></div></div>

@@ -218,7 +218,7 @@ export function SystemHealthView() {
     { label: "Database", status: health?.database ?? "UNKNOWN", detail: "SQLite connected" },
     { label: "Redis", status: health?.redis ?? "not-configured", detail: "Extension point (not wired)" },
     { label: "Copilot", status: "HEALTHY", detail: "Query layer operational" },
-    { label: "Auth", status: "HEALTHY", detail: "JWT foundation active" },
+    { label: "Auth", status: "HEALTHY", detail: "Role-based access active" },
     { label: "Ingestion Pipeline", status: "HEALTHY", detail: `${meta?.counts?.dataSources ?? 0} sources` },
   ];
 

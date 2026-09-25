@@ -804,3 +804,158 @@ Work Log:
 
 Stage Summary:
 - Phase 12.5 Part 1 + Part 2 COMPLETE and browser-verified. Full candidate/beneficiary workspace implemented as the INDIVIDUAL CAPABILITY AND EVIDENCE LAYER (not a jobs portal) reusing the shared Skill Intelligence Engine (skill ontology, competency layer, market intelligence, training intelligence, evidence layer, employer validation, outcome intelligence, copilot). Closed loop functional: MARKET DEMAND → ROLE REQUIREMENT → CANDIDATE CAPABILITY → EVIDENCE → SKILL GAP → TRAINING/DEVELOPMENT → NEW EVIDENCE → EMPLOYER VALIDATION → OUTCOME → UPDATED INTELLIGENCE. Privacy: candidate sees own data only; employer feedback written to candidate ledger; aggregated intelligence exposes no individual identities. All Part 1 (25 sections) + Part 2 (11 sections) acceptance items satisfied. STOP.
+
+---
+Task ID: p15-a
+Agent: full-stack-developer
+Task: Completely redesign landing-screen.tsx into a clean, visual, domain-specific Maharashtra Skill Intelligence homepage. SHOW THE INTELLIGENCE. HIDE THE IMPLEMENTATION.
+
+Work Log:
+- Read worklog.md (Phases 1 → 14), landing-screen.tsx (current), maharashtra-background.tsx, visual-components.tsx (16 components incl. new SkillDecisionLoop/PrioritySignal/DeliveryGapVisual), app-store.ts, use-fetch.ts, sheet.tsx, types/domain.ts.
+- Rewrote /home/z/my-project/src/components/kaushal/landing-screen.tsx (single-file change, no other files touched):
+  • Header: sticky, logo + "KAUSHAL DRISHTI", public nav (Home · Labour Market · Skill Intelligence · Districts · Training Ecosystem · Industry & Employers · About) + Login button + Sheet mobile drawer. Removed the pulsing "Prototype · Synthetic Data" utility strip.
+  • Hero: MaharashtraIntelligenceBackground (opacity-50) atmosphere, subtle "Maharashtra Skill Intelligence" badge (NO "Prototype · Synthetic Demonstration" badge), H1 "KAUSHAL DRISHTI", subtitle, tagline, one-sentence explanation, 3 primary actions (EXPLORE SKILL INTELLIGENCE / EXPLORE DISTRICTS / ACCESS WORKSPACE) + 4 AnimatedCounter stats from /api/v1/meta. Removed the technical 7-step FlowNode pipeline.
+  • Skill Decision Loop section: heading "The Skill Decision Loop" + "One intelligence loop connecting every stakeholder." + interactive `<SkillDecisionLoop size="lg" />` with bidirectional click-sync to a side list of all 8 stages (Industry Demand → Role → Skills → Training Capability → Skill Gap → Candidate Evidence → Intervention → Outcome).
+  • 5 visual intelligence blocks (Headline + 1-sentence + Visual):
+    01 Labour Market Pulse — inline LabourMarketPulse (4 VisualBar trends: Demand ↑, Emerging Skills, Top Roles, District Pressure + 3-cell summary).
+    02 Where Are The Skill Gaps? — inline MaharashtraDistrictGrid (36 Maharashtra districts, each cell colour-coded by gap intensity with legend + counts).
+    03 Demand vs Training — three DemandSupplyComparison (PLC 88/65, SCADA 72/58, Industrial IoT 95/20).
+    04 Evidence, Not Claims — inline EvidencePreview (EvidenceChain Assessment→Project→Certificate→Practice→Employer Validation→Demonstrated Proficiency + GapMatrix preview).
+    05 What Should Government Do? — 3 PrioritySignal cards (IoT Pune-Nagpur, Robotics Mumbai-Thane, EV Aurangabad-Nashik) tracing Gap → Cause → Intervention + "Open Policy Sandbox" CTA + SIMULATED disclaimer.
+  • Workspace selector / About block — 4 workspace cards opening login modal pre-scoped.
+  • Footer (mt-auto): ONE subtle note "Prototype environment using synthetic demonstration data." + "KAUSHAL DRISHTI · Maharashtra Skill Intelligence & Planning Platform".
+  • Login modal: kept workspace tabs + useAuth.login flow. Renamed demo accounts to realistic Maharashtra names (admin → State Skill Administrator; planner → Pune District Planner; employer → Maharashtra Precision Systems; provider → Pune Advanced Manufacturing Centre; arjun.sharma → Arjun Sharma). "Quick Demo Access" → "Quick Access". "Demo Accounts — synthetic identities." → "Synthetic demonstration identities.". Account list now max-h-56 overflow scroll.
+  • Inline helpers: MaharashtraDistrictGrid, LabourMarketPulse, EvidencePreview, SectionLabel — all kept inside landing-screen.tsx.
+  • Domain vocabulary used throughout (Labour Market, Skill Demand, Emerging Skills, Proficiency, Training Centre, Curriculum, Trainer Capability, Equipment Readiness, Employer Validation, District Skill Gap, Skill Development Planning, Policy Sandbox). ZERO instances of "Phase X / Demo prefix / Prototype architecture / Implementation status / Coming soon / Planned / Roadmap / Manage your workflow / 8 Issues debug / raw API/DB/Redis status".
+- Verification: `bun run lint` exit code 0 (0 errors, 0 warnings). dev.log checked — no compile errors.
+
+Stage Summary:
+- Landing page transformed from text-heavy government SaaS shell into visual-first Maharashtra Skill Intelligence homepage. Signature SkillDecisionLoop visual is the conceptual identity. 5 visual intelligence blocks (district grid, demand-vs-supply, evidence chain, gap matrix, priority signals) communicate the platform in under 30 seconds. Footer is ONE subtle synthetic-data note. Login modal carries realistic Maharashtra stakeholder identities. Responsive across desktop/laptop/tablet (Sheet drawer on mobile). STOP — single-file deliverable, lint clean.
+
+---
+Task ID: p15-c
+Agent: full-stack-developer
+Task: Final UX transformation — simplify Industry/Employer, Training Ecosystem, and Candidate workspace overviews. Remove phase/demo/technical language. Replace tables with visualizations.
+
+Work Log:
+- Read worklog.md and all referenced files (employer-validation-view, training-view, courses-view, delivery-capability-view, gap-intelligence-view, candidate shell/sidebar/topbar/home, sidebar, topbar, visual-components, maharashtra-background, page-header, evidence-panel, status-pill, metric-card, data-table, states, app-store, use-fetch).
+- employer-validation-view.tsx: Full rewrite as 3-action visual layout. THREE major action cards: (1) WHAT INDUSTRY NEEDS — top emerging skills with VisualBar + ConfidenceBadge, drilldown to skill-demand + Emerging Radar; (2) WHAT EMPLOYERS ARE HIRING FOR — top role cards with hiring demand bars, drilldown to role-demand + Labour Market; (3) VALIDATE DEMAND — 5 validation dimensions + confirmed/pending/modified metrics + Submit Employer Validation CTA. Followed by Sector Demand + Cluster Requirements evidence panels with VisualBar, and a "How Demand Validation Closes the Loop" section using PrioritySignal. Added subtle MaharashtraIntelligenceBackground (opacity 0.06) variant="industry". StatusBadge replaces "Live Intelligence" pill.
+- training-view.tsx: Simplified. Removed "All data is synthetic demonstration data." text. Removed "No demonstration institutions match your search." → "No institutions match your search." Added insight strip (4 MetricCards: Institutions/Qualifications/Courses/Coverage Insight) + a Training Supply Chain visual (Market Demand → Curriculum → Trainer → Equipment → Capacity with ArrowRight between steps) + StatusBadge. Added subtle MaharashtraIntelligenceBackground variant="training" (opacity 0.05). Kept Institutions + Qualifications tabs.
+- delivery-capability-view.tsx: New headline-driven layout. Title is the question "Can This Centre Deliver What the Market Needs?" followed by DeliveryGapVisual for PLC Technician (demand HIGH, course PARTIAL, trainer MEDIUM, equipment LOW, capacity INSUFFICIENT, result "DELIVERY GAP"). Then 4 navigation cards: VIEW CURRICULUM → courses, VIEW TRAINER → competency-framework, VIEW EQUIPMENT → training, VIEW CAPACITY → gap-intelligence. Kept CourseRelevanceSection, CentreReadinessSection, DeliveryGapsSection as drilldown. Removed duplicate chain banner.
+- courses-view.tsx: Renamed to "Curriculum & Course Coverage". Added compact relevance/coverage visual per row (VisualBar + M/R/I/N chip legend showing skill coverage distribution). Added coverage legend strip below filters. StatusBadge replaces "Live Intelligence" pill. Removed "No demonstration courses" → "No courses match your search."
+- gap-intelligence-view.tsx: Added compact GapMatrix visual summary at top of page (6 skill rows with demand/supply/gap/confidence cells). Replaced "Live Intelligence" StatusPill with StatusBadge. Kept existing GapTable + District Gap Summary + Quick links structure intact. No phase/demo text exists in this file.
+- candidate-sidebar.tsx: Removed "Environment: Prototype" label + "Synthetic demonstration data only." text block. Kept "Evidence, not claims." footer note. Removed the divider line.
+- candidate-shell.tsx: Footer text changed from "Prototype · Synthetic Demonstration Data. Evidence-based readiness — NOT employment guarantees." → "Synthetic demonstration data · Evidence-based readiness, not employment guarantees." Added MaharashtraIntelligenceBackground variant="candidate" as subtle fixed background (opacity 0.06) behind entire shell.
+- candidate-topbar.tsx: Removed "SYNTHETIC" Badge (now only the footer carries the disclaimer). Removed unused Badge import.
+- candidate-home.tsx: Removed "Synthetic Demonstration" StatusPill badge from hero. Kept the capability-first layout (target role / current readiness / priority gap).
+- profile-view.tsx: Removed "Synthetic Demonstration" StatusPill badge from Identity card.
+- sidebar.tsx: Removed `phase: number` field from NavItem interface + all usages (every NavItem literal now only has id/label/icon/active). Removed "Environment: Prototype" label from footer. Renamed "System" group → "System Administration" for State Admin role. Renamed "Data Governance" nav item → "Data Stewardship". Kept "Synthetic demonstration data only." subtle note + KAUSHAL DRISHTI platform name.
+- topbar.tsx: Renamed "Data Governance Centre" → "Data Stewardship" in VIEW_TITLES. Renamed "Courses" → "Curriculum & Course Coverage". Renamed "Employer Validation" → "Industry Demand & Employer Validation". Removed duplicate `outcomes: "Outcomes"` entry. Softened topbar badge from "DEMO / SYNTHETIC DATA" → "SYNTHETIC DATA".
+- Lint: 0 errors, 0 warnings. (Run twice during dev.)
+- Dev log: confirmed pre-existing errors (gap before initialization in /api/v1/candidate/one-skill, PrismaClientValidationError) are unrelated to my changes — they belong to the candidate backend owned by previous agents.
+
+Stage Summary:
+- Final UX transformation applied across Industry/Employer, Training Ecosystem, Courses, Gap Intelligence, and Candidate workspace. Three-action visual layout for employer validation (WHAT INDUSTRY NEEDS / WHAT EMPLOYERS ARE HIRING FOR / VALIDATE DEMAND) replaces the giant admin dashboard. Delivery Capability now leads with DeliveryGapVisual + 4 navigation cards answering "Can This Centre Deliver What the Market Needs?". Courses table enhanced with per-row coverage visual + legend. Gap Intelligence gains a compact GapMatrix summary at the top. All Phase X / Prototype / Demo X / Demo language removed; StatusBadge replaces "Live Intelligence" pills; subtle Maharashtra intelligence backgrounds added per workspace at opacity 0.05-0.06. Sidebar `phase` field removed entirely; sidebar/topbar System group renamed to "System Administration" with Data Stewardship label. Candidate workspace gets MaharashtraIntelligenceBackground as a fixed subtle background; SYNTHETIC badge removed from candidate topbar; hero badges cleaned. Lint passes 0/0. STOP.
+
+---
+Task ID: p15-b
+Agent: full-stack-developer
+Task: Simplify Government Command Centre (overview-view.tsx) and the District views (district-profile-view.tsx, districts-view.tsx, district-twin-view.tsx) — SHOW THE INTELLIGENCE, HIDE THE IMPLEMENTATION.
+
+Work Log:
+- Read worklog.md to understand prior context (KAUSHAL DRISHTI Phase 1–8 implementation, visual-components.tsx with VisualBar, DemandSupplyComparison, EvidenceChain, GapMatrix, StatusBadge, ConfidenceBadge, FlowNode, SkillDecisionLoop, PrioritySignal, DistrictTwinVisual, etc., and the new MaharashtraIntelligenceBackground).
+- Read existing overview-view.tsx (had ~12 sections including Platform Roadmap with phase labels, Knowledge Foundation, Data Health, Market Intelligence, Architecture Flow — too dense, too text-heavy).
+- Read existing district-profile-view.tsx (4 metrics: Employers, Institutions, State Code, Coordinates + two DataTables + Labour-Market Intelligence stub — answered "what foundation entities exist?" not "what is happening in this district?").
+- Read existing districts-view.tsx (basic DataTable of districts — no gap intensity visual).
+- Read existing district-twin-view.tsx (DistrictTwinVisual + state panels + 3-card Quick links — Policy Sandbox link not prominent enough).
+- Inspected /api/v1/meta, /api/v1/gaps/districts, /api/v1/gaps/skills, /api/v1/market-demand/skills, /api/v1/district-twin/[id] response shapes to wire real signal data.
+- Inspected types/domain.ts for DistrictGapSummary (no moderateGapCount field — derived it client-side) and MarketDemandSkill.
+
+OVERVIEW-VIEW.TSX — REWRITTEN:
+1. Headline + intelligence banner with subtle MaharashtraIntelligenceBackground (variant=hero) + 4 compact headline metrics (Districts, Skills tracked, Market signals, Training centres) using AnimatedCounter.
+2. NEW MaharashtraIntelligenceMap SVG — 6×6 district grid (~36 cells, Maharashtra-wide-north / tapering-south shape mask) with 6-layer toggle (Skill Gap, Demand Pressure, Training Coverage, Emerging Skills, Centre Readiness, Outcome Signal) recoloring the grid. Each cell uses Tooltip showing high gaps / total signals / covered counts. Click drills to district profile (openDistrict). Legend gradient at bottom.
+3. Priority Signals — 3–5 PrioritySignal cards aggregated from /api/v1/gaps/districts topGaps across districts (skill → market label + training label + cause + action). Clicking navigates to gap-intelligence.
+4. Demand vs Supply — DemandSupplyComparison × 3, skills chosen by aggregating /api/v1/gaps/skills statewide and sorting by gapScore (real data, not hardcoded PLC/SCADA/IoT).
+5. Emerging skills mini-panel — top 5 from /api/v1/market-demand/skills with VisualBar trend strips, links to emerging-radar.
+6. "What should government do?" panel — PrioritySignal linking to Policy Sandbox + small District Plans / Outcomes secondary actions.
+7. EvidenceChain compact visual kept.
+8. Footer integrity line: "All signals derived from existing intelligence — no forecasting. No automatic recommendations."
+REMOVED: Platform Roadmap section, Knowledge Foundation section, Foundation badges, Data Health section, Market Intelligence section, ArchitectureFlow, raw API/DB/Redis status, "phase-1" / "RBAC" / "JWT" / "Keycloak" / "8 Issues" / "Foundation" text.
+
+DISTRICT-PROFILE-VIEW.TSX — REWRITTEN:
+1. Back button + PageHeader with district name, code, division, period, ConfidenceBadge + SYNTHETIC badge.
+2. District Skill Profile — 6 compact metrics: Market Demand, Training Capacity, Critical Skill Gaps, Centre Readiness, Emerging Skills, Candidate Readiness (derived from /api/v1/district-twin/{id}).
+3. Demand vs Supply mini — 3 DemandSupplyComparison from /api/v1/gaps/skills?districtId=.
+4. Priority Actions — PrioritySignal cards per top gap (5) with cause derived from coverageStatus / proficiencyStatus / capacityStatus / gapSignal + action recommending Policy Sandbox.
+5. Top demand skills + Emerging skills + Centre readiness triple panel with VisualBars.
+6. Three drill-down actions: District Digital Twin, Policy Sandbox, District Plans.
+REMOVED: 4-card foundation metrics (Employers, Institutions, State Code, Coordinates), "Foundation Profile" badge, two DataTables (Employers, Institutions), "Synthetic demonstration profile" subtitle text.
+
+DISTRICTS-VIEW.TSX — REWRITTEN:
+- Kept the table (still clickable via openDistrict).
+- Added compact GapIntensityBar per row (visual bar colored by composite intensity = highGaps + noSupply*0.8 + proficiencyMismatch*0.5 + moderate*0.4 / totalGaps). Tooltip shows high gaps / no-supply / covered / total signals.
+- Added "High Gaps" numeric column with tone coloring (critical/attention/positive).
+- Removed "Active" StatusPill column → replaced with "Monitored" (still StatusPill positive dot).
+- Description rewritten: "Live intelligence across Maharashtra districts — skill-gap intensity, employers, training institutions. Click a district to open its skill profile." (removed "demonstration" wording).
+
+DISTRICT-TWIN-VIEW.TSX — TARGETED EDIT:
+- Kept DistrictTwinVisual + Twin header + 5 summary MetricCards + Market State + Training/Capability + Gap/Candidate + Implementation Monitoring panels.
+- Replaced the 3-card Quick links section with a prominent "What should government do?" CTA banner: rounded border-primary/40 card with bg-primary/5, big headline + descriptive paragraph, primary "Open Policy Sandbox" button + secondary "District plans" button. Below: 3 small secondary actions (Outcomes, Gap intelligence, District profile).
+- Added `const setActiveView = useNav((s) => s.setActiveView);` to TwinDashboard (was missing — caused TS2304 errors).
+- "Implementation Monitoring" panel kept (it tracks district interventions — legitimate, not "Implementation status" placeholder).
+
+CRITICAL RULES VERIFIED:
+- NO "Phase X", "phase-1", "Demo", "Foundation", "RBAC", "JWT", "Keycloak", "Implementation status", "Coming soon", "Planned feature", "Development roadmap", "Prototype architecture", "8 Issues", raw API/DB/Redis status in these 4 views (verified by grep).
+- Domain terminology used throughout: Labour Market, Skill Demand, Emerging Skills, District Skill Gap, Training Capacity, Centre Readiness, Market Demand, Training Coverage, etc.
+- Repetitive tables replaced with VisualBar / DemandSupplyComparison / PrioritySignal / DistrictTwinVisual / custom SVG map.
+- Each page: 1 clear headline + 1 primary visual + 3–5 key insights + evidence/metadata + optional drilldown — verified.
+- All useFetch calls work with existing APIs (/api/v1/meta, /api/v1/gaps/districts, /api/v1/gaps/skills, /api/v1/market-demand/skills, /api/v1/district-twin/[id], /api/v1/district-outcomes/[id], /api/v1/districts, /api/v1/districts/[id]).
+
+TS / LINT FIXES APPLIED:
+- district-profile-view.tsx: Type the skillProfileMetrics array with explicit MetricTone union (TS1355 — `as const` cannot be applied to ternaries; switched to explicit type).
+- overview-view.tsx & district-profile-view.tsx: Add `label=""` to VisualBar calls where label was missing (VisualBarProps.label is required in the existing component).
+- district-twin-view.tsx: Add `const setActiveView = useNav((s) => s.setActiveView);` to TwinDashboard so the new CTA banner can navigate.
+- districts-view.tsx: Derive `moderate = totalGaps - highGapCount - coveredCount - noSupplyCount - proficiencyMismatchCount - geographicGapCount` client-side (DistrictGapSummary type does not expose moderateGapCount directly).
+
+Verification: `bunx tsc --noEmit` reports 0 errors in the 4 edited view files. `bun run lint` exit code 0 (0 errors, 0 warnings). dev.log shows no compile errors after HMR.
+
+Stage Summary:
+- Government Command Centre now answers "What is happening across Maharashtra?" with a primary visual SVG district-grid heat-map + 6-layer toggle (Skill Gap / Demand Pressure / Training Coverage / Emerging Skills / Centre Readiness / Outcome Signal), 3–5 PrioritySignal cards aggregated from real gap intelligence, real DemandSupplyComparison from /api/v1/gaps/skills, compact EvidenceChain, and a Policy Sandbox CTA. All roadmap / foundation / data-health bloat removed.
+- District Profile now answers "What is happening in this district?" with 6 compact skill-profile metrics (Market Demand / Training Capacity / Critical Skill Gaps / Centre Readiness / Emerging Skills / Candidate Readiness) + PrioritySignal cards per top district gap (with cause + action) + drill-downs to District Twin & Policy Sandbox.
+- Districts list keeps the table but adds a visual GapIntensityBar + High Gaps numeric per row, making the list scannable for problem districts.
+- District Digital Twin keeps the layered DistrictTwinVisual + state panels but promotes the "What should government do?" → Policy Sandbox call-to-action into a prominent banner with a primary button + secondary actions.
+- All 4 views: lint-clean (0 errors, 0 warnings), TypeScript-clean, no Phase/Demo/RBAC/JWT/Keycloak/Foundation/Roadmap/8-Issues/raw-API-status references.
+
+---
+Task ID: p15 (main)
+Agent: GLM (main)
+Task: FINAL UX TRANSFORMATION — Show the Intelligence. Hide the Implementation.
+
+Work Log:
+- Audited all phase/demo/technical language across src/components/kaushal/ (40 files with matches initially).
+- Built MaharashtraIntelligenceBackground (code-generated SVG): abstract Maharashtra district-network visual with deep navy + saffron/teal accent dots + animated data-flow edges. 5 variants (hero/government/industry/training/candidate). No external image dependency — deterministic, instant, government-grade.
+- Added 3 signature visual components to visual-components.tsx:
+  • SkillDecisionLoop — the conceptual identity (8-step circular loop: Industry Demand → Role → Skills → Training Capability → Skill Gap → Candidate Evidence → Intervention → Outcome ↺). Interactive (clickable steps, active-step highlighting).
+  • PrioritySignal — compact card: title + market + training + cause + action → links to Policy Sandbox.
+  • DeliveryGapVisual — "Can this centre deliver?" 5-dimension visual (demand/course/trainer/equipment/capacity → result).
+- Renamed all demo entities via prisma/rename-demo-entities.ts:
+  • 4 demo login users → realistic names (State Skill Administrator, Pune District Planner, Maharashtra Precision Systems, Pune Advanced Manufacturing Centre).
+  • 105 "Demo Candidate XXX" → realistic Indian names (Aarav Patil, Diya Sharma, etc.).
+- Dispatched 3 parallel subagents (p15-a/b/c):
+  • p15-a: Redesigned landing-screen.tsx — clean hero with Maharashtra bg + Skill Decision Loop + 5 visual intelligence blocks (Labour Market Pulse / Where Are The Gaps / Demand vs Training / Evidence Not Claims / What Should Government Do) + realistic demo account names + single subtle footer note.
+  • p15-b: Simplified Government Command Centre (overview-view) — Maharashtra Skill Intelligence Map (36-district SVG grid with 6-layer toggle) + Priority Signals + Demand vs Supply + Evidence Chain + "What should government do?" → Policy Sandbox. Removed Platform Roadmap/Knowledge Foundation/phase labels. Simplified district-profile + districts + district-twin views.
+  • p15-c: Simplified Industry/Employer (3-action layout: What Industry Needs / What Employers Hire For / Validate Demand), Training Ecosystem (DeliveryGapVisual leads), Courses (Curriculum & Coverage), Gap Intelligence (GapMatrix summary). Candidate workspace cleanup (removed Demo/Prototype badges, subtle Maharashtra bg). Sidebar removed `phase` field. Topbar titles softened.
+- Main-agent cleanup sweep: admin-view (removed Foundation/RBAC/JWT/HMAC/Keycloak/phase-1, renamed "RBAC Roles" → "Roles & Access", removed Redis row), skill-graph-view (JWT → Role-based access), upload-view (removed JWT ref), competency-framework-view (removed Foundation), app-shell footer (Demo Environment → single subtle note), removed unused login-screen.tsx + phase-placeholder.tsx dead code.
+- Fixed duplicate React key in gap-intelligence-view GapMatrix (role-gapSignal collision → added gapScore for uniqueness).
+- Lint: 0 errors, 0 warnings.
+- Browser E2E verification (agent-browser):
+  • Landing page (logged out): renders KAUSHAL DRISHTI hero + Maharashtra background + Skill Decision Loop + 5 visual intelligence blocks. 0 errors.
+  • Login modal: realistic names (State Skill Administrator, Pune District Planner, Maharashtra Precision Systems, Pune Advanced Manufacturing Centre, Arjun Sharma). "Quick Access" label. "Synthetic demonstration identities." No "Demo" prefix.
+  • Government Command Centre (State Skill Administrator login): Maharashtra Skill Intelligence Map + Priority Signals (Software Developer, EV Technician with market/training/cause/action) + Demand vs Supply + Evidence Not Claims + Emerging skills + "What should government do?" → Open Policy Sandbox. 0 errors.
+  • All government views navigated (Labour Market, Districts, Gap Intelligence, Delivery Capability, Industry, Training, Courses, Policy Sandbox, District Outcomes) — 0 console errors (fixed the one duplicate-key warning in Training/Gap Matrix).
+  • Candidate workspace (Arjun Sharma login): all 11 views (Overview, Skill Passport, Evidence, Target Roles, Role Readiness, Skill Gaps, Development Path, Skill Evolution, Readiness, Opportunities, Market Context, Profile) render with 0 errors.
+  • Final UI text scan: `document.body.innerText.match(/Demo [A-Z]|Phase [0-9]|phase-[0-9]|Demo Environment|RBAC|JWT|HMAC|Keycloak|8 Issues|Implementation status/g)` → "CLEAN - no demo/phase language found".
+  • dev.log: 0 ⨯ errors.
+
+Stage Summary:
+- FINAL UX TRANSFORMATION COMPLETE and browser-verified. The product now SHOWS THE INTELLIGENCE (Skill Decision Loop, Maharashtra map, demand-vs-supply visuals, evidence chain, priority signals, delivery-gap visual, proficiency ladders) and HIDES THE IMPLEMENTATION (no Phase X / Demo X / RBAC / JWT / Keycloak / 8 Issues / raw API status in the primary UX). A judge can open KAUSHAL DRISHTI and understand within 10-20 seconds: THIS IS A MAHARASHTRA SKILL INTELLIGENCE PLATFORM connecting Industry Demand → Skills → Training Capability → Candidate Evidence → Government Action. Within another 30 seconds: WHERE skill gaps exist, WHY they exist, and WHAT government should do next. All 25 acceptance items satisfied. STOP.

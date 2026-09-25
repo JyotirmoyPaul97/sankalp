@@ -50,7 +50,7 @@ export function AdminView() {
     {
       key: "status",
       header: "Status",
-      cell: () => <StatusPill tone="info" dot>Foundation</StatusPill>,
+      cell: () => <StatusPill tone="positive" dot>Active</StatusPill>,
       width: "120px",
     },
   ];
@@ -61,7 +61,7 @@ export function AdminView() {
     <div className="space-y-6">
       <PageHeader
         title="Administration"
-        description="Platform foundation status: roles, RBAC, health, environment, data provenance, and data ingestion operations."
+        description="Platform administration: roles, data stewardship, environment, provenance and ingestion operations."
         badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
@@ -71,7 +71,7 @@ export function AdminView() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <MetricCard label="Registered Districts" value={counts.districts ?? 0} icon={<Database className="size-4" />} tone="default" />
           <MetricCard label="Registered Courses" value={counts.courses ?? 0} icon={<Database className="size-4" />} tone="default" />
-          <MetricCard label="RBAC Roles" value={ROLE_ROWS.length} icon={<Users className="size-4" />} tone="info" />
+          <MetricCard label="Roles" value={ROLE_ROWS.length} icon={<Users className="size-4" />} tone="info" />
           <MetricCard label="Data Sources" value={counts.dataSources ?? 0} icon={<Activity className="size-4" />} tone="default" />
         </div>
       )}
@@ -89,8 +89,6 @@ export function AdminView() {
               { k: "Status", v: health?.status ?? "—" },
               { k: "Environment", v: health?.environment ?? process.env.APP_ENV ?? "development" },
               { k: "Database", v: health?.database ?? "—" },
-              { k: "Redis", v: health?.redis ?? "not-configured" },
-              { k: "Phase", v: health ? "phase-1" : "—" },
             ].map((row) => (
               <div key={row.k} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
                 <dt className="text-xs text-muted-foreground">{row.k}</dt>
@@ -109,9 +107,9 @@ export function AdminView() {
 
         <EvidencePanel title="Authentication" source="Intelligence Module">
           <ul className="space-y-1.5 text-xs text-muted-foreground leading-relaxed list-disc pl-4">
-            <li>JWT-based foundation (HMAC-SHA256). Replace with Keycloak / OAuth2 without touching route contracts.</li>
-            <li>Demo users live in the <span className="font-mono">users</span> table; clearly labelled, not actual government identities.</li>
-            <li>Tokens carry <span className="font-mono">sub, email, name, role, iat, exp</span>.</li>
+            <li>Role-based access control across Government, Industry, Training and Candidate workspaces.</li>
+            <li>Demo users live in the <span className="font-mono">users</span> table — clearly labelled synthetic identities, not actual government users.</li>
+            <li>Session tokens carry <span className="font-mono">sub, email, name, role, iat, exp</span>.</li>
             <li>Protected routes read <span className="font-mono">Authorization: Bearer &lt;token&gt;</span>.</li>
           </ul>
           <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
@@ -122,7 +120,7 @@ export function AdminView() {
       </div>
 
       <section className="space-y-3">
-        <SectionLabel>RBAC Roles</SectionLabel>
+        <SectionLabel>Roles & Access</SectionLabel>
         <DataTable columns={roleCols} rows={ROLE_ROWS} rowKey={(r) => r.id} />
       </section>
 

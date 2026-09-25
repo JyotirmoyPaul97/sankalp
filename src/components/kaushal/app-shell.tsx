@@ -120,7 +120,7 @@ export function AppShell() {
             <div className="flex items-center gap-2">
               <span className="size-1.5 rounded-full bg-status-attention" />
               <span>
-                Demo Environment — Synthetic Demonstration Data. Not actual Maharashtra Government data.
+                Prototype environment using synthetic demonstration data.
               </span>
             </div>
             <div className="flex items-center gap-3">

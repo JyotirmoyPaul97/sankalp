@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Building2, MapPin } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { PageHeader } from "@/components/kaushal/page-header";
 import { DataTable, type Column } from "@/components/kaushal/data-table";
 import { StatusPill } from "@/components/kaushal/status-pill";
@@ -9,7 +9,79 @@ import { useFetch } from "@/hooks/use-fetch";
 import { ErrorState, LoadingState } from "@/components/kaushal/states";
 import { useNav } from "@/store/app-store";
 import { Input } from "@/components/ui/input";
-import type { District, Paginated } from "@/types/domain";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
+import type { District, DistrictGapSummary, Paginated } from "@/types/domain";
+
+function intensityFor(d: DistrictGapSummary | undefined): number {
+  if (!d || d.totalGaps === 0) return 0;
+  const moderate = Math.max(0, d.totalGaps - d.highGapCount - d.coveredCount - d.noSupplyCount - d.proficiencyMismatchCount - d.geographicGapCount);
+  const composite =
+    d.highGapCount * 1 + d.noSupplyCount * 0.8 + d.proficiencyMismatchCount * 0.5 + moderate * 0.4;
+  return Math.min(1, composite / Math.max(1, d.totalGaps));
+}
+
+function intensityTone(i: number): "positive" | "info" | "attention" | "critical" {
+  if (i === 0) return "positive";
+  if (i < 0.25) return "info";
+  if (i < 0.55) return "attention";
+  return "critical";
+}
+
+function GapIntensityBar({ d }: { d: DistrictGapSummary | undefined }) {
+  if (!d) {
+    return <span className="text-[11px] text-muted-foreground">—</span>;
+  }
+  const i = intensityFor(d);
+  const tone = intensityTone(i);
+  const toneClass = {
+    positive: "bg-status-positive",
+    info: "bg-status-info",
+    attention: "bg-status-attention",
+    critical: "bg-status-critical",
+  }[tone];
+
+  return (
+    <TooltipProvider delayDuration={120}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex items-center gap-2 min-w-[120px]">
+            <div className="h-2 w-16 rounded-full bg-muted overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${toneClass}`}
+                style={{ width: `${Math.max(4, Math.round(i * 100))}%` }}
+              />
+            </div>
+            <span className="text-[11px] tabular-nums text-muted-foreground">
+              {d.highGapCount}/{d.totalGaps}
+            </span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="text-xs">
+          <div className="space-y-0.5">
+            <p className="font-medium">{d.district.name} gap intensity</p>
+            <p className="text-muted-foreground">
+              High gaps: <span className="tabular-nums text-foreground">{d.highGapCount}</span>
+            </p>
+            <p className="text-muted-foreground">
+              No-supply skills: <span className="tabular-nums text-foreground">{d.noSupplyCount}</span>
+            </p>
+            <p className="text-muted-foreground">
+              Covered: <span className="tabular-nums text-foreground">{d.coveredCount}</span>
+            </p>
+            <p className="text-muted-foreground">
+              Total signals: <span className="tabular-nums text-foreground">{d.totalGaps}</span>
+            </p>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
 
 export function DistrictsView() {
   const [search, setSearch] = React.useState("");
@@ -17,6 +89,13 @@ export function DistrictsView() {
   const openDistrict = useNav((s) => s.openDistrict);
   const path = `/api/v1/districts?page=${page}&pageSize=20${search ? `&search=${encodeURIComponent(search)}` : ""}`;
   const { data, loading, error, refetch } = useFetch<Paginated<District>>(path, [search, page]);
+  const { data: gapData } = useFetch<{ districts: DistrictGapSummary[] }>("/api/v1/gaps/districts");
+
+  const gapByDistrict = React.useMemo(() => {
+    const map = new Map<string, DistrictGapSummary>();
+    for (const d of gapData?.districts ?? []) map.set(d.district.id, d);
+    return map;
+  }, [gapData]);
 
   const columns: Column<District>[] = [
     {
@@ -35,10 +114,29 @@ export function DistrictsView() {
       ),
     },
     {
-      key: "state",
-      header: "State",
-      cell: (d) => <span className="text-xs font-mono">{d.stateCode}</span>,
-      width: "90px",
+      key: "gapIntensity",
+      header: "Gap Intensity",
+      cell: (d) => <GapIntensityBar d={gapByDistrict.get(d.id)} />,
+      width: "180px",
+    },
+    {
+      key: "highGaps",
+      header: "High Gaps",
+      cell: (d) => {
+        const g = gapByDistrict.get(d.id);
+        const v = g?.highGapCount ?? 0;
+        return (
+          <span
+            className={
+              "tabular-nums text-sm font-medium " +
+              (v > 5 ? "text-status-critical" : v > 0 ? "text-status-attention" : "text-status-positive")
+            }
+          >
+            {v}
+          </span>
+        );
+      },
+      width: "100px",
     },
     {
       key: "employers",
@@ -53,21 +151,9 @@ export function DistrictsView() {
       width: "120px",
     },
     {
-      key: "location",
-      header: "Coordinates",
-      cell: (d) => (
-        <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
-          <MapPin className="size-3" />
-          {d.latitude != null && d.longitude != null
-            ? `${d.latitude.toFixed(2)}, ${d.longitude.toFixed(2)}`
-            : "—"}
-        </span>
-      ),
-    },
-    {
       key: "status",
       header: "Status",
-      cell: () => <StatusPill tone="positive" dot>Active</StatusPill>,
+      cell: () => <StatusPill tone="positive" dot>Monitored</StatusPill>,
       width: "120px",
     },
   ];
@@ -76,7 +162,7 @@ export function DistrictsView() {
     <div className="space-y-6">
       <PageHeader
         title="District Intelligence"
-        description="District-level foundation view of the demonstration training ecosystem. Click a district to open its profile."
+        description="Live intelligence across Maharashtra districts — skill-gap intensity, employers, training institutions. Click a district to open its skill profile."
         badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
@@ -102,7 +188,7 @@ export function DistrictsView() {
             rowKey={(d) => d.id}
             loading={loading && !data}
             onRowClick={(d) => openDistrict(d.id)}
-            emptyMessage="No demonstration districts match your search."
+            emptyMessage="No districts match your search."
           />
           {data ? (
             <div className="flex items-center justify-between text-xs text-muted-foreground">

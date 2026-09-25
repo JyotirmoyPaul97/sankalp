@@ -10,6 +10,7 @@ import { DataTable, type Column } from "@/components/kaushal/data-table";
 import { LoadingState, ErrorState } from "@/components/kaushal/states";
 import { useFetch } from "@/hooks/use-fetch";
 import { useNav } from "@/store/app-store";
+import { GapMatrix, StatusBadge } from "@/components/kaushal/visual-components";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -46,8 +47,25 @@ export function GapIntelligenceView() {
       <PageHeader
         title="Training Supply & Gap Intelligence"
         description="Compare observed labour-market demand with the training ecosystem that currently serves it. OBSERVATION + LIMITED INTERPRETATION — not recommendations."
-        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
+        badge={<StatusBadge status="OBSERVED" />}
       />
+
+      {/* Compact gap matrix summary — the headline visual */}
+      <section className="space-y-2">
+        <SectionLabel>Gap Matrix — Skills Snapshot</SectionLabel>
+        {skillsFetch.loading ? <LoadingState /> : skillsFetch.error ? <ErrorState message={skillsFetch.error.message} /> : (
+          <GapMatrix rows={(skillsFetch.data?.skills ?? []).filter((g) => g.gapScore > 0).slice(0, 6).map((g) => ({
+            skill: g.skill?.name ?? g.jobRole?.title ?? "—",
+            demand: g.marketDemandSignal,
+            supply: g.trainingSupplySignal,
+            gap: g.gapSignal,
+            confidence: g.confidenceLevel,
+          }))} />
+        )}
+        <p className="text-[11px] text-muted-foreground">
+          Each row compares observed market demand with training supply for one skill. Drill into the table below for full evidence per gap.
+        </p>
+      </section>
 
       {/* Two-sided model banner */}
       <div className="rounded-lg border bg-card p-4 flex flex-col md:flex-row items-center justify-between gap-3">
@@ -404,7 +422,7 @@ export function GapMatrixView() {
   return (
     <div className="space-y-6">
       <PageHeader title="Market–Training Matrix" description="Side-by-side comparison of observed demand vs training supply for each role. Filterable by district and sector." badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>} />
-      <DataTable columns={cols} rows={data?.matrix ?? []} rowKey={(r) => `${r.role}-${r.gapSignal}`} emptyMessage="No matrix data." />
+      <DataTable columns={cols} rows={data?.matrix ?? []} rowKey={(r) => `${r.role}-${r.gapSignal}-${r.gapScore}`} emptyMessage="No matrix data." />
       <p className="text-[11px] text-muted-foreground">Gap signal computed from transparent rules comparing normalized demand (0-100) with normalized supply (0-100). Weights documented as 'initial system configuration — subject to validation.' No workforce-unit estimation.</p>
     </div>
   );

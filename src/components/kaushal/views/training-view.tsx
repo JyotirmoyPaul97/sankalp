@@ -2,14 +2,17 @@
 
 import * as React from "react";
 import { useState } from "react";
-import { GraduationCap, BookOpen, Award, MapPin } from "lucide-react";
-import { PageHeader, SectionLabel } from "@/components/kaushal/page-header";
+import { GraduationCap, BookOpen, Award, MapPin, ArrowRight, Building2, Layers3 } from "lucide-react";
+import { PageHeader } from "@/components/kaushal/page-header";
 import { DataTable, type Column } from "@/components/kaushal/data-table";
 import { StatusPill } from "@/components/kaushal/status-pill";
 import { MetricCard } from "@/components/kaushal/metric-card";
 import { useFetch } from "@/hooks/use-fetch";
 import { ErrorState, LoadingState } from "@/components/kaushal/states";
 import { Input } from "@/components/ui/input";
+import { StatusBadge } from "@/components/kaushal/visual-components";
+import { MaharashtraIntelligenceBackground } from "@/components/kaushal/maharashtra-background";
+import { useNav } from "@/store/app-store";
 import {
   Tabs,
   TabsContent,
@@ -22,12 +25,15 @@ export function TrainingView() {
   const [tab, setTab] = useState("institutions");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const setActiveView = useNav((s) => s.setActiveView);
 
   const instPath = `/api/v1/institutions?page=${page}&pageSize=20${search ? `&search=${encodeURIComponent(search)}` : ""}`;
   const qualPath = `/api/v1/qualifications?page=${page}&pageSize=20${search ? `&search=${encodeURIComponent(search)}` : ""}`;
+  const coursesPath = "/api/v1/courses?pageSize=1";
 
   const instFetch = useFetch<Paginated<Institution>>(tab === "institutions" ? instPath : null, [search, page]);
   const qualFetch = useFetch<Paginated<Qualification>>(tab === "qualifications" ? qualPath : null, [search, page]);
+  const coursesFetch = useFetch<Paginated<{ id: string; name: string }>>(coursesPath);
 
   const institutionCols: Column<Institution>[] = [
     {
@@ -121,12 +127,56 @@ export function TrainingView() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Subtle workspace background */}
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-xl opacity-[0.05]">
+        <MaharashtraIntelligenceBackground variant="training" />
+      </div>
+
       <PageHeader
         title="Training Ecosystem"
-        description="Institutions, courses and qualifications forming the training-supply foundation. All data is synthetic demonstration data."
-        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
+        description="The institutions, qualifications, and courses that form the state's training-supply foundation. Coverage and capability gaps are surfaced in Delivery Capability."
+        badge={<StatusBadge status="OBSERVED" />}
       />
+
+      {/* Insight strip */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <MetricCard label="Institutions" value={instFetch.data?.total ?? "—"} icon={<Building2 className="size-4" />} tone="info" />
+        <MetricCard label="Qualifications" value={qualFetch.data?.total ?? "—"} icon={<Award className="size-4" />} tone="info" />
+        <MetricCard label="Courses" value={coursesFetch.data?.total ?? "—"} icon={<BookOpen className="size-4" />} tone="info" />
+        <MetricCard label="Coverage Insight" value={<span className="text-sm font-semibold">Curriculum ↔ Demand</span>} icon={<Layers3 className="size-4" />} hint="See Delivery Capability for the chain." tone="default" />
+      </div>
+
+      {/* Capability chain visual — Market → Curriculum → Trainer → Equipment → Capacity */}
+      <div className="rounded-lg border bg-card p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">Training Supply Chain</h3>
+          <button onClick={() => setActiveView("delivery-capability")} className="text-xs text-primary hover:underline inline-flex items-center gap-1">
+            Open Delivery Capability <ArrowRight className="size-3" />
+          </button>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+          {[
+            { label: "Market Demand", value: "What industry needs", tone: "text-status-attention", icon: <GraduationCap className="size-4" /> },
+            { label: "Curriculum", value: "Course coverage", tone: "text-status-info", icon: <BookOpen className="size-4" /> },
+            { label: "Trainer", value: "Proficiency + capacity", tone: "text-status-info", icon: <Award className="size-4" /> },
+            { label: "Equipment", value: "Availability + condition", tone: "text-status-info", icon: <Building2 className="size-4" /> },
+            { label: "Capacity", value: "Combined delivery", tone: "text-status-positive", icon: <Layers3 className="size-4" /> },
+          ].map((s, i, arr) => (
+            <React.Fragment key={s.label}>
+              <div className="rounded-md border bg-background p-3 text-center space-y-1">
+                <div className="flex justify-center">{s.icon}</div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</p>
+                <p className={`text-xs font-medium ${s.tone}`}>{s.value}</p>
+              </div>
+              {i < arr.length - 1 ? <div className="hidden md:flex items-center justify-center"><ArrowRight className="size-4 text-muted-foreground" /></div> : null}
+            </React.Fragment>
+          ))}
+        </div>
+        <p className="text-[11px] text-muted-foreground pt-2 border-t">
+          Five dimensions, kept separate. Each is observed independently before being combined into a delivery readiness signal.
+        </p>
+      </div>
 
       <Tabs value={tab} onValueChange={(v) => { setTab(v); setPage(1); }}>
         <TabsList>
@@ -153,7 +203,7 @@ export function TrainingView() {
               rows={instFetch.data?.items ?? []}
               rowKey={(i) => i.id}
               loading={instFetch.loading && !instFetch.data}
-              emptyMessage="No demonstration institutions match your search."
+              emptyMessage="No institutions match your search."
             />
           )}
           {instFetch.data ? (
@@ -176,7 +226,7 @@ export function TrainingView() {
               rows={qualFetch.data?.items ?? []}
               rowKey={(q) => q.id}
               loading={qualFetch.loading && !qualFetch.data}
-              emptyMessage="No demonstration qualifications match your search."
+              emptyMessage="No qualifications match your search."
             />
           )}
           {qualFetch.data ? (

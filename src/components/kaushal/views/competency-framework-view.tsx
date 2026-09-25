@@ -30,7 +30,7 @@ export function CompetencyFrameworkView() {
     <div className="space-y-6">
       <PageHeader
         title="Competency Framework"
-        description="Structural competency profiles: what proficiency each role expects and what each course confers. Foundation for role and course competency profiles."
+        description="Structural competency profiles: what proficiency each role expects and what each course confers."
         badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 

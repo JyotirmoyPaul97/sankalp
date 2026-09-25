@@ -62,6 +62,7 @@ export function DistrictTwinView() {
 }
 
 function TwinDashboard({ districtId }: { districtId: string }) {
+  const setActiveView = useNav((s) => s.setActiveView);
   const { data, loading, error } = useFetch<Record<string, unknown>>(`/api/v1/district-twin/${districtId}`);
   const outcomesFetch = useFetch<{ interventions: unknown[]; alerts: { id: string; alertType: string; severity: string; evidence: string | null; status: string; timestamp: string }[] }>(`/api/v1/district-outcomes/${districtId}`);
 
@@ -216,20 +217,69 @@ function TwinDashboard({ districtId }: { districtId: string }) {
         <p className="mt-2 text-[11px] text-muted-foreground">Pre/post comparison only. Other factors may have contributed. NO causal claim without valid evaluation design.</p>
       </EvidencePanel>
 
-      {/* Quick links */}
-      <div className="grid sm:grid-cols-3 gap-3">
-        <button onClick={() => setActiveView("policy-sandbox")} className="text-left rounded-lg border bg-card p-4 space-y-1.5 hover:border-primary/40 hover:bg-accent/30 transition-colors">
-          <div className="flex items-center gap-2 text-primary"><FlaskConical className="size-4" /><span className="text-sm font-medium">Policy Sandbox</span></div>
-          <p className="text-xs text-muted-foreground">Create scenarios, simulate interventions.</p>
-        </button>
-        <button onClick={() => setActiveView("district-plans")} className="text-left rounded-lg border bg-card p-4 space-y-1.5 hover:border-primary/40 hover:bg-accent/30 transition-colors">
-          <div className="flex items-center gap-2 text-primary"><Target className="size-4" /><span className="text-sm font-medium">District Plans</span></div>
-          <p className="text-xs text-muted-foreground">Evidence-linked planning.</p>
-        </button>
-        <button onClick={() => setActiveView("outcomes")} className="text-left rounded-lg border bg-card p-4 space-y-1.5 hover:border-primary/40 hover:bg-accent/30 transition-colors">
-          <div className="flex items-center gap-2 text-primary"><Activity className="size-4" /><span className="text-sm font-medium">Outcomes</span></div>
-          <p className="text-xs text-muted-foreground">Plan vs actual, lessons learned.</p>
-        </button>
+      {/* What should government do? — prominent CTA */}
+      <div className="relative overflow-hidden rounded-lg border border-primary/40 bg-primary/5 p-5 sm:p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <FlaskConical className="size-5 text-primary" />
+              <h3 className="text-base font-semibold">What should government do?</h3>
+            </div>
+            <p className="text-xs text-muted-foreground max-w-2xl leading-relaxed">
+              Turn this district's signals into action — design scenarios, configure interventions,
+              simulate impacts, and compare alternatives. Simulated outcomes, not forecasts.
+              Decision support, not automatic decision making.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setActiveView("policy-sandbox")}
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              Open Policy Sandbox
+              <ArrowRight className="size-4" />
+            </button>
+            <button
+              onClick={() => setActiveView("district-plans")}
+              className="inline-flex items-center gap-2 rounded-md border bg-card px-4 py-2.5 text-sm font-medium hover:bg-accent/40 transition-colors"
+            >
+              <Target className="size-4" />
+              District plans
+            </button>
+          </div>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-3 pt-4 mt-4 border-t border-primary/20">
+          <button
+            onClick={() => setActiveView("outcomes")}
+            className="text-left rounded-md border bg-card p-3 space-y-1 hover:border-primary/40 hover:bg-accent/30 transition-colors"
+          >
+            <div className="flex items-center gap-1.5 text-primary">
+              <Activity className="size-3.5" />
+              <span className="text-[11px] font-semibold uppercase tracking-wide">Outcomes</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground">Plan vs actual, lessons learned.</p>
+          </button>
+          <button
+            onClick={() => setActiveView("gap-intelligence")}
+            className="text-left rounded-md border bg-card p-3 space-y-1 hover:border-primary/40 hover:bg-accent/30 transition-colors"
+          >
+            <div className="flex items-center gap-1.5 text-primary">
+              <AlertTriangle className="size-3.5" />
+              <span className="text-[11px] font-semibold uppercase tracking-wide">Gap intelligence</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground">Skill-level demand vs supply.</p>
+          </button>
+          <button
+            onClick={() => setActiveView("district-profile")}
+            className="text-left rounded-md border bg-card p-3 space-y-1 hover:border-primary/40 hover:bg-accent/30 transition-colors"
+          >
+            <div className="flex items-center gap-1.5 text-primary">
+              <Gauge className="size-3.5" />
+              <span className="text-[11px] font-semibold uppercase tracking-wide">District profile</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground">Skill profile & priority actions.</p>
+          </button>
+        </div>
       </div>
     </div>
   );

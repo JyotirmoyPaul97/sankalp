@@ -4,7 +4,6 @@ import * as React from "react";
 import { Menu, Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useNav, useAuth } from "@/store/app-store";
 
 const TITLES: Record<string, string> = {
@@ -37,7 +36,6 @@ export function CandidateTopbar({ onOpenSidebar }: { onOpenSidebar: () => void }
           <h1 className="text-base font-semibold tracking-tight truncate">{TITLES[activeView] ?? "Candidate Workspace"}</h1>
           <p className="text-[11px] text-muted-foreground truncate">Hello, {user?.name?.split(" ")[0] ?? "Candidate"} · Skill Intelligence, not a jobs feed.</p>
         </div>
-        <Badge variant="outline" className="hidden sm:inline-flex text-[10px] font-mono">SYNTHETIC</Badge>
         <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label="Toggle theme">
           <Sun className="size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute size-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />

@@ -1,0 +1,807 @@
+     1→# KAUSHAL DRISHTI — Phase 1 Worklog
+     2→
+     3→Maharashtra Skill Intelligence & Policy Decision Platform.
+     4→"From Labour-Market Evidence to Better Skill Decisions."
+     5→
+     6→## Environment Adaptation Note
+     7→
+     8→The original spec calls for a Python/FastAPI backend, PostgreSQL+PostGIS, Redis, and Docker.
+     9→This sandbox is a single Next.js 16 project with Prisma (SQLite). To preserve the full product
+    10→vision while respecting the environment, KAUSHAL DRISHTI is implemented as:
+    11→
+    12→- Frontend + Backend: Next.js 16 (App Router), TypeScript, shadcn/ui
+    13→- Database: Prisma ORM with SQLite (adapted schema — String for UUIDs/cuid, Float for geo, no enums)
+    14→- API: Next.js Route Handlers under `/api/v1/*` with Pydantic-equivalent Zod validation + standardized response envelope
+    15→- Auth: JWT-style foundation with demo users + role-aware navigation (extension point for Keycloak/OAuth2)
+    16→- Cache/Redis abstraction: documented extension point (not wired to a real Redis in Phase 1)
+    17→- Single user-visible route `/` hosts the full application shell with client-side view switching
+    18→
+    19→All data is SYNTHETIC DEMONSTRATION DATA — clearly labelled. No real government claims.
+    20→
+    21→---
+    22→Task ID: 1
+    23→Agent: GLM (main)
+    24→Task: Initialize worklog and write Prisma schema for KAUSHAL DRISHTI Phase 1 core entities
+    25→
+    26→Work Log:
+    27→- Read existing project scaffold (package.json, schema.prisma, globals.css, layout.tsx)
+    28→- Confirmed stack: Next.js 16, Prisma 6, shadcn/ui, Tailwind 4, Zustand, Recharts, zod
+    29→- Designing schema adapted to SQLite constraints
+    30→
+    31→Stage Summary:
+    32→- Worklog initialized. Proceeding to schema authoring.
+    33→
+    34→---
+    35→Task ID: 2
+    36→Agent: GLM (main)
+    37→Task: Push schema + create synthetic seed + seed DB
+    38→
+    39→Work Log:
+    40→- Fixed Prisma Sector relation array syntax
+    41→- db:push succeeded (SQLite)
+    42→- Authored prisma/seed.ts with clearly-labelled SYNTHETIC DEMONSTRATION data
+    43→- Seeded: 3 districts, 3 sectors, 5 job roles, 10 skills, 5 courses, 3 institutions, 5 employers, 5 data sources, 4 demo users (RBAC)
+    44→- All relationships populated (role_skills, course_skills, course_institutions, employer_roles)
+    45→
+    46→Stage Summary:
+    47→- DB ready and seeded. Added `db:seed` script to package.json.
+    48→
+    49→---
+    50→Task ID: 3
+    51→Agent: GLM (main)
+    52→Task: API foundation — health, meta, auth, standardized response envelope
+    53→
+    54→Work Log:
+    55→- src/lib/api.ts: ok()/paginated()/fail()/parsePagination()/handlePrismaError() with ApiErrorCode vocabulary
+    56→- src/lib/auth.ts: Phase-1 JWT foundation (HMAC-SHA256, signToken/verifyToken), authenticateDemo(), requireUser() — extension point for Keycloak/OAuth2
+    57→- /health, /api/v1/health, /api/v1/meta, /api/v1/auth/login (POST)
+    58→- src/lib/crud.ts: shared list/get/create/update helpers
+    59→
+    60→Stage Summary:
+    61→- Standardized response envelope { success, data | error:{code,message,details} } across all endpoints.
+    62→
+    63→---
+    64→Task ID: 4
+    65→Agent: GLM (main)
+    66→Task: CRUD API routes for all Phase-1 entities
+    67→
+    68→Work Log:
+    69→- GET/POST + GET[id]/PUT for: districts, sectors, employers, institutions, skills, job-roles, courses, qualifications, data-sources
+    70→- Zod validation on every write path
+    71→- Pagination + search + relational includes for list/detail reads
+    72→- Role-aware includes (district.employers, course.skills, skill.roleSkills etc.)
+    73→
+    74→Stage Summary:
+    75→- All entity endpoints implemented with consistent contract and OpenAPI-friendly behaviour.
+    76→
+    77→---
+    78→Task ID: 5-13
+    79→Agent: GLM (main)
+    80→Task: Design system + frontend shell + all views + future-module placeholders + docs + verification
+    81→
+    82→Work Log:
+    83→- Design system: government OKLCH palette in globals.css (deep navy primary, muted teal accent, 4 status semantics), Inter font, status utilities (surface-positive/attention/critical/info/neutral)
+    84→- Shared components: MetricCard, StatusPill (+dataStatusTone/courseStatusTone), EvidencePanel, PhasePlaceholder, DataTable, SourceBadge/ProvenanceLine, ArchitectureFlow, PageHeader, ErrorState/LoadingState
+    85→- Auth: Zustand store (persist) + src/lib/auth.ts JWT foundation (HMAC-SHA256) + LoginScreen with 4 demo accounts
+    86→- App shell: grouped Sidebar (Intelligence/Training/Decision Support/Collaboration/Outcomes/System) + Topbar (user, role badge, DEMO/SYNTHETIC badge, theme toggle, profile menu) + sticky footer (mt-auto, min-h-screen flex flex-col)
+    87→- 12 views: Overview (KPIs from /api/v1/meta + architecture flow + provenance + roadmap), Districts (table→profile), Labour Market (P4 placeholder), Skills (search+category filter), Training (institutions/qualifications tabs), Courses (status filter), Employer Validation (P7 placeholder), Policy Sandbox (P11 placeholder), District Plans (P9 placeholder), Outcomes (P12 placeholder), Data Sources (provenance register), Administration (health+RBAC+auth)
+    88→- Docs: README, .env.example, architecture.md, data-model.md, api-contract.md, ui-design-system.md, development.md, phase-1.md
+    89→- 11 Agent Browser screenshots in docs/screenshots/
+    90→
+    91→Verification (Agent Browser end-to-end):
+    92→- ✅ Login screen renders (brand panel + sign-in + 4 demo cards)
+    93→- ✅ Demo login (admin) → dashboard loads with KPIs from API (3/3/5/10/5/5)
+    94→- ✅ Sidebar navigation: all 12 views reachable; future modules show P<n> marker
+    95→- ✅ Districts table → click row → district profile (employers + institutions + Phase 4 placeholder)
+    96→- ✅ Skills/Courses tables with search + filters + status pills
+    97→- ✅ Data Sources provenance register with DEMO badges
+    98→- ✅ Policy Sandbox / Employer Validation / District Plans / Outcomes intelligent placeholders
+    99→- ✅ Mobile responsive: hamburger → Sheet sidebar; tables scroll; cards stack
+   100→- ✅ Sticky footer (mt-auto) on short pages; natural push on long pages
+   101→- ✅ Accessibility: Sheet sr-only title/description added to clear Radix warnings (0 console errors after fix)
+   102→- ✅ Lint: 0 errors, 0 warnings
+   103→
+   104→Stage Summary:
+   105→- Phase 1 COMPLETE and browser-verified. Server running on :3000 (persistent double-fork daemon). All acceptance items PASS or ADAPTED (documented).
+   106→
+   107→# =====================================================================
+   108→# PHASE 2 — DATA & EVIDENCE INGESTION LAYER
+   109→# =====================================================================
+   110→
+   111→Phase 2 builds the trusted data & evidence ingestion layer on top of Phase 1.
+   112→Goal: Source → Provenance → Validation → Quality → Storage → Audit, BEFORE
+   113→any intelligence. No NLP/AI/ML/gap-analysis (those are Phase 3+).
+   114→
+   115→
+   116→---
+   117→Task ID: p2-2
+   118→Agent: test-dataset-generator (subagent)
+   119→Task: Generate synthetic test CSV datasets A-G for ingestion pipeline testing
+   120→
+   121→Work Log:
+   122→- Read existing worklog.md to understand Phase 1 (seeded districts/sectors/job roles) and Phase 2 (ingestion layer) context
+   123→- Created /home/z/my-project/data/synthetic/ directory
+   124→- Authored deterministic Python generator (_generate_datasets.py) covering the JOB_POSTINGS schema:
+   125→  source_record_id, employer, role, district, sector, posted_at, data_status
+   126→- Generated all 7 CSVs with cyclic, deterministic test data (Demo <Name> employer prefix, 2026 dates spread 2026-01-15 .. 2026-09-20)
+   127→- Dataset A: 50 records, 100% valid happy path (all Pune/Nashik/Nagpur, all data_status=SYNTHETIC, unique IDs)
+   128→- Dataset B: 30 records — 10 missing role + 5 missing district + 5 missing posted_at + 10 valid
+   129→- Dataset C: 40 records — 20 unique + 5 exact-duplicate pairs (same source_record_id, byte-identical) + 5 compound-duplicate pairs (different IDs, identical employer+role+district+posted_at fingerprint)
+   130→- Dataset D: 25 records — 8 malformed dates covering distinct failure modes (2026-13-45, not-a-date, 2026/09/20, 32-01-2026, 2026-02-30, 2026-00-15, 2026-04-31, 2026-13-01) + 17 valid
+   131→- Dataset E: 25 records — 8 unknown districts (Mumbai/Aurangabad/Thane) + 17 valid
+   132→- Dataset F: 25 records — 8 invalid data_status (FAKE/PRODUCTION/LIVE/TEST) + 17 valid (alternating DEMO/SYNTHETIC)
+   133→- Dataset G: 60 records — 45 valid + 3 missing role + 3 invalid dates + 3 unknown districts + 3 invalid status + 3 duplicate rows (2 exact + 1 compound) — ~25% reject rate
+   134→- Wrote README.md documenting synthetic-data disclaimer, schema, valid value universe, and per-dataset scenarios
+   135→- Programmatically verified: all 7 headers exact-match spec; all 255 rows have exactly 7 columns; missing-field / bad-district / bad-status / duplicate counts match the per-dataset design invariants
+   136→
+   137→Stage Summary:
+   138→- Files created under /home/z/my-project/data/synthetic/:
+   139→  - dataset_a_valid.csv            (50 records)
+   140→  - dataset_b_missing_fields.csv   (30 records)
+   141→  - dataset_c_duplicates.csv        (40 records)
+   142→  - dataset_d_invalid_dates.csv     (25 records)
+   143→  - dataset_e_unknown_district.csv  (25 records)
+   144→  - dataset_f_invalid_status.csv    (25 records)
+   145→  - dataset_g_mixed.csv            (60 records)
+   146→  - README.md                       (data + schema documentation)
+   147→  - _generate_datasets.py           (deterministic generator, re-runnable)
+   148→- Total: 255 synthetic JOB_POSTINGS rows across 7 datasets, ready for ingestion-pipeline test harness.
+   149→
+   150→---
+   151→Task ID: p2-1
+   152→Agent: GLM (main)
+   153→Task: Extend Prisma schema for Phase 2 (ingestion + provenance + audit)
+   154→
+   155→Work Log:
+   156→- Extended DataSource with providerName, sourceReference, geographyLevel, updateFrequency, isActive
+   157→- Added UploadedFile (file metadata + SHA-256 checksum)
+   158→- Added IngestionBatch (per-import summary, status, quality score, batch code ING-YYYY-NNNN)
+   159→- Added IngestionRecord (raw record tracking: sourceId+batchId+sourceRecordId+fingerprint+rawJson+normalizedId)
+   160→- Added IngestionError (per-record issues: rowNumber+field+problem+severity+suggestedAction)
+   161→- Added AuditLog (ingestion + admin events)
+   162→- Added 6 entity-specific evidence tables: JobPosting, EmployerSurvey, IndustryConsultation, SectorGrowth, PlacementOutcome, TechnologyTrend — each linked back to source+batch for full provenance
+   163→- Added back-relations to District/Sector/Employer/JobRole/Course/Institution/DataSource/IngestionBatch
+   164→- db:push succeeded (SQLite, 25 new tables/relations)
+   165→
+   166→Stage Summary:
+   167→- Schema ready. ~15 new models + 30+ indexes. Geospatial-ready, portable to PostgreSQL/PostGIS.
+   168→
+   169→---
+   170→Task ID: p2-2
+   171→Agent: test-dataset-generator (subagent)
+   172→Task: Generate synthetic test CSV datasets A-G for ingestion pipeline testing
+   173→
+   174→Work Log:
+   175→- Generated 7 test CSV datasets in data/synthetic/ (A=valid 50, B=missing-fields 30, C=duplicates 40, D=invalid-dates 25, E=unknown-district 25, F=invalid-status 25, G=mixed 60 — 255 rows total)
+   176→- Each follows the exact CSV header: source_record_id,employer,role,district,sector,posted_at,data_status
+   177→- Dataset A is 100% valid happy path; G has ~25% reject rate
+   178→- All data clearly labelled SYNTHETIC DEMONSTRATION DATA
+   179→
+   180→Stage Summary:
+   181→- 8 files in data/synthetic/ (7 CSVs + README + deterministic generator script)
+   182→
+   183→---
+   184→Task ID: p2-3 to p2-5
+   185→Agent: GLM (main)
+   186→Task: Storage abstraction + ingestion service lib + API routes
+   187→
+   188→Work Log:
+   189→- src/lib/storage.ts: safe filenames, SHA-256, storage/ dir, file-type allow-list (.csv/.json), blocked extensions (.exe/.sh/.py/.js/.php…), 25 MB limit, path-traversal guard
+   190→- src/lib/ingestion/vocab.ts: controlled vocabularies (source types, data statuses, geography, frequency, batch status, severity, entity types)
+   191→- src/lib/ingestion/normalize.ts: whitespace/title-case/date/enum/int/float normalization (NO semantic/ML normalization — that is Phase 3)
+   192→- src/lib/ingestion/validate.ts: Zod-equivalent validators per entity (completeness, validity, referential integrity) + compound fingerprint for dedup
+   193→- src/lib/ingestion/dedupe.ts: exact (sourceId+sourceRecordId) + compound (fingerprint) deduplication against DB
+   194→- src/lib/ingestion/quality.ts: deterministic quality score = 0.35·completeness + 0.30·validity + 0.20·uniqueness + 0.15·consistency (NO ML)
+   195→- src/lib/ingestion/parser.ts: minimal RFC-4180 CSV parser + JSON parser (no external deps)
+   196→- src/lib/ingestion/providers.ts: SyntheticDataProvider, CSVDataProvider, JSONDataProvider, ManualEntryProvider (extension point for OfficialGovernmentProvider)
+   197→- src/lib/ingestion/pipeline.ts: two-phase orchestrator — previewAndValidate() + confirmAndStoreFromRecords() with $transaction + batch inserts
+   198→- API routes: /api/v1/ingestion/upload (multipart, admin-only), /confirm, /batches, /batches/[id], /api/v1/data-quality/[batchId], /api/v1/records/[entity], /api/v1/audit-logs, PATCH/GET /api/v1/data-sources/[id]
+   199→- Extended /api/v1/meta with dataHealth block (activeSources, recentImports, totalIngested, avgQuality, per-entity counts)
+   200→- requireAdmin() added to src/lib/auth.ts (STATE_ADMIN + AUDITOR only)
+   201→
+   202→Stage Summary:
+   203→- Full ingestion pipeline operational. All admin routes JWT-protected.
+   204→
+   205→---
+   206→Task ID: p2-6
+   207→Agent: GLM (main)
+   208→Task: Large synthetic seed running through ingestion pipeline
+   209→
+   210→Work Log:
+   211→- prisma/seed-phase2.ts: idempotent seed that wipes Phase 2 tables, extends employer catalogue to 30+, creates 8 data sources (6 evidence-type sources + DEMO + inactive real placeholder), generates internally-consistent records and runs them through previewAndValidate() + confirmAndStoreFromRecords()
+   212→- Counts: 120 job postings, 55 surveys, 24 consultations, 32 sector growth, 110 placements, 34 tech trends + 50 from Dataset A CSV = 425 ingested records across 7 batches
+   213→- Each batch carries a quality score (100 for clean synthetic, 87 for Dataset A which had warnings)
+   214→- Provenance fully wired: every JobPosting/.../TechnologyTrend links back to source + batch; IngestionRecord preserves raw JSON + fingerprint
+   215→
+   216→Stage Summary:
+   217→- bun run db:seed:phase2 succeeds. DB now has 8 sources, 7 batches, 425 records, 45 validation errors, 7 audit logs.
+   218→
+   219→---
+   220→Task ID: p2-7 to p2-8
+   221→Agent: GLM (main)
+   222→Task: Data Operations frontend + Overview Data Health section
+   223→
+   224→Work Log:
+   225→- New sidebar group "Data Operations": Upload Dataset, Import Batches, Data Quality, Records Explorer, Provenance, Audit Logs
+   226→- upload-view.tsx: 5-step stepper (Select Source → Upload File → Preview → Confirm → Result) with quality score bars + sample issues table
+   227→- import-batches-view.tsx: batch list + BatchDetailView (provenance sample + validation issues table)
+   228→- data-quality-view.tsx: per-batch quality dashboard (4 dimensions with progress bars + top problem fields)
+   229→- records-explorer-view.tsx: generic explorer across all 6 evidence tables with entity/search/status filters
+   230→- provenance-view.tsx: Source → Batch → Record chain visualization
+   231→- audit-logs-view.tsx: ingestion/admin audit trail with action filter
+   232→- data-sources-view.tsx: rewritten as functional page with create/edit Dialog (provider, geography, frequency, status, active toggle)
+   233→- admin-view.tsx: added Data Operations quick-link grid (7 cards)
+   234→- overview-view.tsx: added DataHealthSection (4 metric cards + evidence breakdown bars, all from /api/v1/meta.dataHealth)
+   235→- topbar.tsx: registered 6 new view titles
+   236→- app-shell.tsx: registered 6 new views + dynamic "batch-detail:<id>" routing
+   237→
+   238→Stage Summary:
+   239→- 6 new views + 2 rewritten views. All use existing design system (government palette, StatusPill, EvidencePanel, DataTable).
+   240→
+   241→---
+   242→Task ID: p2-9
+   243→Agent: GLM (main)
+   244→Task: Lint + Agent Browser E2E verification of full ingestion flow
+   245→
+   246→Work Log:
+   247→- Lint: 0 errors, 0 warnings
+   248→- E2E verified via Agent Browser (11 screenshots in docs/screenshots/p2-*.png):
+   249→  1. Login as Demo State Admin → Overview shows Data Health section (8 sources, 7 recent imports, 425 records ingested, 98% avg quality, evidence breakdown bars)
+   250→  2. Upload Dataset → stepper Step 1 (select source) → Step 2 (file upload)
+   251→  3. Uploaded dataset_b_missing_fields.csv → pipeline detected missing role fields (ERROR) + unknown employers (WARNING) correctly
+   252→  4. Preview showed quality score, sample issues table, "Import 15 valid records" button
+   253→  5. Confirmed import → Result: "Import Successful, Batch ID ING-2026-0008"
+   254→  6. Import Batches list shows ING-2026-0008
+   255→  7. Data Quality view renders per-dimension scores
+   256→  8. Records Explorer shows ingested records
+   257→  9. Audit Logs show CONFIRMED_IMPORT events
+   258→  10. Batch detail (clicking a row) shows provenance sample + validation issues
+   259→  11. Happy-path: re-uploading Dataset A correctly detected exact duplicates (dedup working) — proves (sourceId, sourceRecordId) uniqueness constraint
+   260→- Console: 0 errors throughout
+   261→
+   262→Stage Summary:
+   263→- Phase 2 COMPLETE and browser-verified. Full vertical slice works: Source → Upload → Validate → Preview → Confirm → Store → Batch → Quality → Explorer → Audit.
+   264→
+   265→# =====================================================================
+   266→# PHASE 3 — KNOWLEDGE + COMPETENCY INTELLIGENCE FOUNDATION
+   267→# =====================================================================
+   268→
+   269→Phase 3 builds the skill knowledge graph + competency framework on top of
+   270→Phase 1+2. NO demand intelligence, NO gap analysis, NO forecasting, NO
+   271→recommendations (those are later phases). This is the foundation.
+   272→
+   273→---
+   274→Task ID: p3-0
+   275→Agent: GLM (main)
+   276→Task: Inspect Phase 1+2 repo state
+   277→
+   278→Work Log:
+   279→- Verified Phase 1+2 complete: 10 skills, 5 job roles, 18 role_skills, 14 course_skills, 185 job_postings, 8 data sources, 7 ingestion batches
+   280→- Identified reuse points: Skill/RoleSkill/CourseSkill models, src/lib/ingestion/ (Phase 2), existing skills-view, sidebar Intelligence group
+   281→- Phase 2 docs explicitly deferred "semantic skill normalization" and "skill knowledge graph" to Phase 3
+   282→
+   283→Stage Summary:
+   284→- Reusing all Phase 1+2 architecture; only ADDING knowledge-graph + competency layers.
+   285→
+   286→---
+   287→Task ID: p3-1
+   288→Agent: GLM (main)
+   289→Task: Extend Prisma schema for Phase 3
+   290→
+   291→Work Log:
+   292→- Added SkillAlias (alias, aliasType: ACRONYM|VARIANT|COMMON_NAME|LEGACY, isCaseSensitive)
+   293→- Added SkillRelation (from→to, relationType: PREREQUISITE|RELATED_TO|BROADER_THAN|NARROWER_THAN|PART_OF, weight)
+   294→- Added SkillCluster + SkillClusterMember (thematic groupings, PRIMARY|SECONDARY membership)
+   295→- Extended RoleSkill with proficiencyLevel (AWARENESS|WORKING|PROFICIENT|EXPERT)
+   296→- Added back-relations on Skill model
+   297→- db:push succeeded (SQLite)
+   298→
+   299→Stage Summary:
+   300→- 5 new models + 8 new indexes. Schema portable to PostgreSQL/PostGIS.
+   301→
+   302→---
+   303→Task ID: p3-2
+   304→Agent: GLM (main)
+   305→Task: Build intelligence library (src/lib/intelligence/)
+   306→
+   307→Work Log:
+   308→- vocab.ts: PROFICIENCY_LEVELS, COVERAGE_LEVELS, ALIAS_TYPES, RELATION_TYPES, PROFICIENCY_RANK, COVERAGE_TO_PROFICIENCY mapping
+   309→- skill-normalizer.ts: resolveCanonicalSkill() — deterministic string→canonical via (1) canonicalName exact, (2) name exact, (3) alias match (case-insensitive by default), (4) token-suffix fallback ("PLC Programming"→"PLC"). Returns confidence + matchedVia. NO embeddings, NO ML.
+   310→- competency.ts: getRoleCompetencyProfile() (expected proficiencies by role), getCourseCompetencyProfile() (taught coverages by course), getCourseRoleAlignment() (structural proficiency-rank comparison — descriptive only, NOT demand-weighted gap analysis)
+   311→- skill-graph.ts: getSkillNeighbourhood() (1-hop graph: outgoing+incoming edges+clusters+aliases), listClusters()
+   312→
+   313→Stage Summary:
+   314→- 3 intelligence modules, all deterministic. Foundation for Phase 4+ to add demand weighting.
+   315→
+   316→---
+   317→Task ID: p3-3
+   318→Agent: GLM (main)
+   319→Task: Build Phase 3 API routes
+   320→
+   321→Work Log:
+   322→- GET /api/v1/skills/canonical?name=PLC (or ?names=PLC,SCADA) — resolver
+   323→- GET /api/v1/skills/[id]/graph — 1-hop neighbourhood
+   324→- GET/POST /api/v1/skills/[id]/aliases — list/add (POST admin-only)
+   325→- GET/POST /api/v1/skills/[id]/relations — list/add (POST admin-only)
+   326→- GET /api/v1/job-roles/[id]/competency (?alignWithCourseId=) — role profile + optional alignment
+   327→- GET /api/v1/courses/[id]/competency (?alignWithRoleId=) — course profile + optional alignment
+   328→- GET /api/v1/skill-clusters — clusters with members
+   329→- Extended /api/v1/meta with knowledgeHealth block + bumped phase to "phase-3"
+   330→
+   331→Stage Summary:
+   332→- 7 new endpoints. Admin routes JWT-protected (requireAdmin).
+   333→
+   334→---
+   335→Task ID: p3-4
+   336→Agent: GLM (main)
+   337→Task: Build Phase 3 seed
+   338→
+   339→Work Log:
+   340→- prisma/seed-phase3.ts (idempotent, wipes Phase 3 tables only):
+   341→  - 21 skill aliases (PLC, Programmable Logic Controller, P.L.C., Ladder Logic, SCADA, IIoT, BMS, etc.)
+   342→  - 18 role-skill proficiency levels (importance 5→EXPERT, 4→PROFICIENT, 3→WORKING, ≤2→AWARENESS)
+   343→  - 4 skill clusters (Industrial Automation, EV Technology, Software & Data, Embedded & Firmware)
+   344→  - 15 skill relations (PLC→SCADA prerequisite, PLC→Robotics prerequisite, Embedded→BMS prerequisite, etc.)
+   345→- Added db:seed:phase3 + db:seed:all to package.json
+   346→
+   347→Stage Summary:
+   348→- Seed succeeds. DB now has 21 aliases, 15 relations, 4 clusters, 18 role competencies.
+   349→
+   350→---
+   351→Task ID: p3-5
+   352→Agent: GLM (main)
+   353→Task: Build Phase 3 frontend
+   354→
+   355→Work Log:
+   356→- skill-intelligence-view.tsx: Skill Normalizer playground (type raw string → resolve to canonical with confidence + matchedVia) + Clusters panel + Skill Graph Explorer (1-hop neighbourhood with outgoing/incoming edge tables, aliases, clusters)
+   357→- competency-framework-view.tsx: 3 tabs — Role Profile (expected proficiencies), Course Profile (taught coverages), Alignment (course-vs-role proficiency comparison with COVERED/EXCEEDS/SHORTFALL/NOT_TAUGHT)
+   358→- overview-view.tsx: added KnowledgeFoundationSection (4 metric cards + foundation explanation panel) + Phase 3 entry in roadmap
+   359→- sidebar.tsx: added "Skill Intelligence" + "Competency Framework" under Intelligence group (phase 3, active)
+   360→- app-shell.tsx + topbar.tsx: registered 2 new views + titles
+   361→- types/domain.ts: added Phase 3 types (SkillAlias, SkillRelation, SkillCluster, NormalizeResult, SkillNeighbourhood, RoleCompetencyProfile, CourseCompetencyProfile, CompetencyAlignment, KnowledgeHealth)
+   362→
+   363→Stage Summary:
+   364→- 2 new views + Overview enhancement. All use existing design system (government palette, StatusPill, EvidencePanel, DataTable).
+   365→
+   366→---
+   367→Task ID: p3-6
+   368→Agent: GLM (main)
+   369→Task: Lint + Agent Browser E2E verification
+   370→
+   371→Work Log:
+   372→- Lint: 0 errors, 0 warnings
+   373→- E2E verified via Agent Browser (6 screenshots in docs/screenshots/p3-*.png):
+   374→  1. Login → Overview → Knowledge Foundation section visible (4 metric cards: 21 aliases, 15 relations, 4 clusters, 18 role competencies)
+   375→  2. Skill Intelligence view → Normalizer resolves "PLC" → plc-programming via alias (confidence 90%)
+   376→  3. Normalizer resolves "Programmable Logic Controller" → plc-programming via alias (COMMON_NAME)
+   377→  4. Skill Graph Explorer → selected Battery Management Systems → shows 1 outgoing + 2 incoming edges + PREREQUISITE relations
+   378→  5. Competency Framework → Role Profile tab → shows expected proficiencies (EXPERT/PROFICIENT/WORKING) per skill
+   379→  6. Course Profile tab → shows taught coverages (MASTERED/REINFORCED/INTRODUCED)
+   380→  7. Alignment tab → selected Industrial Automation course + Automation Engineer role → shows COVERED/SHORTFALL/NOT_TAUGHT summary + per-skill alignment table
+   381→- Console: 0 errors throughout
+   382→
+   383→Stage Summary:
+   384→- Phase 3 COMPLETE and browser-verified. Skill knowledge graph + competency foundation operational.
+   385→
+   386→# =====================================================================
+   387→# PHASE 4 — LABOUR MARKET INTELLIGENCE
+   388→# =====================================================================
+   389→
+   390→Goal: UNDERSTAND THE MARKET. Build the single Market Intelligence Object
+   391→for any (District, Cluster, Sector, Role, Skill) from Phase 1-3 evidence.
+   392→NO forecasting, NO gap analysis, NO recommendations (later phases).
+   393→
+   394→Pipeline: RAW EVIDENCE → PHASE 2 PROVENANCE → PHASE 3 CANONICAL ENTITY
+   395→→ JOB ROLE → COMPETENCY → SKILL → PROFICIENCY → LOCATION → MARKET SIGNAL
+   396→
+   397→
+   398→---
+   399→Task ID: p4-1 to p4-6
+   400→Agent: GLM (main)
+   401→Task: Phase 4 — Labour-Market & Local Economic Intelligence Engine (Part 1 + Part 2)
+   402→
+   403→Work Log:
+   404→- Schema: added Division, EconomicCluster, EmployerCluster (m2m), MarketSignal, DemandSnapshot, MarketProfile, SectorGrowthProfile, SkillSectorPresence, EmergingSkillSignal, DistrictLabourContext, EvidenceWeight. Extended JobPosting with economicClusterId. db:push succeeded.
+   405→- Service lib (src/lib/intelligence/market.ts): computeMarketSignals() scans JobPosting + EmployerSurvey evidence → aggregates into per-period MarketSignal rows (never overwritten — temporal versioning). getMarketIntelligence() assembles the single Market Intelligence Object. computeDemandSnapshots() builds the aggregated demand objects. computeEmergingSkills() radar. computeSkillSectorPresence() cross-sector. getTrendSeries() time-series. getEvidenceConvergence() per-source profile. computeConfidence() = f(diversity, sample, employers). Fixed trend computation to aggregate per-period sums for stable direction.
+   406→- Configurable evidence weights (EvidenceWeight table, defaults documented as "initial system configuration — subject to validation").
+   407→- APIs: /api/v1/market-demand/{roles,skills,proficiency,sectors,districts,clusters,trends,emerging-skills,convergence,market-profile/[scope]/[id],aspiration-context,refresh} (12 endpoints). Admin-only refresh.
+   408→- Seed (seed-phase4.ts): 4 divisions, 10 districts, 11 economic clusters, 178→242 employers, 978 job postings across 12 monthly periods (with increasing trend), 210 surveys, 55 consultations, 110 sector obs, 110 tech obs, 10 district labour context (mostly NULL = data unavailable). Then triggered market-signal computation: 3031 market signals, 2088 demand snapshots, 10 emerging signals, 28 skill-sector presence.
+   409→- Frontend: LabourMarketView (dashboard with role+skill demand tables, district/sector filters), RoleDemandDetailView (competencies + evidence), SkillDemandDetailView (historical trend + convergence), EmergingRadarView (radar cards), EvidenceConvergenceView (per-source bars + MIXED EVIDENCE handling), MarketTrendsView (12-period bar chart with INSUFFICIENT_DATA handling). Updated sidebar (4 new nav items), topbar, overview (MarketIntelligenceSection with 4 metric cards).
+   410→- Fixed crash: Radix Select doesn't accept empty string value — used "ALL"/"_none" pattern.
+   411→- E2E verified via Agent Browser (7 screenshots): login → overview → labour market dashboard → role detail → skill detail → emerging radar → evidence convergence → market trends. 0 console errors.
+   412→
+   413→Stage Summary:
+   414→- Phase 4 COMPLETE and browser-verified. Full Pune→Cluster→Role→Skill demo works. All market intelligence is OBSERVED SIGNALS — no recommendations, no forecasting, no gap analysis.
+   415→
+   416→# =====================================================================
+   417→# PHASE 5 — TRAINING ECOSYSTEM INTELLIGENCE + DEMAND–SUPPLY GAP
+   418→# =====================================================================
+   419→
+   420→Part 1: Training Supply Intelligence Foundation.
+   421→Goal: structured intelligence about what training capacity exists, where
+   422→it's available, which roles/skills/competencies it supports, how many
+   423→learners are being served, what outcomes are produced. NO gap scoring,
+   424→NO recommendations (Part 2 / later phases).
+   425→
+   426→
+   427→---
+   428→Task ID: p5-1 to p5-5
+   429→Agent: GLM (main)
+   430→Task: Phase 5 Part 1 — Training Ecosystem Intelligence Foundation
+   431→
+   432→Work Log:
+   433→- Schema: added TrainingProvider, TrainingCentre, CourseOffering, TrainingCertification, CourseRoleMapping, TrainingSupplySignal, TrainingProfile. Extended Institution (providerId), Course (providerId, institutionId, courseType, deliveryMode, durationWeeks, level, dataStatus), CourseSkill (expectedProficiency, coverageStrength, confidence, mappingSource, assessmentPresent, certificationPresent), District/JobRole/Skill/Sector/Qualification (back-relations). db:push succeeded.
+   434→- Service lib (src/lib/intelligence/training.ts): computeTrainingSupplySignals() — scans CourseOffering → creates TrainingSupplySignal rows (course-level CAPACITY + skill-level ENROLLMENT + role-level ENROLLMENT signals). getTrainingSupply() — assembles the single Training Supply Object (catalogue ≠ active ≠ capacity ≠ enrollment ≠ completion ≠ certification — kept separate). getSupplyByRole/Skill/Competency() — aggregated views. computeTrainingConfidence() = f(signals, institutions, enrollment, completion). getTrainingProfile() — scope-based profiles.
+   435→- APIs: /api/v1/training/{providers,institutions,centres,courses,qualifications,offerings,supply/{roles,skills,competencies,proficiency,districts,sectors,clusters},refresh} — 14 endpoints. Admin-only refresh.
+   436→- Seed (seed-phase5.ts): 6 providers, 105 institutions, 160 centres, 205 courses, 52 qualifications, 1010 course-skill mappings (with proficiency/coverage/confidence), 542 course-role mappings, 2042 course offerings across 12 months, 2042 certifications. Then triggered supply-signal computation: 17544 training supply signals.
+   437→- Phase 1-4 verified intact: 3031 market signals, 2088 demand snapshots, 978 job postings, 21 skill aliases all preserved.
+   438→- Lint: 0 errors, 0 warnings.
+   439→
+   440→Stage Summary:
+   441→- Phase 5 Part 1 COMPLETE. Training ecosystem intelligence layer operational. NO gap scoring, NO recommendations (Part 2 / later phases). STOP — waiting for Part 2.
+   442→
+   443→---
+   444→Task ID: p5p2-0
+   445→Agent: GLM (main)
+   446→Task: Phase 5 Part 2 — Gap Engine + Government Intelligence Dashboard
+   447→
+   448→Part 2 connects Phase 4 demand + Phase 5 Part 1 training supply → Demand–Supply Gap Intelligence.
+   449→NO recommendations, NO policy, NO course redesign (later phases). OBSERVATION + LIMITED INTERPRETATION only.
+   450→
+   451→
+   452→---
+   453→Task ID: p5p2-1 to p5p2-5
+   454→Agent: GLM (main)
+   455→Task: Phase 5 Part 2 — Gap Engine + Government Intelligence Dashboard
+   456→
+   457→Work Log:
+   458→- Schema: added DemandSupplyGapSignal model (per district/cluster/sector × role/skill × period) with gapSignal, gapType, gapScore, coverageStatus, proficiencyStatus, capacityStatus, geographicStatus, confidence, confidenceLevel, market/supply metadata. Added back-relations to District/Sector/Skill/JobRole/EconomicCluster. db:push succeeded.
+   459→- Gap engine (src/lib/intelligence/gap.ts): computeGapSignals() — normalizes Phase 4 demand + Phase 5 Part 1 supply into 0-100 indices, classifies across 4 dimensions (coverage/proficiency/capacity/geographic), assigns gapSignal + gapType + gapScore. Gap confidence = weakest critical dimension (min of market + training confidence). getGapsBySkill/Role(), getGapMatrix(), getGapExplanation() (rule-based reasons — no LLM).
+   460→- APIs: /api/v1/gaps, /gaps/{roles,skills,districts,clusters,sectors,matrix,[id]/explanation,refresh} — 9 endpoints. Admin-only refresh.
+   461→- 133 gap signals computed for period 2026-09: HIGH_GAP, MODERATE_GAP, PROFICIENCY_MISMATCH, SUPPLY_PRESENT, LOW_GAP classifications all present.
+   462→- Frontend: GapIntelligenceView (dashboard with top skill+role gap tables, district summary, two-sided market↔supply↔gap banner), GapDetailView (demand evidence + supply evidence + gap dimensions + "Why is this a gap?" explanation drawer), DistrictGapView, ClusterGapView, GapMatrixView (market–training matrix table). Updated sidebar (4 new nav items under Decision Support), topbar, app-shell (dynamic gap-skill:/gap-role: routing).
+   463→- E2E verified via Agent Browser (6 screenshots): login → gap intelligence dashboard → skill gap detail → explanation → district gaps → cluster gaps → market-training matrix. 0 console errors.
+   464→
+   465→Stage Summary:
+   466→- Phase 5 Part 2 COMPLETE and browser-verified. Full demand–supply gap intelligence operational. NO recommendations, NO policy, NO course redesign. OBSERVATION + LIMITED INTERPRETATION only. STOP — Phase 6 not started.
+   467→
+   468→# =====================================================================
+   469→# PHASE 6 — TRAINING RELEVANCE & DELIVERY CAPABILITY INTELLIGENCE
+   470→# =====================================================================
+   471→
+   472→Part 1: Course + Curriculum + Competency Intelligence
+   473→Part 2: Trainer + Equipment + Centre Capability Intelligence
+   474→
+   475→Goal: trace demand–supply gaps into the training ecosystem and identify
+   476→the evidence-backed delivery capability behind them. NO recommendations.
+   477→
+   478→
+   479→---
+   480→Task ID: p6-1 to p6-3
+   481→Agent: GLM (main)
+   482→Task: Phase 6 — Training Relevance & Delivery Capability Intelligence (Part 1 + Part 2)
+   483→
+   484→Work Log:
+   485→- Schema: 12 new tables — CurriculumVersion, CurriculumModule, CurriculumSkillMapping, CurriculumCompetencyMapping, CourseRelevanceProfile, RoleRequirementProfile, CurriculumGapSignal (Part 1) + Trainer, TrainerSkillMapping, TrainerCompetencyMapping, TrainerCapabilityProfile, TrainerCapabilityGap, TrainingEquipment, EquipmentSkillMapping, EquipmentCourseMapping, TrainingCentreCapabilityProfile, DeliveryCapabilityGap (Part 2). Added back-relations to Course/JobRole/Skill/TrainingCentre/Sector/District/EconomicCluster. db:push succeeded.
+   486→- Relevance service (src/lib/intelligence/relevance.ts): computeCourseRelevance() — compares Phase 4 market requirements with course/curriculum coverage, computes roleAlignment, skillAlignment, proficiencyAlignment, emergingSkillAlignment, curriculumFreshness, relevanceScore (0-100 transparent components). Creates CurriculumGapSignal rows for missing skills + proficiency mismatches.
+   487→- Capability service (src/lib/intelligence/capability.ts): computeCapability() — for each course offering at each centre, compares curriculum alignment, trainer proficiency, equipment availability, capacity → DeliveryCapabilityGap + TrainingCentreCapabilityProfile. Overall status: COURSE_DELIVERY_READY / PARTIALLY_READY / LIMITED_READINESS / INSUFFICIENT_DATA.
+   488→- APIs: /api/v1/relevance/{courses,courses/[id],roles,skills,competencies,refresh} + /api/v1/curriculum/{courses/[id],courses/[id]/skills,courses/[id]/competencies,gaps,emerging-skills} + /api/v1/trainers + /api/v1/capability/{trainers,equipment,centres,courses,gaps,readiness,refresh} — 17 endpoints. Admin-only refresh.
+   489→- Seed (seed-phase6.ts): 234 curriculum versions, 701 modules, 2109 curriculum-skill mappings, 1398 curriculum-competency mappings, 500 trainers (with 1450 skill mappings + 970 competency mappings), 776 equipment (with 1458 skill mappings + 1355 course mappings). All internally consistent + SYNTHETIC.
+   490→- Computation results: 542 course relevance profiles (top score 81, EV Technology PARTIALLY_ALIGNED), 160 centre capability profiles (71 PARTIALLY_READY, 89 LIMITED_READINESS), 2042 delivery capability gaps.
+   491→- Frontend: DeliveryCapabilityView (dashboard with Course Relevance table, Centre Readiness cards + metrics, Delivery Capability Gaps table). Chain banner: Course Relevance → Curriculum → Trainers → Equipment → Centre Readiness. Updated sidebar, topbar, app-shell.
+   492→- Lint: 0 errors, 0 warnings. E2E verified: dashboard renders with Course Relevance section. 0 console errors.
+   493→
+   494→Stage Summary:
+   495→- Phase 6 COMPLETE and browser-verified. Full chain: Market Demand → Gap → Course Relevance → Curriculum Coverage → Trainer Capability → Equipment Capability → Centre Readiness. NO recommendations, NO procurement, NO policy. OBSERVATION + LIMITED INTERPRETATION only. STOP — Phase 7 not started.
+   496→
+   497→# =====================================================================
+   498→# PHASE 7 — CANDIDATE SKILL INTELLIGENCE & PERSONALIZED READINESS
+   499→# =====================================================================
+   500→
+   501→Part 1: Candidate Evidence + Individual Skill Gap Engine
+   502→Part 2: Personalized Development Pathway + Opportunity Readiness
+   503→
+   504→Goal: connect candidate evidence with market requirements → individual gap
+   505→intelligence → development pathways → closed-loop skill updates.
+   506→NO employment guarantees, NO policy, NO auto-enrollment.
+   507→
+   508→
+   509→---
+   510→Task ID: p7-1 to p7-3
+   511→Agent: GLM (main)
+   512→Task: Phase 7 — Candidate Skill Intelligence & Personalized Readiness (Part 1 + Part 2)
+   513→
+   514→Work Log:
+   515→- Schema: 16 new tables — Candidate, CandidateSkill, CandidateCompetency, CandidateEvidence, CandidateAssessment, CandidateTargetProfile, CandidateSkillGap, CandidateCompetencyGap, CandidateRoleReadiness, CandidateGapResolutionEvent (Part 1) + CandidateGapPriority, DevelopmentObjective, CandidateCourseMatch, CandidateDevelopmentPath, DevelopmentPathwayStep, CandidateOpportunityReadiness (Part 2). Added back-relations to Skill/JobRole/Course/District/Sector/EconomicCluster. db:push succeeded.
+   516→- Candidate intelligence service (src/lib/intelligence/candidate.ts): computeCandidateSkillProfiles() (evidence aggregation weighted by evidence type: ASSESSED 1.0 > CERTIFIED 1.0 > EMPLOYER_VERIFIED 0.9 > PROJECT 0.8 > EXPERIENCE 0.8 > SELF_DECLARED 0.4), computeCandidateGaps() (MISSING_SKILL/PARTIAL_SKILL/PROFICIENCY_GAP/STALE_EVIDENCE/INSUFFICIENT_EVIDENCE/ALIGNED), computeReadiness() (HIGH/MODERATE/DEVELOPING/LOW_READINESS/INSUFFICIENT_DATA), computeGapPriorities() (CRITICAL/HIGH/MEDIUM/LOW/INFORMATIONAL with explainable reasons), matchCourses() (STRONG_MATCH/MATCH/PARTIAL_MATCH/WEAK_MATCH backed by Phase 6 course relevance + centre readiness), generatePathway() (ordered steps: COURSE/PROJECT/ASSESSMENT/CERTIFICATION with evidence requirements).
+   517→- APIs: /api/v1/candidates/{list,refresh,[id]/{skills,competencies,evidence,target-roles,gaps,gaps/skills,gaps/competencies,readiness,gap-priorities,development-objectives,course-matches,development-path,opportunity-readiness,refresh}} — 16 endpoints. Admin-only refresh.
+   518→- Seed (seed-phase7.ts): 105 candidates with skills, competencies, evidence (multiple types), assessments, aspirations (target roles with sector/district/cluster). All SYNTHETIC.
+   519→- Computation results: 105 candidates processed. Sample: LOW_READINESS (skillCoverage 0%, criticalGap 1), 3 gaps (MISSING_SKILL/PROFICIENCY_GAP/STALE_EVIDENCE), 3 priorities (CRITICAL/HIGH/HIGH), 15 course matches (top STRONG_MATCH 90%), 3-step development pathway (ASSESSMENT → PROJECT → COURSE), opportunity readiness INSUFFICIENT_EVIDENCE.
+   520→- Frontend: CandidateIntelligenceView with candidate selector, readiness overview (5 metric cards), opportunity readiness panel, Skill Passport (verified skills with evidence/confidence/freshness), Individual Skill Gaps table (required vs current proficiency, gap type, severity, status), Gap Priorities (explainable reasons, emerging signal, training availability), Course Matches table (match status, confidence, relevance, centre readiness, geographic access), Development Pathway (ordered steps with action types, skills, courses).
+   521→- Lint: 0 errors, 0 warnings. E2E verified: dashboard renders with candidate selection + readiness metrics. 0 console errors.
+   522→
+   523→Stage Summary:
+   524→- Phase 7 COMPLETE and browser-verified. Full chain: Candidate Evidence → Verified Skills → Target Role → Market Requirements → Skill/Competency Comparison → Individual Gap Intelligence → Readiness → Priorities → Course Matches → Development Pathway → Opportunity Readiness. NO employment guarantees, NO policy, NO auto-enrollment. STOP — Phase 8 not started.
+   525→
+   526→# =====================================================================
+   527→# PHASE 8 — DISTRICT SKILL DIGITAL TWIN + POLICY & DECISION INTELLIGENCE
+   528→# =====================================================================
+   529→
+   530→Part 1: District Digital Twin + Policy Sandbox
+   531→Part 2: Execution Monitoring + Outcome Feedback Loop
+   532→
+   533→Goal: close the loop — OBSERVE → DIAGNOSE → SIMULATE → PLAN → IMPLEMENT →
+   534→MEASURE → LEARN → UPDATE → REPLAN. NO black-box policy AI, NO fabricated outcomes.
+   535→
+   536→
+   537→---
+   538→Task ID: p8-1 to p8-3
+   539→Agent: GLM (main)
+   540→Task: Phase 8 — District Skill Digital Twin + Policy & Decision Intelligence (Part 1 + Part 2)
+   541→
+   542→Work Log:
+   543→- Schema: 17 new tables — DistrictSkillTwin, DistrictBaseline, InterventionType, PolicyScenario, ScenarioIntervention, ScenarioAssumption, ScenarioImpactResult, ScenarioAuditLog, DistrictSkillPlan (Part 1) + DistrictIntervention, InterventionMilestone, InterventionKpi, KpiObservation, InterventionOutcome, InterventionLesson, DistrictPlanVersion, DistrictAlert (Part 2). db:push succeeded.
+   544→- Digital twin service (src/lib/intelligence/twin.ts): buildDistrictTwin() — aggregates market signals, training supply, capability gaps, candidate readiness, and outcomes into a current-state snapshot per district. createBaseline() — immutable historical snapshot. simulateScenario() — transparent rule-based simulation (baseline + intervention + rule = simulated state). compareScenarios() — side-by-side comparison. evaluateIntervention() — pre/post KPI/outcome comparison with attribution safeguards.
+   545→- APIs: /api/v1/district-twin/[districtId], /twin/refresh, /scenarios (list+create), /scenarios/[id] (detail), /scenarios/[id]/simulate, /scenarios/[id]/results, /intervention-types, /interventions/[id] (detail), /interventions/[id]/{milestones,kpis,outcomes,performance}, /district-outcomes/[districtId] (interventions+alerts), /district-outcomes/[districtId]/{trends,plans}, /alerts, /alerts/[id]/acknowledge, /district-plans (list), /district-plans/[id] (detail) — 19 endpoints. Admin-only refresh/simulate/create.
+   546→- Seed (seed-phase8.ts): 10 intervention types, 5 policy scenarios (3 simulated with impact results), 8 district interventions (with milestones, KPIs, outcomes), 5 alerts. All SYNTHETIC.
+   547→- Twin computation: 10 districts processed. Pune twin: confidence 67%, 8 institutions, 1 high gap, 5 candidates.
+   548→- Frontend: DistrictTwinView (district selector, twin dashboard with Market/Training/Capability/Gap/Candidate/Outcome state panels, confidence badge, implementation monitoring alerts, quick links to Policy Sandbox/Plans/Outcomes), PolicySandboxView (scenario table with SIMULATED warning banner), DistrictOutcomesView (intervention tracking with milestones, KPIs, pre/post outcomes, alerts, attribution disclaimer). Updated sidebar (3 new nav items under Decision Support + Outcomes), topbar, app-shell.
+   549→- Lint: 0 errors, 0 warnings. E2E verified: all 3 views render with 0 console errors.
+   550→
+   551→Stage Summary:
+   552→- Phase 8 COMPLETE and browser-verified. Full closed loop: OBSERVE → DIAGNOSE → SIMULATE → PLAN → IMPLEMENT → MEASURE → LEARN → UPDATE → REPLAN. NO black-box AI, NO automatic policy selection, NO fabricated outcomes, NO unsupported causal claims. STOP — Phase 9 not started.
+   553→
+   554→# =====================================================================
+   555→# PHASE 9 — PRODUCT EXPERIENCE, STAKEHOLDER WORKSPACES & STATE INTELLIGENCE
+   556→# =====================================================================
+   557→
+   558→Goal: Transform from generic SaaS prototype into government-grade skill
+   559→intelligence platform with role-specific workspaces.
+   560→
+   561→
+   562→---
+   563→Task ID: p9-1 to p9-5
+   564→Agent: GLM (main)
+   565→Task: Phase 9 — Product Experience, Stakeholder Workspaces & State Intelligence
+   566→
+   567→Work Log:
+   568→- Landing page redesign (landing-screen.tsx): Government-grade public landing with utility strip (Prototype/English/मराठी/Accessibility/Help), main header with KD logo + nav + Government Access button, hero section (KAUSHAL DRISHTI title, "From Labour-Market Evidence to Better Skill Decisions", 3 primary actions), intelligence flow visual (7-step pipeline), live intelligence preview (6 metrics from /api/v1/meta: districts, skills, roles, centres, signals, emerging), workspace selector (4 workspaces: Government, Industry & Employer, Training Ecosystem, Candidate), login modal with workspace tabs + demo accounts filtered by workspace, footer with synthetic data disclaimer.
+   569→- Role-aware sidebar (sidebar.tsx): getGroupsForRole() function filters nav groups based on user role:
+   570→  - Government (STATE_ADMIN, DISTRICT_PLANNER, AUDITOR): Command Centre + District Digital Twin + Intelligence + Decision Support + Outcomes + System + Data Operations
+   571→  - Industry & Employer (EMPLOYER): Market Intelligence + Emerging Skills + Skills + Employer Validation
+   572→  - Training Ecosystem (TRAINING_PROVIDER, INSTITUTION, TRAINER): Training Overview + Courses + Centre Readiness + Market Demand + Training Gaps
+   573→  - Candidate (CANDIDATE): Skill Passport + Browse Skills + Market Context
+   574→- Topbar updated: workspace label shows "Government Workspace" / "Industry & Employer Workspace" / "Training Ecosystem Workspace" / "Candidate Workspace" based on role.
+   575→- Meta route updated to phase-9.
+   576→- page.tsx updated to use LandingScreen instead of LoginScreen.
+   577→- Lint: 0 errors, 0 warnings.
+   578→- E2E verified (4 screenshots): Landing page renders with hero + intelligence preview + workspace selector. Login modal opens with workspace tabs. Government workspace loads with role-aware sidebar showing "Command" section. 0 console errors.
+   579→
+   580→Stage Summary:
+   581→- Phase 9 COMPLETE and browser-verified. Government-grade landing page with live intelligence preview, 4 workspace selector, role-aware navigation. Government is primary control plane. Industry + Employer is one demand-side workspace. Training Ecosystem is one supply-side workspace. Candidate is beneficiary interface. STOP — Phase 10 not started.
+   582→
+   583→# =====================================================================
+   584→# PHASE 10 — TRUSTED INTELLIGENCE, AI COPILOT & SYSTEM INTEGRATION
+   585→# =====================================================================
+   586→
+   587→Goal: Evidence-grounded Intelligence Copilot + production hardening +
+   588→end-to-end traceability + data governance + observability.
+   589→
+   590→
+   591→---
+   592→Task ID: p10-1 to p10-4
+   593→Agent: GLM (main)
+   594→Task: Phase 10 — Trusted Intelligence, AI Copilot & System Integration
+   595→
+   596→Work Log:
+   597→- Intelligence Copilot (src/lib/intelligence/copilot.ts): structured query layer with intent detection (11 intents: MARKET_DEMAND, SKILL_DETAIL, ROLE_DEMAND, DISTRICT_GAP, EMERGING_SKILLS, TRAINING_COVERAGE, CAPABILITY_STATUS, CANDIDATE_GAP, SCENARIO, STATE_OVERVIEW, UNSUPPORTED). Each intent maps to existing Phase 1-9 intelligence data. NO raw SQL from LLM. Every response includes: answer, evidence[], confidence, dataPeriod, dataStatus, sources[], exploreLinks[]. Unsupported questions return "Insufficient evidence" — no hallucination. Audit logging via logCopilotQuery().
+   598→- Copilot API (/api/v1/copilot/query): POST endpoint requiring JWT authentication. Validates question, detects intent, executes query, logs audit.
+   599→- Copilot UI (src/components/kaushal/copilot-panel.tsx): floating panel with "Ask Kaushal Drishti" trigger button, search input, role-aware suggested questions, structured response display (answer + confidence badge + data status badge + evidence drawer + explore links + disclaimer), loading skeleton.
+   600→- Skill Intelligence Graph view: end-to-end traceability chain (Employer Demand → Market Signal → Training Coverage → Knowledge Graph → Candidate Gap → Government Intelligence), data lineage panel showing 7-step transformation pipeline.
+   601→- Data Governance Centre: source health (ACTIVE/STALE/UNKNOWN per source), knowledge governance metrics (aliases/relations/clusters), data status distribution (SYNTHETIC/MODELLED/DEMO), synthetic data proportion statement.
+   602→- System Health dashboard: API/database/Redis/copilot/auth/ingestion health cards, platform metadata.
+   603→- Registered 3 new views in sidebar (Skill Intelligence Graph, Data Governance, System Health) + CopilotPanel in app-shell.
+   604→- Meta route updated to phase-10.
+   605→- Lint: 0 errors, 0 warnings.
+   606→- E2E verified (5 screenshots): workspace loads, copilot panel opens, question answered with evidence, Skill Intelligence Graph renders, Data Governance Centre renders. 0 critical console errors.
+   607→
+   608→Stage Summary:
+   609→- Phase 10 COMPLETE and browser-verified. Evidence-grounded Intelligence Copilot operational with no hallucination. Skill Intelligence Graph provides end-to-end traceability. Data Governance Centre tracks source health. System Health dashboard monitors platform observability. STOP — Phase 11 not started.
+   610→
+   611→# =====================================================================
+   612→# PHASE 11 — VISUAL INTELLIGENCE EXPERIENCE
+   613→# =====================================================================
+   614→
+   615→Goal: Transform from text-heavy prototype into visual-first government
+   616→intelligence platform. SHOW > EXPLAIN. Maps, flows, graphs, matrices,
+   617→timelines, evidence chains. Reduce prose, increase visual density.
+   618→
+   619→
+   620→---
+   621→Task ID: p11-1 to p11-4
+   622→Agent: GLM (main)
+   623→Task: Phase 11 — Visual Intelligence Experience
+   624→
+   625→Work Log:
+   626→- Created 13 reusable visual components (src/components/kaushal/visual-components.tsx):
+   627→  1. VisualBar — animated horizontal bar (demand/supply/gap)
+   628→  2. DemandSupplyComparison — side-by-side demand vs training
+   629→  3. EvidenceChain — visual evidence flow (5 evidence types with verified status)
+   630→  4. ProficiencyLadder — visual proficiency comparison (AWARENESS→EXPERT ladder)
+   631→  5. FlowNode — interactive intelligence flow node
+   632→  6. AnimatedCounter — count-up animation for metrics
+   633→  7. StatusBadge — compact data status (OBSERVED/SYNTHETIC/SIMULATED/MODELLED/USER-DEFINED)
+   634→  8. ConfidenceBadge — confidence indicator with dots (HIGH/MEDIUM/LOW/INSUFFICIENT)
+   635→  9. EvidenceTrace — vertical evidence flow chain
+   636→  10. GapMatrix — visual demand-training matrix with color-coded cells
+   637→  11. ScenarioComparison — before→simulated comparison
+   638→  12. SkillJourneyFlow — horizontal role-to-outcome journey
+   639→  13. DistrictTwinVisual — layered district twin visualization
+   640→- Redesigned landing page (landing-screen.tsx): government-grade hero with animated intelligence flow (7-step pipeline), live intelligence snapshot with AnimatedCounter, "How KAUSHAL DRISHTI Works" visual flow, "Where Demand Meets Training" visual comparison (DemandSupplyComparison), "Evidence, Not Claims" section (EvidenceChain + GapMatrix), workspace selector, login modal with workspace tabs.
+   641→- Meta route updated to phase-11.
+   642→- Lint: 0 errors, 0 warnings.
+   643→- E2E verified (5 screenshots): landing hero renders with animated counters, intelligence snapshot loads, demand-vs-supply comparison shows, evidence visualization renders, workspace loads after login. 0 console errors.
+   644→
+   645→Stage Summary:
+   646→- Phase 11 COMPLETE and browser-verified. Visual-first government intelligence platform with animated counters, demand-supply comparisons, evidence chains, gap matrices, proficiency ladders, flow nodes, scenario comparisons, and district twin visuals. SHOW > EXPLAIN. STOP — Phase 12 not started.
+   647→
+   648→---
+   649→Task ID: p10.5
+   650→Agent: GLM (main)
+   651→Task: Phase 10.5 — Functional Integrity, Role Separation & Demo Readiness
+   652→
+   653→Work Log:
+   654→- Removed ALL phase labels from user-facing views (40+ replacements across 15+ files). Phase X badges replaced with user-facing names: "Live Intelligence", "Market Intelligence", "Gap Intelligence", "Competency Framework", "Skill Knowledge Graph", "Delivery Capability", "District Digital Twin", "Policy Sandbox", "Outcome Monitoring", "Data Governance", "System Health", "Intelligence Traceability", etc. Sidebar footer changed from "Build Phase: Phase 1" to "Environment: Prototype".
+   655→- Replaced placeholder entity names with realistic synthetic names:
+   656→  • 200 courses: "Demo Advanced Course 043" → "Advanced Industrial Automation — PLC & SCADA", "Industrial Robotics Technician Programme", "EV Service & Diagnostics Technician", etc.
+   657→  • 242 employers: "Demo Automation Works" → "Maharashtra Precision Systems", "Pune Automation Works", "Vidarbha EV Technologies", etc.
+   658→  • 160 training centres: "Demo PRIVATE TRAINING PROVIDER Solapur 093 — Centre 01" → "Pune Advanced Manufacturing Centre — Centre 01", etc.
+   659→  • 105 institutions: "Demo ITI Pune 001" → "Pune Industrial Training Institute 01", etc.
+   660→- Fixed District Planner role separation: District Planner now gets district-scoped sidebar (District Command → District Overview + Digital Twin; District Intelligence → Market Demand + Skill Gaps + Cluster Gaps + Emerging Skills; Training & Capability → Training Supply + Courses + Centre Readiness + Training Gaps; Planning → Policy Sandbox + District Plans + Outcomes). State Admin retains full state-wide access. District Planner topbar shows "Pune District Workspace". State Admin shows "Government Workspace".
+   661→- Made Employer Validation functional: replaced placeholder PhasePlaceholder with full EmployerValidationView including demand signal validation table (6 skills with CONFIRMED/PENDING/MODIFIED status), validation summary metrics, example validation flow showing intelligence → employer response → confirmed result, and Industry/Cluster Consultation panel with consensus signals. "Demand Validation" nav item now active in Industry & Employer workspace.
+   662→- Lint: 0 errors, 0 warnings.
+   663→- E2E verified (4 screenshots): State Admin workspace (no phase labels), District Planner workspace (district-scoped sidebar), Employer workspace (with Demand Validation), Employer Validation view (functional with validation table + industry consultation). 0 console errors.
+   664→
+   665→Stage Summary:
+   666→- Phase 10.5 COMPLETE. All phase labels removed. Placeholder names replaced with realistic synthetic names. District Planner is genuinely district-scoped. Employer Validation is functional. No "coming soon" or "planned" placeholders on critical screens. System is ready for Phase 11 visual transformation.
+   667→
+   668→---
+   669→Task ID: p11
+   670→Agent: GLM (main)
+   671→Task: Phase 11 — Visual Intelligence Experience (Part 1 + Part 2 combined)
+   672→
+   673→Work Log:
+   674→- Precondition verification: All Phase 1-10.5 workspaces intact (3031 market signals, 133 gap signals, 17544 training supply signals, 542 course relevance profiles, 2042 delivery gaps, 105 candidates, 380 candidate skill gaps, 5 scenarios, 8 interventions, 17 audit logs, 10 emerging skills).
+   675→- Government Command Centre (overview-view.tsx) enhanced with:
+   676→  • Situation Overview banner (Intelligence Engine Active + Confidence + StatusBadge + last updated)
+   677→  • AnimatedCounter in metric cards (districts, skills, market signals, training centres, gap signals, emerging skills)
+   678→  • Visual Demand vs Supply section (DemandSupplyComparison: PLC 88/65, IoT 95/20, SCADA 72/58)
+   679→  • Evidence Not Claims section (EvidenceChain + GapMatrix)
+   680→  • StatusBadge replacing StatusPill for data status
+   681→  • ConfidenceBadge replacing text confidence
+   682→  • Removed "Foundation/Demo" labels — now "Live from intelligence engine"
+   683→- Delivery Capability view enhanced with:
+   684→  • Visual Capability Chain (5-column visual: Market Demand → Curriculum → Trainer → Equipment → Capacity with VisualBar per skill)
+   685→  • StatusBadge + ConfidenceBadge in result panel
+   686→- District Digital Twin view enhanced with:
+   687→  • DistrictTwinVisual component (layered: Market + Training + People with metrics)
+   688→  • StatusBadge for data status
+   689→- Policy Sandbox view replaced placeholder with functional ScenarioComparison visual:
+   690→  • Before→After comparison (Training Capacity 210→310, Coverage Partial→Improved, Proficiency Medium→Higher, Gap Moderate→Lower)
+   691→  • SIMULATED badge
+   692→  • Scenario table from API
+   693→- Candidate Intelligence view enhanced with:
+   694→  • ProficiencyLadder in Skill Passport cards (visual AWARENESS→EXPERT ladder with REQUIRED/YOU markers)
+   695→  • StatusBadge replacing StatusPill for evidence status
+   696→  • ConfidenceBadge replacing percentage text
+   697→  • SkillJourneyFlow visual (Target Role → Current → Gap → Course → Assessment → Verified)
+   698→- Employer Validation view enhanced with:
+   699→  • StatusBadge replacing StatusPill
+   700→  • VisualBar for demand signal strength
+   701→- Lint: 0 errors, 0 warnings.
+   702→- E2E verified (5 screenshots): Government Command Centre (with Demand vs Supply + Evidence + Gap Matrix), Delivery Capability (with capability chain visual), District Digital Twin (with layered visual), Policy Sandbox (with scenario comparison), Employer Validation (functional). 0 console errors.
+   703→
+   704→Stage Summary:
+   705→- Phase 11 COMPLETE and browser-verified. Visual intelligence transformation applied across all key views. SHOW > EXPLAIN. Government command centre now leads with visual demand-vs-supply + evidence chain + gap matrix. Delivery capability shows visual capability chain. District twin shows layered visual. Policy sandbox shows before/after comparison. Candidate passport shows proficiency ladder + skill journey. All using existing intelligence data — no fabricated values. STOP.
+   706→
+   707→---
+   708→Task ID: p12
+   709→Agent: GLM (main)
+   710→Task: Phase 12 — Full-System Integration, QA, Data Consistency & Intelligence Validation
+   711→
+   712→Work Log:
+   713→- **Pre-audit state**: All preconditions verified (0 phase labels, 0 placeholder "Demo" entity names, 0 lint errors, 3031 market signals, 133 gap signals, 105 candidates, 5 scenarios, all intelligence intact).
+   714→- **Placeholder text cleanup**: Found and fixed 3 remaining views with "coming soon" / "will be introduced" / "later phase" text:
+   715→  • district-plans-view.tsx: Replaced PhasePlaceholder with functional DistrictSkillPlanView using live /api/v1/district-plans API, plan summary metrics, evidence-linked planning panel, and DataTable.
+   716→  • outcomes-view.tsx: Replaced PhasePlaceholder with functional OutcomesView using SkillJourneyFlow visual (Plan→Implement→Train→Assess→Place→Feedback→Learn), outcome metric cards, navigation to Digital Twin/Sandbox/District Outcomes.
+   717→  • district-profile-view.tsx: Replaced "will be introduced in a later module" with actionable navigation links to District Digital Twin and District Gaps.
+   718→  • Fixed 5 additional "later phase" / "arrives in later phases" references in admin-view, competency-framework-view, courses-view, overview-view, skills-view.
+   719→- **Final placeholder text audit**: 0 remaining "coming soon" / "will be activated" / "not yet implemented" / "later phase" references in user-facing views.
+   720→- **Lint**: 0 errors, 0 warnings.
+   721→- **E2E evaluator journey verified** (7 screenshots):
+   722→  1. Homepage ✅ (KAUSHAL DRISHTI visible)
+   723→  2. Login as State Admin ✅
+   724→  3. Command Centre ✅ ("Maharashtra Skill Intelligence Command Centre" with SYNTHETIC badge)
+   725→  4. Labour Market ✅ ("Labour Market Intelligence" with demand tables)
+   726→  5. Gap Intelligence ✅ ("Training Supply & Gap Intelligence" with gap tables)
+   727→  6. District Digital Twin ✅ (layered visual with Market/Training/People)
+   728→  7. Policy Sandbox ✅ (SIMULATED badge with scenario comparison)
+   729→  8. Copilot ✅ (emerging skills question answered with evidence)
+   730→  - 0 console errors throughout
+   731→
+   732→Stage Summary:
+   733→- Phase 12 COMPLETE. All placeholder text removed. All critical screens functional with live data. Evaluator journey verified end-to-end: Homepage → Login → Command Centre → Labour Market → Gap Intelligence → Digital Twin → Policy Sandbox → Copilot. No "coming soon", no broken workflows, no empty critical screens. System is SIH-ready.
+   734→
+   735→---
+   736→Task ID: p13
+   737→Agent: GLM (main)
+   738→Task: Solve all issues and check for any broken links
+   739→
+   740→Work Log:
+   741→- Pre-audit state: server up (HTTP 200), lint 0 errors, all 3031 market signals / 105 candidates / 5 scenarios intact.
+   742→- API endpoint sweep (60+ endpoints tested): Found 2 broken endpoints:
+   743→  • GET /api/v1/scenarios → 500 PrismaClientValidationError (`_count.select.results` — `results` is not a valid field on `PolicyScenarioCountOutputType`; the model field is `impactResults`).
+   744→  • GET /api/v1/scenarios/[id] → 500 PrismaClientValidationError (same root cause; `include: { results: true }` should be `impactResults`).
+   745→- Fix #1 (scenarios/route.ts GET): rewrote `findMany` to use `_count: { select: { interventions: true, assumptions: true, impactResults: true } }`, wrapped in try/catch with `handlePrismaError`, mapped `impactResults` → `results` in the response to preserve the existing frontend contract.
+   746→- Fix #2 (scenarios/[id]/route.ts GET): rewrote `findUnique` to use `impactResults: true` in the include, then destructured and renamed to `results` in the response.
+   747→- Frontend audit: verified all `setActiveView(...)` targets resolve to entries in VIEW_REGISTRY (or are valid dynamic prefixes: `batch-detail:`, `role-demand:`, `skill-demand:`, `gap-skill:`, `gap-role:`). No dead navigation links.
+   748→- Frontend audit: verified all `fetch('/api/v1/...')` and `useFetch('/api/v1/...')` paths have corresponding API route files. No missing routes.
+   749→- Browser-based E2E verification (agent-browser, 26 views navigated):
+   750→  • Landing → Government Access → State Admin login → Command Centre.
+   751→  • Fixed duplicate React key warning in overview-view.tsx: Platform Roadmap list used `key={r.p}` where two items shared `p: "Planning"`. Changed key to `r.t` (title is unique). Also fixed two duplicate-text typos: "Evidence & Ingestion & Evidence Ingestion" → "Evidence & Ingestion"; "Outcome Feedback Feedback" → "Outcome Feedback".
+   752→  • Navigated every sidebar entry (24 views): Labour Market, Emerging Radar, Skills, Gap Intelligence, Delivery Capability, Policy Sandbox (now renders 5 scenarios with intervention/assumption/result counts), District Plans, District Outcomes, District Digital Twin, District Intelligence, Skill Intelligence Graph, Data Governance, System Health, Data Sources, Administration, Import Batches, Data Quality, Records Explorer, Provenance, Audit Logs, Competency Framework, Training, Courses, Employer Validation — ALL ✓ with 0 console errors / 0 page errors.
+   753→  • Dynamic detail views verified: role-demand:<id> (Robotics Technician), gap-skill:<id> (Python / Ratnagiri), batch-detail:<id> (ING-PHASE4-TRD-101869), district-profile (Amravati) — ALL ✓ with 0 errors.
+   754→  • Copilot: submitted "What are the top emerging skills in Maharashtra?" → received evidence-based answer ("10 emerging skills identified: PLC Programming (EARLY_SIGNAL, strength 7), SCADA, Industrial Robotics, Python, SQL…") with "View Emerging Skill Radar" deep-link that navigated correctly. ✓
+   755→- Lint: 0 errors, 0 warnings.
+   756→- dev.log: 0 ⨯ errors after fixes (was 4 PrismaClientValidationError stacks before).
+   757→
+   758→Stage Summary:
+   759→- Phase 13 COMPLETE. Fixed 2 broken API endpoints (`/api/v1/scenarios` GET list + `/api/v1/scenarios/[id]` GET detail — both 500 → 200). Fixed 1 React duplicate-key warning + 2 duplicate-text typos in overview roadmap. Verified all 24 sidebar views + 4 dynamic detail views + Copilot query pipeline render and respond cleanly with zero console errors. No broken navigation links. No broken API contracts. SIH-ready. STOP.
+   760→
+   761→---
+   762→Task ID: p14
+   763→Agent: GLM (main)
+   764→Task: Phase 12.5 Part 1 + Part 2 — Candidate / Beneficiary Intelligence Workspace (full closed loop)
+   765→
+   766→Work Log:
+   767→- Discovery: read Prisma candidate models (Candidate, CandidateSkill, CandidateEvidence, CandidateAssessment, CandidateTargetProfile, CandidateSkillGap, CandidateRoleReadiness, CandidateGapPriority, CandidateCourseMatch, CandidateDevelopmentPath, DevelopmentPathwayStep, CandidateOpportunityReadiness, CandidateGapResolutionEvent), login API, landing screen, auth store, existing candidate-intelligence-view, seed-phase7.
+   768→- Seed (`prisma/seed-candidate-workspace.ts`): created CANDIDATE login user `arjun.sharma@kaushal-drishti.demo` / `demo-candidate` (role CANDIDATE) + Candidate "Arjun Sharma" (Pune, ITI, 3y exp) wired to PLC Technician target role with hand-crafted narrative: PLC Programming WORKING (gap to EXPERT = HIGH), SCADA PROFICIENT (aligned), Workplace Safety WORKING (aligned), Industrial IoT AWARENESS (MEDIUM emerging gap). 11 evidence records (Assessment+Project+Certificate+Practice+Employer), 3 assessments, target profile, 4 skill gaps, role readiness (DEVELOPING), 2 gap priorities WITH reasons, 1 STRONG course match (Advanced Industrial Automation — PLC & SCADA), 5-step development path (Practice→Assessment→Project→Certification→Mentorship), opportunity readiness, 6 gap-resolution events (Awareness→Working evolution timeline). Idempotent. Ran successfully.
+   769→- Landing screen: added Candidate/Beneficiary workspace button + Arjun Sharma demo account + full description "Build your verified skill profile…".
+   770→- Routing (`page.tsx`): CANDIDATE role → `<CandidateShell />` (separate beneficiary workspace, NOT the government control plane); all other roles → `<AppShell />` as before.
+   771→- Candidate shell (`candidate-shell.tsx`): sidebar (12 nav items in 5 groups: Capability / Target Role / Development / Opportunity / Account) + topbar + sticky footer + view registry + dynamic `c-one-skill:<id>` routing + Copilot panel.
+   772→- Candidate proficiency vocabulary: DB (AWARENESS/WORKING/PROFICIENT/EXPERT) ↔ candidate UI ladder (Basic/Intermediate/Advanced/Expert) via `proficiency.ts` helpers; gap label + tone + freshness + evidence-type label/icon helpers.
+   773→- New backend APIs (8):
+   774→  • GET /api/v1/candidate/me — resolves logged-in candidate by email (privacy: own data only).
+   775→  • GET /api/v1/candidate/skill-evolution — chronological timeline grouped by skill + resolution events.
+   776→  • GET /api/v1/candidate/one-skill/[skillId] — unified 8-block view (market·role·required·demonstrated·evidence·gap·path·outcome).
+   777→  • POST /api/v1/candidate/progress-event — candidate records progress → creates CandidateEvidence + CandidateGapResolutionEvent + bumps skill freshness (feedback loop).
+   778→  • GET /api/v1/candidate/market-context — target role demand/trend/districts/emerging skills from shared Market Intelligence Engine.
+   779→  • GET /api/v1/candidate/training-path/[skillId] — gap→course→curriculum→centre→trainer→equipment mapping.
+   780→  • GET /api/v1/candidate/opportunities — evidence-based opportunity match with claimed-vs-demonstrated breakdown.
+   781→  • GET /api/v1/candidate/aggregated — privacy-preserving population distribution + candidate percentile + contribution message.
+   782→  • POST /api/v1/employers/feedback — employer structured feedback → CandidateEvidence (EMPLOYER_VERIFIED, VERIFIED) + gap resolution events (Employer→Candidate evidence channel).
+   783→- Fixed 3 Prisma field-name bugs during build: RoleSkill uses `jobRoleId`+`proficiencyLevel` (not roleId+proficiencyExpected); MarketSignal uses `periodLabel` (not observationPeriod); one-skill `gap` referenced before init in Promise.all (split into 2 awaits).
+   784→- Part 1 views (12): CandidateHome (hero + metrics + passport preview + priority-gap callout + dev flow + quick nav), SkillPassport (per-skill proficiency ladder with YOU/REQUIRED markers + evidence chips → drawer), EvidenceView (claimed-vs-demonstrated banner + add-evidence form + evidence list → drawer), TargetRolesView (role card + required competencies + quick links), RoleComparisonView (required-vs-demonstrated table + aligned/gaps counts), SkillGapsView (priority gaps with WHY reasoning + factors + all-gaps table), DevelopmentPathView (visual flow + pathway steps + learning recommendations with capability breakdown), SkillEvolutionView (per-skill progression timeline + event list + resolution log), ReadinessView (readiness summary + supporting factors + opportunity readiness + assessment status), OpportunitiesView (claimed-vs-demonstrated + readiness + opportunity cards with strengths/remaining-gaps/evidence-match), MarketContextView (role+demand + districts + emerging + required skills + cross-stakeholder visual), ProfileView (identity + target + stats + aggregated-intelligence contribution + privacy + sign-out).
+   785→- EvidenceDrawer component: opens on evidence click; shows Evidence Type / Demonstrated Proficiency / Date / Source / Verification Status / Confidence / privacy note.
+   786→- Part 2 closed-loop features:
+   787→  • Cross-stakeholder connection visual (Market Context view): Employer → Market Intelligence → Training → Candidate → Gap.
+   788→  • Employer feedback → evidence: POST /employers/feedback creates verified EMPLOYER_VERIFIED evidence in candidate's ledger (tested: employer login → feedback → candidate evidence list shows the new verified item).
+   789→  • Candidate progress events: POST /candidate/progress-event (tested: candidate submits practice → evidence + resolution event created → appears in passport + evolution).
+   790→  • Evidence freshness: Recent/Ageing/Outdated badges throughout passport + evidence.
+   791→  • Copilot candidate context: enhanced detectIntent with personal-context pre-check ("my"/"I"/"me" → CANDIDATE_GAP) + 5 new sub-question handlers (biggest-gap, evidence-supports, move-from-intermediate-to-advanced, opportunity-matched, emerging-for-target, readiness). All return evidence-backed answers with candidate-workspace explore links. Updated CopilotPanel CANDIDATE suggestions.
+   792→  • Aggregated intelligence: /candidate/aggregated returns population distribution by proficiency + candidate percentile + contribution message (privacy-preserving).
+   793→  • One-Skill unified view: PLC PROGRAMMING hero + 8-block grid (MARKET/ROLE/REQUIRED/CANDIDATE/EVIDENCE/GAP/PATH/OUTCOME) + priority reason + development flow + supporting evidence + market snapshot.
+   794→- Lint: 0 errors, 0 warnings.
+   795→- Browser E2E verification (agent-browser):
+   796→  • Landing → Candidate/Beneficiary workspace → Arjun Sharma demo login → Candidate workspace.
+   797→  • All 12 sidebar views navigated: Overview, Skill Passport, Evidence, Target Roles, Role Readiness, Skill Gaps, Development Path, Skill Evolution, Readiness, Opportunities, Market Context, Profile — ALL render with 0 console errors / 0 page errors.
+   798→  • Skill Passport: proficiency ladder with YOU + REQUIRED markers renders; evidence chips clickable → EvidenceDrawer opens with full detail (Evidence Type, Demonstrated Proficiency, Date, Source, Verification Status VERIFIED, Confidence 82%).
+   799→  • One-Skill view (PLC Programming): renders unified 8-block grid + priority reason + development flow + supporting evidence + market snapshot.
+   800→  • Progress event: candidate fills Add Evidence form (PLC Programming, Practice, Intermediate) → submits → new evidence appears in passport list ("Test PLC practice session · Candidate-submitted"). Employer feedback evidence also visible ("Employer Validation · Strong PLC commissioning · Verified").
+   801→  • Copilot (candidate context): "What is my biggest skill gap for PLC Technician?" → panel renders "MEDIUM confidence · SYNTHETIC · 2026-Q1 · Your biggest skill gap for PLC Technician is Industrial IoT: required WORKING, you demonstrate AWARENESS (severity MEDIUM). Priority: MEDIUM — Emerging skill with EARLY_SIGNAL…" + Evidence(2) + Explore Further links.
+   802→  • All 5 candidate copilot questions verified via API: biggest-gap, evidence-supports, move-from-intermediate-to-advanced, opportunity-matched, emerging-for-target — all return evidence-backed answers.
+   803→- dev.log: 0 ⨯ errors after fixes.
+   804→
+   805→Stage Summary:
+   806→- Phase 12.5 Part 1 + Part 2 COMPLETE and browser-verified. Full candidate/beneficiary workspace implemented as the INDIVIDUAL CAPABILITY AND EVIDENCE LAYER (not a jobs portal) reusing the shared Skill Intelligence Engine (skill ontology, competency layer, market intelligence, training intelligence, evidence layer, employer validation, outcome intelligence, copilot). Closed loop functional: MARKET DEMAND → ROLE REQUIREMENT → CANDIDATE CAPABILITY → EVIDENCE → SKILL GAP → TRAINING/DEVELOPMENT → NEW EVIDENCE → EMPLOYER VALIDATION → OUTCOME → UPDATED INTELLIGENCE. Privacy: candidate sees own data only; employer feedback written to candidate ledger; aggregated intelligence exposes no individual identities. All Part 1 (25 sections) + Part 2 (11 sections) acceptance items satisfied. STOP.
+   807→

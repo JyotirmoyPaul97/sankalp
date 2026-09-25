@@ -15,7 +15,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { StatusBadge, VisualBar } from "@/components/kaushal/visual-components";
 import type { Course, Paginated } from "@/types/domain";
+
+const COVERAGE_WEIGHT: Record<string, number> = {
+  NONE: 0, INTRODUCED: 25, REINFORCED: 60, MASTERED: 100,
+};
+
+function coverageScore(c: Course): { score: number; counts: { MASTERED: number; REINFORCED: number; INTRODUCED: number; NONE: number } } {
+  const sks = c.courseSkills ?? [];
+  const counts = { MASTERED: 0, REINFORCED: 0, INTRODUCED: 0, NONE: 0 };
+  if (sks.length === 0) return { score: 0, counts };
+  let sum = 0;
+  for (const s of sks) {
+    const lvl = s.coverageLevel ?? "NONE";
+    sum += COVERAGE_WEIGHT[lvl] ?? 0;
+    counts[lvl as keyof typeof counts] = (counts[lvl as keyof typeof counts] ?? 0) + 1;
+  }
+  return { score: Math.round(sum / sks.length), counts };
+}
 
 export function CoursesView() {
   const [search, setSearch] = React.useState("");
@@ -57,6 +75,27 @@ export function CoursesView() {
       width: "180px",
     },
     {
+      key: "coverage",
+      header: "Coverage",
+      cell: (c) => {
+        const { score, counts } = coverageScore(c);
+        const tone: "positive" | "info" | "attention" | "critical" | "neutral" =
+          score >= 70 ? "positive" : score >= 45 ? "info" : score >= 20 ? "attention" : "critical";
+        return (
+          <div className="space-y-1 w-32">
+            <VisualBar label="" value={score} tone={tone} height="sm" showValue />
+            <div className="flex flex-wrap gap-1">
+              {counts.MASTERED > 0 ? <span className="text-[9px] rounded-full bg-status-positive/15 text-status-positive px-1.5 py-0.5">{counts.MASTERED} M</span> : null}
+              {counts.REINFORCED > 0 ? <span className="text-[9px] rounded-full bg-status-info/15 text-status-info px-1.5 py-0.5">{counts.REINFORCED} R</span> : null}
+              {counts.INTRODUCED > 0 ? <span className="text-[9px] rounded-full bg-status-attention/15 text-status-attention px-1.5 py-0.5">{counts.INTRODUCED} I</span> : null}
+              {counts.NONE > 0 ? <span className="text-[9px] rounded-full bg-muted text-muted-foreground px-1.5 py-0.5">{counts.NONE} N</span> : null}
+            </div>
+          </div>
+        );
+      },
+      width: "150px",
+    },
+    {
       key: "duration",
       header: "Duration",
       cell: (c) => (
@@ -88,9 +127,9 @@ export function CoursesView() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Courses"
-        description="Course catalogue mapped to sectors and qualifications. Course relevance and gap analysis available in Delivery Capability and Gap Intelligence."
-        badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
+        title="Curriculum & Course Coverage"
+        description="Curriculum mapped to sectors and qualifications, with per-course skill coverage. Course relevance profiles and capability gaps are surfaced in Delivery Capability and Gap Intelligence."
+        badge={<StatusBadge status="OBSERVED" />}
       />
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -117,6 +156,16 @@ export function CoursesView() {
         </div>
       </div>
 
+      {/* Coverage legend */}
+      <div className="rounded-md border bg-muted/30 p-3 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+        <span className="font-semibold uppercase tracking-wider">Coverage legend</span>
+        <span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-status-positive" /> M = Mastered</span>
+        <span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-status-info" /> R = Reinforced</span>
+        <span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-status-attention" /> I = Introduced</span>
+        <span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-muted-foreground" /> N = Not covered</span>
+        <span className="ml-auto">Bar = avg coverage across mapped skills.</span>
+      </div>
+
       {error ? (
         <ErrorState message={error.message} onRetry={refetch} />
       ) : (
@@ -126,7 +175,7 @@ export function CoursesView() {
             rows={data?.items ?? []}
             rowKey={(c) => c.id}
             loading={loading && !data}
-            emptyMessage="No demonstration courses match your search."
+            emptyMessage="No courses match your search."
           />
           {data ? (
             <div className="flex items-center justify-between text-xs text-muted-foreground">
