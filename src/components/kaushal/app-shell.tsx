@@ -24,6 +24,8 @@ import { DataQualityView } from "./views/data-quality-view";
 import { RecordsExplorerView } from "./views/records-explorer-view";
 import { ProvenanceView } from "./views/provenance-view";
 import { AuditLogsView } from "./views/audit-logs-view";
+import { SkillIntelligenceView } from "./views/skill-intelligence-view";
+import { CompetencyFrameworkView } from "./views/competency-framework-view";
 
 const VIEW_REGISTRY: Record<string, React.ComponentType> = {
   overview: OverviewView,
@@ -31,6 +33,8 @@ const VIEW_REGISTRY: Record<string, React.ComponentType> = {
   "district-profile": DistrictProfileView,
   "labour-market": LabourMarketView,
   skills: SkillsView,
+  "skill-intelligence": SkillIntelligenceView,
+  "competency-framework": CompetencyFrameworkView,
   training: TrainingView,
   courses: CoursesView,
   "employer-validation": EmployerValidationView,

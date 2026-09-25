@@ -35,6 +35,8 @@ const VIEW_TITLES: Record<string, string> = {
   "district-profile": "District Profile",
   "labour-market": "Labour Market",
   skills: "Skills",
+  "skill-intelligence": "Skill Intelligence",
+  "competency-framework": "Competency Framework",
   training: "Training Ecosystem",
   courses: "Courses",
   "employer-validation": "Employer Validation",

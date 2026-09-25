@@ -37,6 +37,7 @@ export async function GET() {
   // safe counts — never hard-coded in app code, derived from DB.
   let counts: Record<string, number> = {};
   let dataHealth: Record<string, number> = {};
+  let knowledgeHealth: Record<string, number> = {};
   try {
     counts = {
       districts: await db.district.count(),
@@ -48,6 +49,12 @@ export async function GET() {
       institutions: await db.institution.count(),
       qualifications: await db.qualification.count(),
       dataSources: await db.dataSource.count(),
+      // Phase 3 knowledge-graph counts
+      skillAliases: await db.skillAlias.count(),
+      skillRelations: await db.skillRelation.count(),
+      skillClusters: await db.skillCluster.count(),
+      roleCompetencies: await db.roleSkill.count(),
+      courseCompetencies: await db.courseSkill.count(),
     };
     // Phase 2 data-health metrics for the Overview page
     const activeSources = await db.dataSource.count({ where: { isActive: true } });
@@ -82,15 +89,24 @@ export async function GET() {
       avgQuality,
       totalBatches: await db.ingestionBatch.count(),
     };
+    // Phase 3 knowledge-graph health
+    knowledgeHealth = {
+      skillAliases: counts.skillAliases,
+      skillRelations: counts.skillRelations,
+      skillClusters: counts.skillClusters,
+      roleCompetencies: counts.roleCompetencies,
+      courseCompetencies: counts.courseCompetencies,
+    };
   } catch {
     counts = {};
     dataHealth = {};
+    knowledgeHealth = {};
   }
 
   return ok({
     service: "kaushal-drishti",
     tagline: "From Labour-Market Evidence to Better Skill Decisions.",
-    phase: "phase-2",
+    phase: "phase-3",
     environment: process.env.APP_ENV || "development",
     dataDisclaimer: "Demo Environment — Synthetic Data",
     phases,
@@ -98,5 +114,6 @@ export async function GET() {
     dataStatusVocab,
     counts,
     dataHealth,
+    knowledgeHealth,
   });
 }

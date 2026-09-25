@@ -10,6 +10,7 @@ import {
   Users,
   Database,
   ArrowRight,
+  Network,
 } from "lucide-react";
 import { PageHeader, SectionLabel } from "@/components/kaushal/page-header";
 import { MetricCard } from "@/components/kaushal/metric-card";
@@ -145,6 +146,9 @@ export function OverviewView() {
       {/* Data Health section (Phase 2) */}
       <DataHealthSection />
 
+      {/* Knowledge Foundation section (Phase 3) */}
+      <KnowledgeFoundationSection />
+
       {/* Phase roadmap */}
       <section className="space-y-3">
         <SectionLabel>Phase Roadmap</SectionLabel>
@@ -152,6 +156,7 @@ export function OverviewView() {
           {[
             { p: "Phase 1", t: "Foundation & Data Model", d: "Entities, taxonomy, provenance, RBAC, dashboard shell.", active: true },
             { p: "Phase 2", t: "Data & Evidence Ingestion", d: "Trusted ingestion layer: CSV/JSON, validation, dedupe, quality scoring, provenance, audit.", active: true },
+            { p: "Phase 3", t: "Knowledge + Competency Foundation", d: "Skill knowledge graph, aliases, relations, clusters, role/course competency profiles.", active: true },
             { p: "Phase 4", t: "Labour-Market Intelligence", d: "Job-posting signals, employer surveys, sector growth.", active: false },
             { p: "Phase 7", t: "Employer Validation", d: "Structured employer demand-validation workflows.", active: false },
             { p: "Phase 9", t: "District Action Plans", d: "Generate district-level training plans from evidence.", active: false },
@@ -241,6 +246,47 @@ function DataHealthSection() {
           </EvidencePanel>
         </>
       )}
+    </section>
+  );
+}
+
+function KnowledgeFoundationSection() {
+  const { data: meta } = useFetch<PlatformMeta>("/api/v1/meta");
+  const setActiveView = useNav((s) => s.setActiveView);
+  const kh = meta?.knowledgeHealth;
+  if (!kh) return null;
+
+  const metrics = [
+    { label: "Skill Aliases", value: kh.skillAliases, hint: "alternate surface forms", tone: "info" as const, view: "skill-intelligence" },
+    { label: "Skill Relations", value: kh.skillRelations, hint: "graph edges", tone: "default" as const, view: "skill-intelligence" },
+    { label: "Skill Clusters", value: kh.skillClusters, hint: "thematic groupings", tone: "default" as const, view: "skill-intelligence" },
+    { label: "Role Competencies", value: kh.roleCompetencies, hint: "expected proficiencies", tone: "positive" as const, view: "competency-framework" },
+  ];
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center justify-between">
+        <SectionLabel>Knowledge Foundation</SectionLabel>
+        <span className="text-[11px] text-muted-foreground">Phase 3 — skill knowledge graph + competency profiles</span>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {metrics.map((m) => (
+          <button key={m.label} onClick={() => setActiveView(m.view)} className="text-left transition-transform hover:-translate-y-0.5">
+            <MetricCard label={m.label} value={m.value} hint={m.hint} tone={m.tone} icon={<Network className="size-4" />} />
+          </button>
+        ))}
+      </div>
+      <EvidencePanel title="Knowledge Graph Foundation" source="Phase 3" lastUpdated="deterministic">
+        <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+          Phase 3 builds the skill knowledge graph: canonical skills + aliases (so "PLC", "Programmable Logic Controller", "P.L.C." all resolve to one canonical entity), explicit relations (PREREQUISITE / RELATED_TO / BROADER_THAN), and thematic clusters. The competency framework models what proficiency each role expects (AWARENESS → EXPERT) and what each course confers (INTRODUCED → MASTERED).
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusPill tone="info" dot>NO embeddings</StatusPill>
+          <StatusPill tone="info" dot>NO ML</StatusPill>
+          <StatusPill tone="attention" dot>NO demand intelligence (Phase 4)</StatusPill>
+          <StatusPill tone="attention" dot>NO gap analysis (later phase)</StatusPill>
+        </div>
+      </EvidencePanel>
     </section>
   );
 }

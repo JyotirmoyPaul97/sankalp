@@ -261,3 +261,124 @@ Work Log:
 
 Stage Summary:
 - Phase 2 COMPLETE and browser-verified. Full vertical slice works: Source → Upload → Validate → Preview → Confirm → Store → Batch → Quality → Explorer → Audit.
+
+# =====================================================================
+# PHASE 3 — KNOWLEDGE + COMPETENCY INTELLIGENCE FOUNDATION
+# =====================================================================
+
+Phase 3 builds the skill knowledge graph + competency framework on top of
+Phase 1+2. NO demand intelligence, NO gap analysis, NO forecasting, NO
+recommendations (those are later phases). This is the foundation.
+
+---
+Task ID: p3-0
+Agent: GLM (main)
+Task: Inspect Phase 1+2 repo state
+
+Work Log:
+- Verified Phase 1+2 complete: 10 skills, 5 job roles, 18 role_skills, 14 course_skills, 185 job_postings, 8 data sources, 7 ingestion batches
+- Identified reuse points: Skill/RoleSkill/CourseSkill models, src/lib/ingestion/ (Phase 2), existing skills-view, sidebar Intelligence group
+- Phase 2 docs explicitly deferred "semantic skill normalization" and "skill knowledge graph" to Phase 3
+
+Stage Summary:
+- Reusing all Phase 1+2 architecture; only ADDING knowledge-graph + competency layers.
+
+---
+Task ID: p3-1
+Agent: GLM (main)
+Task: Extend Prisma schema for Phase 3
+
+Work Log:
+- Added SkillAlias (alias, aliasType: ACRONYM|VARIANT|COMMON_NAME|LEGACY, isCaseSensitive)
+- Added SkillRelation (from→to, relationType: PREREQUISITE|RELATED_TO|BROADER_THAN|NARROWER_THAN|PART_OF, weight)
+- Added SkillCluster + SkillClusterMember (thematic groupings, PRIMARY|SECONDARY membership)
+- Extended RoleSkill with proficiencyLevel (AWARENESS|WORKING|PROFICIENT|EXPERT)
+- Added back-relations on Skill model
+- db:push succeeded (SQLite)
+
+Stage Summary:
+- 5 new models + 8 new indexes. Schema portable to PostgreSQL/PostGIS.
+
+---
+Task ID: p3-2
+Agent: GLM (main)
+Task: Build intelligence library (src/lib/intelligence/)
+
+Work Log:
+- vocab.ts: PROFICIENCY_LEVELS, COVERAGE_LEVELS, ALIAS_TYPES, RELATION_TYPES, PROFICIENCY_RANK, COVERAGE_TO_PROFICIENCY mapping
+- skill-normalizer.ts: resolveCanonicalSkill() — deterministic string→canonical via (1) canonicalName exact, (2) name exact, (3) alias match (case-insensitive by default), (4) token-suffix fallback ("PLC Programming"→"PLC"). Returns confidence + matchedVia. NO embeddings, NO ML.
+- competency.ts: getRoleCompetencyProfile() (expected proficiencies by role), getCourseCompetencyProfile() (taught coverages by course), getCourseRoleAlignment() (structural proficiency-rank comparison — descriptive only, NOT demand-weighted gap analysis)
+- skill-graph.ts: getSkillNeighbourhood() (1-hop graph: outgoing+incoming edges+clusters+aliases), listClusters()
+
+Stage Summary:
+- 3 intelligence modules, all deterministic. Foundation for Phase 4+ to add demand weighting.
+
+---
+Task ID: p3-3
+Agent: GLM (main)
+Task: Build Phase 3 API routes
+
+Work Log:
+- GET /api/v1/skills/canonical?name=PLC (or ?names=PLC,SCADA) — resolver
+- GET /api/v1/skills/[id]/graph — 1-hop neighbourhood
+- GET/POST /api/v1/skills/[id]/aliases — list/add (POST admin-only)
+- GET/POST /api/v1/skills/[id]/relations — list/add (POST admin-only)
+- GET /api/v1/job-roles/[id]/competency (?alignWithCourseId=) — role profile + optional alignment
+- GET /api/v1/courses/[id]/competency (?alignWithRoleId=) — course profile + optional alignment
+- GET /api/v1/skill-clusters — clusters with members
+- Extended /api/v1/meta with knowledgeHealth block + bumped phase to "phase-3"
+
+Stage Summary:
+- 7 new endpoints. Admin routes JWT-protected (requireAdmin).
+
+---
+Task ID: p3-4
+Agent: GLM (main)
+Task: Build Phase 3 seed
+
+Work Log:
+- prisma/seed-phase3.ts (idempotent, wipes Phase 3 tables only):
+  - 21 skill aliases (PLC, Programmable Logic Controller, P.L.C., Ladder Logic, SCADA, IIoT, BMS, etc.)
+  - 18 role-skill proficiency levels (importance 5→EXPERT, 4→PROFICIENT, 3→WORKING, ≤2→AWARENESS)
+  - 4 skill clusters (Industrial Automation, EV Technology, Software & Data, Embedded & Firmware)
+  - 15 skill relations (PLC→SCADA prerequisite, PLC→Robotics prerequisite, Embedded→BMS prerequisite, etc.)
+- Added db:seed:phase3 + db:seed:all to package.json
+
+Stage Summary:
+- Seed succeeds. DB now has 21 aliases, 15 relations, 4 clusters, 18 role competencies.
+
+---
+Task ID: p3-5
+Agent: GLM (main)
+Task: Build Phase 3 frontend
+
+Work Log:
+- skill-intelligence-view.tsx: Skill Normalizer playground (type raw string → resolve to canonical with confidence + matchedVia) + Clusters panel + Skill Graph Explorer (1-hop neighbourhood with outgoing/incoming edge tables, aliases, clusters)
+- competency-framework-view.tsx: 3 tabs — Role Profile (expected proficiencies), Course Profile (taught coverages), Alignment (course-vs-role proficiency comparison with COVERED/EXCEEDS/SHORTFALL/NOT_TAUGHT)
+- overview-view.tsx: added KnowledgeFoundationSection (4 metric cards + foundation explanation panel) + Phase 3 entry in roadmap
+- sidebar.tsx: added "Skill Intelligence" + "Competency Framework" under Intelligence group (phase 3, active)
+- app-shell.tsx + topbar.tsx: registered 2 new views + titles
+- types/domain.ts: added Phase 3 types (SkillAlias, SkillRelation, SkillCluster, NormalizeResult, SkillNeighbourhood, RoleCompetencyProfile, CourseCompetencyProfile, CompetencyAlignment, KnowledgeHealth)
+
+Stage Summary:
+- 2 new views + Overview enhancement. All use existing design system (government palette, StatusPill, EvidencePanel, DataTable).
+
+---
+Task ID: p3-6
+Agent: GLM (main)
+Task: Lint + Agent Browser E2E verification
+
+Work Log:
+- Lint: 0 errors, 0 warnings
+- E2E verified via Agent Browser (6 screenshots in docs/screenshots/p3-*.png):
+  1. Login → Overview → Knowledge Foundation section visible (4 metric cards: 21 aliases, 15 relations, 4 clusters, 18 role competencies)
+  2. Skill Intelligence view → Normalizer resolves "PLC" → plc-programming via alias (confidence 90%)
+  3. Normalizer resolves "Programmable Logic Controller" → plc-programming via alias (COMMON_NAME)
+  4. Skill Graph Explorer → selected Battery Management Systems → shows 1 outgoing + 2 incoming edges + PREREQUISITE relations
+  5. Competency Framework → Role Profile tab → shows expected proficiencies (EXPERT/PROFICIENT/WORKING) per skill
+  6. Course Profile tab → shows taught coverages (MASTERED/REINFORCED/INTRODUCED)
+  7. Alignment tab → selected Industrial Automation course + Automation Engineer role → shows COVERED/SHORTFALL/NOT_TAUGHT summary + per-skill alignment table
+- Console: 0 errors throughout
+
+Stage Summary:
+- Phase 3 COMPLETE and browser-verified. Skill knowledge graph + competency foundation operational.

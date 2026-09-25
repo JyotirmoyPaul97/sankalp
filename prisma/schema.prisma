@@ -108,9 +108,91 @@ model Skill {
 
   roleSkills   RoleSkill[]
   courseSkills  CourseSkill[]
+  aliases       SkillAlias[]
+  relationsFrom SkillRelation[] @relation("SkillRelationFrom")
+  relationsTo   SkillRelation[] @relation("SkillRelationTo")
+  clusterMembers SkillClusterMember[]
 
   @@index([category])
   @@map("skills")
+}
+
+// ---------------------------------------------------------------------
+// PHASE 3 — Skill aliases (alternate surface forms → canonical skill)
+// e.g. "PLC" / "Programmable Logic Controller" → Skill "PLC Programming"
+// ---------------------------------------------------------------------
+
+model SkillAlias {
+  id          String   @id @default(cuid())
+  skillId     String   @map("skill_id")
+  alias       String
+  aliasType   String   @default("VARIANT") @map("alias_type")
+  // ACRONYM | VARIANT | COMMON_NAME | LEGACY
+  isCaseSensitive Boolean @default(false) @map("is_case_sensitive")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  skill       Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([alias, isCaseSensitive])
+  @@index([skillId])
+  @@index([alias])
+  @@map("skill_aliases")
+}
+
+// ---------------------------------------------------------------------
+// PHASE 3 — Skill relations (knowledge graph edges)
+// ---------------------------------------------------------------------
+
+model SkillRelation {
+  id           String   @id @default(cuid())
+  fromSkillId String   @map("from_skill_id")
+  toSkillId    String   @map("to_skill_id")
+  // PREREQUISITE | RELATED_TO | BROADER_THAN | NARROWER_THAN | PART_OF
+  relationType String   @default("RELATED_TO") @map("relation_type")
+  weight       Int      @default(1)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  fromSkill    Skill    @relation("SkillRelationFrom", fields: [fromSkillId], references: [id], onDelete: Cascade)
+  toSkill      Skill    @relation("SkillRelationTo", fields: [toSkillId], references: [id], onDelete: Cascade)
+
+  @@unique([fromSkillId, toSkillId, relationType])
+  @@index([fromSkillId])
+  @@index([toSkillId])
+  @@index([relationType])
+  @@map("skill_relations")
+}
+
+// ---------------------------------------------------------------------
+// PHASE 3 — Skill clusters (thematic groupings)
+// e.g. "Industrial Automation" cluster: PLC Programming, SCADA, Industrial Robotics
+// ---------------------------------------------------------------------
+
+model SkillCluster {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  category    String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  members     SkillClusterMember[]
+
+  @@map("skill_clusters")
+}
+
+model SkillClusterMember {
+  id          String   @id @default(cuid())
+  clusterId   String   @map("cluster_id")
+  skillId     String   @map("skill_id")
+  // PRIMARY | SECONDARY
+  membershipType String @default("PRIMARY") @map("membership_type")
+
+  cluster     SkillCluster @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  skill       Skill        @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([clusterId, skillId])
+  @@index([skillId])
+  @@map("skill_cluster_members")
 }
 
 model JobRole {
@@ -232,13 +314,17 @@ model RoleSkill {
   id        String   @id @default(cuid())
   jobRoleId String   @map("job_role_id")
   skillId   String   @map("skill_id")
-  // 1-5 importance weight
+  // 1-5 importance weight (legacy Phase 1 field)
   importance Int      @default(3)
+  // Phase 3: expected proficiency for the role
+  // AWARENESS | WORKING | PROFICIENT | EXPERT
+  proficiencyLevel String @default("WORKING") @map("proficiency_level")
   jobRole   JobRole  @relation(fields: [jobRoleId], references: [id], onDelete: Cascade)
   skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
   @@unique([jobRoleId, skillId])
   @@index([skillId])
+  @@index([proficiencyLevel])
   @@map("role_skills")
 }
 

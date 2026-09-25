@@ -171,6 +171,7 @@ export interface PlatformMeta {
   dataStatusVocab: DataStatus[];
   counts: Record<string, number>;
   dataHealth?: DataHealth;
+  knowledgeHealth?: KnowledgeHealth;
 }
 
 export interface AuthUser {
@@ -313,4 +314,98 @@ export interface DataHealth {
   totalIngested: number;
   avgQuality: number;
   totalBatches: number;
+}
+
+// =====================================================================
+// PHASE 3 — Knowledge + Competency Intelligence types
+// =====================================================================
+
+export type ProficiencyLevel = "AWARENESS" | "WORKING" | "PROFICIENT" | "EXPERT";
+export type CoverageLevel = "NONE" | "INTRODUCED" | "REINFORCED" | "MASTERED";
+export type AliasType = "ACRONYM" | "VARIANT" | "COMMON_NAME" | "LEGACY";
+export type RelationType = "PREREQUISITE" | "RELATED_TO" | "BROADER_THAN" | "NARROWER_THAN" | "PART_OF";
+
+export interface SkillAlias {
+  id: string;
+  skillId: string;
+  alias: string;
+  aliasType: string;
+  isCaseSensitive: boolean;
+  createdAt: string;
+}
+
+export interface SkillRelation {
+  id: string;
+  fromSkillId: string;
+  toSkillId: string;
+  relationType: string;
+  weight: number;
+  createdAt: string;
+}
+
+export interface SkillCluster {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  memberCount?: number;
+  skills?: { skillId: string; skillName: string; canonicalName: string; category: string | null; membershipType: string }[];
+}
+
+export interface NormalizeResult {
+  resolved: boolean;
+  skillId?: string;
+  canonicalName?: string;
+  matchedVia: "canonical" | "name" | "alias" | "token" | "none";
+  aliasType?: string;
+  confidence: number;
+  rawInput: string;
+  normalisedInput: string;
+}
+
+export interface SkillNeighbourhood {
+  center: { id: string; name: string; canonicalName: string; category: string | null };
+  clusters: { id: string; name: string; membershipType: string }[];
+  outgoing: { id: string; from: { id: string; name: string; canonicalName: string; category: string | null }; to: { id: string; name: string; canonicalName: string; category: string | null }; relationType: string; weight: number }[];
+  incoming: { id: string; from: { id: string; name: string; canonicalName: string; category: string | null }; to: { id: string; name: string; canonicalName: string; category: string | null }; relationType: string; weight: number }[];
+  aliases: { id: string; alias: string; aliasType: string }[];
+}
+
+export interface RoleCompetencyProfile {
+  roleId: string;
+  roleTitle: string;
+  sectorName: string | null;
+  totalSkills: number;
+  byProficiency: Record<ProficiencyLevel, number>;
+  competencies: { skillId: string; skillName: string; canonicalName: string; category: string | null; importance: number; proficiencyExpected: ProficiencyLevel }[];
+}
+
+export interface CourseCompetencyProfile {
+  courseId: string;
+  courseName: string;
+  courseCode: string;
+  sectorName: string | null;
+  qualificationName: string | null;
+  durationHours: number;
+  status: string;
+  totalSkills: number;
+  byCoverage: Record<CoverageLevel, number>;
+  competencies: { skillId: string; skillName: string; canonicalName: string; category: string | null; coverage: CoverageLevel; proficiencyConfers: ProficiencyLevel }[];
+}
+
+export interface CompetencyAlignment {
+  skillId: string;
+  skillName: string;
+  expected: ProficiencyLevel;
+  conferred: ProficiencyLevel | null;
+  gap: "COVERED" | "EXCEEDS" | "SHORTFALL" | "NOT_TAUGHT";
+  gapRank: number;
+}
+
+export interface KnowledgeHealth {
+  skillAliases: number;
+  skillRelations: number;
+  skillClusters: number;
+  roleCompetencies: number;
+  courseCompetencies: number;
 }
