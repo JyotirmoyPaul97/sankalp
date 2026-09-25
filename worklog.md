@@ -731,3 +731,29 @@ Work Log:
 
 Stage Summary:
 - Phase 12 COMPLETE. All placeholder text removed. All critical screens functional with live data. Evaluator journey verified end-to-end: Homepage → Login → Command Centre → Labour Market → Gap Intelligence → Digital Twin → Policy Sandbox → Copilot. No "coming soon", no broken workflows, no empty critical screens. System is SIH-ready.
+
+---
+Task ID: p13
+Agent: GLM (main)
+Task: Solve all issues and check for any broken links
+
+Work Log:
+- Pre-audit state: server up (HTTP 200), lint 0 errors, all 3031 market signals / 105 candidates / 5 scenarios intact.
+- API endpoint sweep (60+ endpoints tested): Found 2 broken endpoints:
+  • GET /api/v1/scenarios → 500 PrismaClientValidationError (`_count.select.results` — `results` is not a valid field on `PolicyScenarioCountOutputType`; the model field is `impactResults`).
+  • GET /api/v1/scenarios/[id] → 500 PrismaClientValidationError (same root cause; `include: { results: true }` should be `impactResults`).
+- Fix #1 (scenarios/route.ts GET): rewrote `findMany` to use `_count: { select: { interventions: true, assumptions: true, impactResults: true } }`, wrapped in try/catch with `handlePrismaError`, mapped `impactResults` → `results` in the response to preserve the existing frontend contract.
+- Fix #2 (scenarios/[id]/route.ts GET): rewrote `findUnique` to use `impactResults: true` in the include, then destructured and renamed to `results` in the response.
+- Frontend audit: verified all `setActiveView(...)` targets resolve to entries in VIEW_REGISTRY (or are valid dynamic prefixes: `batch-detail:`, `role-demand:`, `skill-demand:`, `gap-skill:`, `gap-role:`). No dead navigation links.
+- Frontend audit: verified all `fetch('/api/v1/...')` and `useFetch('/api/v1/...')` paths have corresponding API route files. No missing routes.
+- Browser-based E2E verification (agent-browser, 26 views navigated):
+  • Landing → Government Access → State Admin login → Command Centre.
+  • Fixed duplicate React key warning in overview-view.tsx: Platform Roadmap list used `key={r.p}` where two items shared `p: "Planning"`. Changed key to `r.t` (title is unique). Also fixed two duplicate-text typos: "Evidence & Ingestion & Evidence Ingestion" → "Evidence & Ingestion"; "Outcome Feedback Feedback" → "Outcome Feedback".
+  • Navigated every sidebar entry (24 views): Labour Market, Emerging Radar, Skills, Gap Intelligence, Delivery Capability, Policy Sandbox (now renders 5 scenarios with intervention/assumption/result counts), District Plans, District Outcomes, District Digital Twin, District Intelligence, Skill Intelligence Graph, Data Governance, System Health, Data Sources, Administration, Import Batches, Data Quality, Records Explorer, Provenance, Audit Logs, Competency Framework, Training, Courses, Employer Validation — ALL ✓ with 0 console errors / 0 page errors.
+  • Dynamic detail views verified: role-demand:<id> (Robotics Technician), gap-skill:<id> (Python / Ratnagiri), batch-detail:<id> (ING-PHASE4-TRD-101869), district-profile (Amravati) — ALL ✓ with 0 errors.
+  • Copilot: submitted "What are the top emerging skills in Maharashtra?" → received evidence-based answer ("10 emerging skills identified: PLC Programming (EARLY_SIGNAL, strength 7), SCADA, Industrial Robotics, Python, SQL…") with "View Emerging Skill Radar" deep-link that navigated correctly. ✓
+- Lint: 0 errors, 0 warnings.
+- dev.log: 0 ⨯ errors after fixes (was 4 PrismaClientValidationError stacks before).
+
+Stage Summary:
+- Phase 13 COMPLETE. Fixed 2 broken API endpoints (`/api/v1/scenarios` GET list + `/api/v1/scenarios/[id]` GET detail — both 500 → 200). Fixed 1 React duplicate-key warning + 2 duplicate-text typos in overview roadmap. Verified all 24 sidebar views + 4 dynamic detail views + Copilot query pipeline render and respond cleanly with zero console errors. No broken navigation links. No broken API contracts. SIH-ready. STOP.

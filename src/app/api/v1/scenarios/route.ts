@@ -20,8 +20,28 @@ const Schema = z.object({
   })).default([]),
 });
 export async function GET() {
-  const scenarios = await db.policyScenario.findMany({ include: { district: true, interventions: { include: { interventionType: true } }, _count: { select: { results: true, assumptions: true } } }, orderBy: { createdAt: "desc" } });
-  return ok({ scenarios });
+  try {
+    const scenarios = await db.policyScenario.findMany({
+      include: {
+        district: true,
+        interventions: { include: { interventionType: true } },
+        _count: { select: { interventions: true, assumptions: true, impactResults: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    // Normalise `_count.impactResults` → `_count.results` to match the frontend contract.
+    const normalised = scenarios.map((s) => ({
+      ...s,
+      _count: {
+        interventions: s._count.interventions,
+        assumptions: s._count.assumptions,
+        results: s._count.impactResults,
+      },
+    }));
+    return ok({ scenarios: normalised });
+  } catch (e) {
+    return handlePrismaError(e);
+  }
 }
 export async function POST(req: Request) {
   const admin = await requireAdmin(req);

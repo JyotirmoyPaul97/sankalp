@@ -199,16 +199,16 @@ export function OverviewView() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {[
             { p: "Foundation", t: "Platform Foundation & Data Model", d: "Entities, taxonomy, provenance, RBAC, dashboard shell.", active: true },
-            { p: "Data Layer", t: "Evidence & Ingestion & Evidence Ingestion", d: "Trusted ingestion layer: CSV/JSON, validation, dedupe, quality scoring, provenance, audit.", active: true },
+            { p: "Data Layer", t: "Evidence & Ingestion", d: "Trusted ingestion layer: CSV/JSON, validation, dedupe, quality scoring, provenance, audit.", active: true },
             { p: "Knowledge", t: "Skill Intelligence + Competency Foundation", d: "Skill knowledge graph, aliases, relations, clusters, role/course competency profiles.", active: true },
             { p: "Market", t: "Labour-Market Intelligence", d: "Demand signals, trends, emerging radar, evidence convergence, cluster intelligence, confidence.", active: true },
             { p: "Training", t: "Training Ecosystem Supply Intelligence", d: "Course capacity, trainer/equipment analysis (planned).", active: false },
             { p: "Collaboration", t: "Employer Validation", d: "Structured employer demand-validation workflows.", active: false },
             { p: "Planning", t: "District Action Plans", d: "Generate district-level training plans from evidence.", active: false },
             { p: "Planning", t: "Policy Simulation Engine", d: "Compare policy interventions before implementation.", active: false },
-            { p: "Outcome", t: "Outcome Feedback Feedback", d: "Placement & outcome learning feeding back into planning.", active: false },
+            { p: "Outcome", t: "Outcome Feedback", d: "Placement & outcome learning feeding back into planning.", active: false },
           ].map((r) => (
-            <div key={r.p} className="rounded-lg border bg-card p-4 space-y-2 shadow-none">
+            <div key={r.t} className="rounded-lg border bg-card p-4 space-y-2 shadow-none">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">{r.p}</span>
                 <StatusPill tone={r.active ? "positive" : "neutral"} dot>
