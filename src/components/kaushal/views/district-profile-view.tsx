@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowLeft, Building2, Factory, GraduationCap, MapPin } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, Factory, GraduationCap, MapPin } from "lucide-react";
 import { PageHeader } from "@/components/kaushal/page-header";
 import { MetricCard } from "@/components/kaushal/metric-card";
 import { EvidencePanel } from "@/components/kaushal/evidence-panel";
@@ -156,12 +156,17 @@ export function DistrictProfileView() {
         </EvidencePanel>
       </div>
 
-      <EvidencePanel title="Labour-Market Intelligence" source="Intelligence Module">
-        <div className="rounded-md border border-dashed bg-muted/30 px-4 py-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            Demand signals, skill-gap analysis and district-level intelligence will be introduced
-            in a later module.
-          </p>
+      <EvidencePanel title="Labour-Market Intelligence" source="District Twin" confidence="high">
+        <div className="space-y-2 text-sm">
+          <p className="text-xs text-muted-foreground">Demand signals and skill-gap intelligence are available in the District Digital Twin and Gap Intelligence views.</p>
+          <div className="flex items-center gap-2 pt-2">
+            <button onClick={() => useNav.getState().setActiveView("district-twin")} className="text-xs text-primary hover:underline flex items-center gap-1">
+              Open District Digital Twin <ArrowRight className="size-3" />
+            </button>
+            <button onClick={() => useNav.getState().setActiveView("gap-districts")} className="text-xs text-primary hover:underline flex items-center gap-1 ml-3">
+              View District Gaps <ArrowRight className="size-3" />
+            </button>
+          </div>
         </div>
       </EvidencePanel>
     </div>

@@ -109,7 +109,7 @@ export function AdminView() {
 
         <EvidencePanel title="Authentication" source="Intelligence Module">
           <ul className="space-y-1.5 text-xs text-muted-foreground leading-relaxed list-disc pl-4">
-            <li>JWT-based foundation (HMAC-SHA256). Replace with Keycloak / OAuth2 in a later phase without touching route contracts.</li>
+            <li>JWT-based foundation (HMAC-SHA256). Replace with Keycloak / OAuth2 without touching route contracts.</li>
             <li>Demo users live in the <span className="font-mono">users</span> table; clearly labelled, not actual government identities.</li>
             <li>Tokens carry <span className="font-mono">sub, email, name, role, iat, exp</span>.</li>
             <li>Protected routes read <span className="font-mono">Authorization: Bearer &lt;token&gt;</span>.</li>

@@ -703,3 +703,31 @@ Work Log:
 
 Stage Summary:
 - Phase 11 COMPLETE and browser-verified. Visual intelligence transformation applied across all key views. SHOW > EXPLAIN. Government command centre now leads with visual demand-vs-supply + evidence chain + gap matrix. Delivery capability shows visual capability chain. District twin shows layered visual. Policy sandbox shows before/after comparison. Candidate passport shows proficiency ladder + skill journey. All using existing intelligence data — no fabricated values. STOP.
+
+---
+Task ID: p12
+Agent: GLM (main)
+Task: Phase 12 — Full-System Integration, QA, Data Consistency & Intelligence Validation
+
+Work Log:
+- **Pre-audit state**: All preconditions verified (0 phase labels, 0 placeholder "Demo" entity names, 0 lint errors, 3031 market signals, 133 gap signals, 105 candidates, 5 scenarios, all intelligence intact).
+- **Placeholder text cleanup**: Found and fixed 3 remaining views with "coming soon" / "will be introduced" / "later phase" text:
+  • district-plans-view.tsx: Replaced PhasePlaceholder with functional DistrictSkillPlanView using live /api/v1/district-plans API, plan summary metrics, evidence-linked planning panel, and DataTable.
+  • outcomes-view.tsx: Replaced PhasePlaceholder with functional OutcomesView using SkillJourneyFlow visual (Plan→Implement→Train→Assess→Place→Feedback→Learn), outcome metric cards, navigation to Digital Twin/Sandbox/District Outcomes.
+  • district-profile-view.tsx: Replaced "will be introduced in a later module" with actionable navigation links to District Digital Twin and District Gaps.
+  • Fixed 5 additional "later phase" / "arrives in later phases" references in admin-view, competency-framework-view, courses-view, overview-view, skills-view.
+- **Final placeholder text audit**: 0 remaining "coming soon" / "will be activated" / "not yet implemented" / "later phase" references in user-facing views.
+- **Lint**: 0 errors, 0 warnings.
+- **E2E evaluator journey verified** (7 screenshots):
+  1. Homepage ✅ (KAUSHAL DRISHTI visible)
+  2. Login as State Admin ✅
+  3. Command Centre ✅ ("Maharashtra Skill Intelligence Command Centre" with SYNTHETIC badge)
+  4. Labour Market ✅ ("Labour Market Intelligence" with demand tables)
+  5. Gap Intelligence ✅ ("Training Supply & Gap Intelligence" with gap tables)
+  6. District Digital Twin ✅ (layered visual with Market/Training/People)
+  7. Policy Sandbox ✅ (SIMULATED badge with scenario comparison)
+  8. Copilot ✅ (emerging skills question answered with evidence)
+  - 0 console errors throughout
+
+Stage Summary:
+- Phase 12 COMPLETE. All placeholder text removed. All critical screens functional with live data. Evaluator journey verified end-to-end: Homepage → Login → Command Centre → Labour Market → Gap Intelligence → Digital Twin → Policy Sandbox → Copilot. No "coming soon", no broken workflows, no empty critical screens. System is SIH-ready.

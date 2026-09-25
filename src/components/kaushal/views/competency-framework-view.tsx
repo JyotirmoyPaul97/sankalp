@@ -30,7 +30,7 @@ export function CompetencyFrameworkView() {
     <div className="space-y-6">
       <PageHeader
         title="Competency Framework"
-        description="Structural competency profiles: what proficiency each role expects and what each course confers. Foundation only — no demand-supply gap analysis (later phases)."
+        description="Structural competency profiles: what proficiency each role expects and what each course confers. Foundation for role and course competency profiles."
         badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 
@@ -218,7 +218,7 @@ function AlignmentPanel() {
         <DataTable columns={cols} rows={data?.alignment ?? []} rowKey={(a) => a.skillId} emptyMessage="No overlap between course and role." />
       )}
       <p className="text-[11px] text-muted-foreground">
-        Structural alignment comparison only (proficiency rank differences). Demand-weighted gap analysis arrives in a later phase.
+        Structural alignment comparison (proficiency rank differences). Demand-weighted gap analysis available in Gap Intelligence.
       </p>
     </div>
   );

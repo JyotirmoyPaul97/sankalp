@@ -86,7 +86,7 @@ export function SkillsView() {
     <div className="space-y-6">
       <PageHeader
         title="Skills"
-        description="Canonical skill catalogue with categories, role linkages and course coverage. Advanced semantic matching arrives in later phases."
+        description="Canonical skill catalogue with categories, role linkages and course coverage."
         badge={<StatusPill tone="info" dot>Live Intelligence</StatusPill>}
       />
 

@@ -117,7 +117,7 @@ export function OverviewView() {
         >
           <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
             The intelligence flow below shows the connected platform. The foundation, evidence ingestion, and
-            foundation (entities, taxonomy, provenance, ingestion). Analytical layers activate in later phases.
+            all intelligence layers (entities, taxonomy, provenance, market signals, gaps, capability, candidates, outcomes).
           </p>
           <ArchitectureFlow nodes={flow} />
         </EvidencePanel>
@@ -329,7 +329,7 @@ function KnowledgeFoundationSection() {
           <StatusPill tone="info" dot>NO embeddings</StatusPill>
           <StatusPill tone="info" dot>NO ML</StatusPill>
           <StatusPill tone="attention" dot>Demand intelligence pending</StatusPill>
-          <StatusPill tone="attention" dot>NO gap analysis (later phase)</StatusPill>
+          <StatusPill tone="attention" dot>Gap analysis available</StatusPill>
         </div>
       </EvidencePanel>
     </section>
