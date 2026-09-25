@@ -64,6 +64,13 @@ export async function GET() {
       emergingSignals: await db.emergingSkillSignal.count(),
       skillSectorPresence: await db.skillSectorPresence.count(),
       sectorGrowthProfiles: await db.sectorGrowthProfile.count(),
+      // Phase 5 training-intelligence counts
+      trainingProviders: await db.trainingProvider.count(),
+      trainingCentres: await db.trainingCentre.count(),
+      courseOfferings: await db.courseOffering.count(),
+      trainingCertifications: await db.trainingCertification.count(),
+      courseRoleMappings: await db.courseRoleMapping.count(),
+      trainingSupplySignals: await db.trainingSupplySignal.count(),
     };
     // Phase 2 data-health metrics for the Overview page
     const activeSources = await db.dataSource.count({ where: { isActive: true } });
@@ -125,7 +132,7 @@ export async function GET() {
   return ok({
     service: "kaushal-drishti",
     tagline: "From Labour-Market Evidence to Better Skill Decisions.",
-    phase: "phase-4",
+    phase: "phase-5",
     environment: process.env.APP_ENV || "development",
     dataDisclaimer: "Demo Environment — Synthetic Data",
     phases,

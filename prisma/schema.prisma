@@ -90,6 +90,8 @@ model District {
   economicClusters EconomicCluster[]
   marketSignals    MarketSignal[]
   labourContext    DistrictLabourContext[]
+  trainingCentres  TrainingCentre[]  @relation("TrainingCentreDistrict")
+  supplySignals    TrainingSupplySignal[]
 
   @@index([stateCode])
   @@index([divisionId])
@@ -156,10 +158,11 @@ model Sector {
   sectorGrowth          SectorGrowth[]           @relation("SectorGrowthSector")
   technologyTrends      TechnologyTrend[]        @relation("TechnologyTrendSector")
   economicClusters      EconomicCluster[]        @relation("EconomicClusterSector")
-  marketSignals         MarketSignal[]
-  demandSnapshots       DemandSnapshot[]
+  marketSignals  MarketSignal[]
+  demandSnapshots DemandSnapshot[]
   sectorGrowthProfiles  SectorGrowthProfile[]
   skillSectorPresence   SkillSectorPresence[]
+  supplySignals         TrainingSupplySignal[]
 
   @@map("sectors")
 }
@@ -184,6 +187,7 @@ model Skill {
   demandSnapshots DemandSnapshot[]
   sectorPresence SkillSectorPresence[]
   emergingSignal  EmergingSkillSignal?
+  supplySignals   TrainingSupplySignal[]
 
   @@index([category])
   @@map("skills")
@@ -283,6 +287,8 @@ model JobRole {
   employerSurveys EmployerSurvey[]
   marketSignals  MarketSignal[]
   demandSnapshots DemandSnapshot[]
+  courseRoleMappings CourseRoleMapping[]
+  supplySignals     TrainingSupplySignal[]
 
   @@map("job_roles")
 }
@@ -298,6 +304,8 @@ model Qualification {
   updatedAt         DateTime @updatedAt @map("updated_at")
 
   courses Course[]
+  trainingCertifications TrainingCertification[]
+  supplySignals TrainingSupplySignal[]
 
   @@map("qualifications")
 }
@@ -312,6 +320,7 @@ model Institution {
   // e.g. "ITI", "Polytechnic", "Skill Centre", "Private Training Provider"
   institutionType String   @map("institution_type")
   districtId      String?  @map("district_id")
+  providerId      String?  @map("provider_id")
   description     String?
   address         String?
   latitude        Float?
@@ -321,10 +330,15 @@ model Institution {
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   district          District?          @relation(fields: [districtId], references: [id])
+  provider          TrainingProvider?  @relation(fields: [providerId], references: [id])
   courseInstitutions CourseInstitution[]
+  courses           Course[]
   placementOutcomes PlacementOutcome[]
+  trainingCentres   TrainingCentre[]
+  supplySignals     TrainingSupplySignal[]
 
   @@index([districtId])
+  @@index([providerId])
   @@map("institutions")
 }
 
@@ -335,20 +349,37 @@ model Course {
   description     String?
   sectorId        String?  @map("sector_id")
   qualificationId String?  @map("qualification_id")
+  providerId      String?  @map("provider_id")
+  institutionId   String?  @map("institution_id")
   durationHours   Int      @map("duration_hours")
+  durationWeeks   Int?     @map("duration_weeks")
+  // SHORT_TERM | LONG_TERM | UPSKILLING | RESKILLING | APPRENTICESHIP | CERTIFICATION | DIPLOMA | OTHER
+  courseType      String   @default("SHORT_TERM") @map("course_type")
+  // CLASSROOM | BLENDED | ONLINE | APPRENTICESHIP | OTHER
+  deliveryMode    String   @default("CLASSROOM") @map("delivery_mode")
+  level           String?
   // DRAFT | ACTIVE | UNDER_REVIEW | DEPRECATED
   status          String   @default("ACTIVE")
+  dataSourceId    String?  @map("data_source_id")
+  dataStatus      String   @default("DEMO") @map("data_status")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   sector       Sector?           @relation("CourseSector", fields: [sectorId], references: [id])
   qualification Qualification?   @relation(fields: [qualificationId], references: [id])
+  provider     TrainingProvider? @relation(fields: [providerId], references: [id])
+  institution  Institution?      @relation(fields: [institutionId], references: [id])
   courseSkills CourseSkill[]
   courseInstitutions CourseInstitution[]
   placementOutcomes PlacementOutcome[]
+  courseRoleMappings CourseRoleMapping[]
+  courseOfferings    CourseOffering[]
+  supplySignals      TrainingSupplySignal[]
 
   @@index([sectorId])
   @@index([qualificationId])
+  @@index([providerId])
+  @@index([institutionId])
   @@map("courses")
 }
 
@@ -409,6 +440,13 @@ model CourseSkill {
   skillId       String   @map("skill_id")
   // NONE | INTRODUCED | REINFORCED | MASTERED
   coverageLevel String   @default("INTRODUCED") @map("coverage_level")
+  // Phase 5: extended mapping metadata
+  expectedProficiency String? @map("expected_proficiency") // AWARENESS | WORKING | PROFICIENT | EXPERT
+  coverageStrength Float  @default(0.5) @map("coverage_strength") // 0-1
+  confidence     Float    @default(0.7) // 0-1
+  mappingSource  String   @default("MANUAL") @map("mapping_source") // MANUAL | SEMANTIC | ADMIN | IMPORTED
+  assessmentPresent Boolean @default(false) @map("assessment_present")
+  certificationPresent Boolean @default(false) @map("certification_present")
   course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   skill         Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
@@ -1067,4 +1105,238 @@ model DistrictLabourContext {
   @@unique([districtId, observationPeriod])
   @@index([districtId])
   @@map("district_labour_context")
+}
+
+// =====================================================================
+// PHASE 5 — TRAINING ECOSYSTEM INTELLIGENCE
+// =====================================================================
+
+// ---------------------------------------------------------------------
+// Training Provider — organisation that operates institutions
+// ---------------------------------------------------------------------
+
+model TrainingProvider {
+  id             String   @id @default(cuid())
+  name           String
+  // GOVERNMENT | PRIVATE | INDUSTRY | ACADEMIC | NGO | OTHER | UNKNOWN
+  providerType   String   @default("GOVERNMENT") @map("provider_type")
+  // PUBLIC | PRIVATE | PPP | TRUST | OTHER
+  ownershipType  String   @default("PUBLIC") @map("ownership_type")
+  department      String?
+  registrationId  String?  @map("registration_id")
+  website         String?
+  contact         String?
+  // ACTIVE | INACTIVE | UNKNOWN
+  status         String   @default("ACTIVE")
+  dataSourceId   String?  @map("data_source_id")
+  dataStatus     String   @default("DEMO") @map("data_status")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  institutions   Institution[]
+  courses        Course[]
+
+  @@index([providerType])
+  @@map("training_providers")
+}
+
+// ---------------------------------------------------------------------
+// Training Centre — a physical delivery location under an institution
+// ---------------------------------------------------------------------
+
+model TrainingCentre {
+  id             String   @id @default(cuid())
+  institutionId  String   @map("institution_id")
+  name           String
+  districtId     String?  @map("district_id")
+  talukaId       String?  @map("taluka_id")
+  // ITI | POLYTECHNIC | SKILL_CENTRE | PRIVATE_LAB | INDUSTRY_TRAINING_FACILITY | OTHER
+  centreType     String   @default("SKILL_CENTRE") @map("centre_type")
+  // CLASSROOM | BLENDED | ONLINE | APPRENTICESHIP | OTHER
+  deliveryMode   String   @default("CLASSROOM") @map("delivery_mode")
+  status         String   @default("ACTIVE")
+  dataSourceId   String?  @map("data_source_id")
+  dataStatus     String   @default("DEMO") @map("data_status")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  institution    Institution    @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  district       District?      @relation("TrainingCentreDistrict", fields: [districtId], references: [id])
+  courseOfferings CourseOffering[]
+  supplySignals   TrainingSupplySignal[]
+
+  @@index([institutionId])
+  @@index([districtId])
+  @@map("training_centres")
+}
+
+// ---------------------------------------------------------------------
+// Course Offering — temporal course delivery with capacity/enrollment/completion
+// A course existing in a catalogue ≠ capacity is currently available.
+// ---------------------------------------------------------------------
+
+model CourseOffering {
+  id                    String    @id @default(cuid())
+  courseId              String    @map("course_id")
+  trainingCentreId      String    @map("training_centre_id")
+  observationPeriodStart DateTime @map("observation_period_start")
+  observationPeriodEnd   DateTime @map("observation_period_end")
+  periodLabel           String    @map("period_label") // e.g. "2026-09"
+  batchStart            DateTime? @map("batch_start")
+  batchEnd              DateTime? @map("batch_end")
+  plannedSeats         Int       @default(0) @map("planned_seats")
+  availableSeats       Int?      @map("available_seats")
+  enrolledCount        Int?      @map("enrolled_count")
+  completedCount       Int?      @map("completed_count")
+  certifiedCount       Int?      @map("certified_count")
+  // ACTIVE | INACTIVE | COMPLETED | UNKNOWN
+  status               String    @default("ACTIVE")
+  dataSourceId         String?   @map("data_source_id")
+  dataStatus           String    @default("DEMO") @map("data_status")
+  createdAt            DateTime  @default(now()) @map("created_at")
+
+  course               Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  trainingCentre       TrainingCentre @relation(fields: [trainingCentreId], references: [id], onDelete: Cascade)
+  certifications       TrainingCertification[]
+
+  @@unique([courseId, trainingCentreId, periodLabel])
+  @@index([courseId])
+  @@index([trainingCentreId])
+  @@index([periodLabel])
+  @@map("course_offerings")
+}
+
+// ---------------------------------------------------------------------
+// Training Certification — certification records per offering
+// Completion ≠ certification. Preserve the distinction.
+// ---------------------------------------------------------------------
+
+model TrainingCertification {
+  id              String   @id @default(cuid())
+  courseOfferingId String  @map("course_offering_id")
+  qualificationId String?  @map("qualification_id")
+  observationPeriod String @map("observation_period")
+  certifiedCount  Int      @default(0) @map("certified_count")
+  dataSourceId    String?  @map("data_source_id")
+  dataStatus      String   @default("DEMO") @map("data_status")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  courseOffering  CourseOffering @relation(fields: [courseOfferingId], references: [id], onDelete: Cascade)
+  qualification    Qualification? @relation(fields: [qualificationId], references: [id])
+
+  @@index([courseOfferingId])
+  @@index([qualificationId])
+  @@map("training_certifications")
+}
+
+// ---------------------------------------------------------------------
+// Course → Role Mapping (many-to-many)
+// Maps courses to canonical Phase 3 JobRoles.
+// ---------------------------------------------------------------------
+
+model CourseRoleMapping {
+  id            String   @id @default(cuid())
+  courseId      String   @map("course_id")
+  jobRoleId     String   @map("job_role_id")
+  // PRIMARY | SECONDARY | OPTIONAL | UNKNOWN
+  mappingType   String   @default("PRIMARY") @map("mapping_type")
+  confidence     Float    @default(0.7) // 0-1
+  mappingSource  String   @default("MANUAL") @map("mapping_source") // MANUAL | SEMANTIC | ADMIN | IMPORTED
+  dataSourceId   String?  @map("data_source_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  jobRole       JobRole  @relation(fields: [jobRoleId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, jobRoleId])
+  @@index([jobRoleId])
+  @@map("course_role_mappings")
+}
+
+// ---------------------------------------------------------------------
+// Training Supply Signal — the training-side equivalent of MarketSignal
+// ---------------------------------------------------------------------
+
+model TrainingSupplySignal {
+  id                    String    @id @default(cuid())
+  districtId            String?   @map("district_id")
+  trainingCentreId      String?   @map("training_centre_id")
+  institutionId         String?   @map("institution_id")
+  courseId              String?   @map("course_id")
+  qualificationId       String?   @map("qualification_id")
+  sectorId              String?   @map("sector_id")
+  jobRoleId             String?   @map("job_role_id")
+  skillId               String?   @map("skill_id")
+
+  observationPeriodStart DateTime  @map("observation_period_start")
+  observationPeriodEnd   DateTime  @map("observation_period_end")
+  periodLabel           String    @map("period_label")
+
+  plannedCapacity       Int       @default(0) @map("planned_capacity")
+  availableCapacity     Int?      @map("available_capacity")
+  enrolledCount         Int?      @map("enrolled_count")
+  completedCount        Int?      @map("completed_count")
+  certifiedCount        Int?      @map("certified_count")
+
+  // CATALOGUE | ACTIVE_DELIVERY | CAPACITY | ENROLLMENT | COMPLETION | CERTIFICATION
+  signalType            String    @default("CAPACITY") @map("signal_type")
+  // FULL | PARTIAL | INTRODUCES | ASSESSES | CERTIFIES | UNKNOWN
+  coverageType          String    @default("PARTIAL") @map("coverage_type")
+
+  confidence            Float     @default(0)
+  dataStatus            String    @default("DEMO") @map("data_status")
+  dataSourceId          String?   @map("data_source_id")
+
+  createdAt             DateTime  @default(now()) @map("created_at")
+
+  district              District?        @relation(fields: [districtId], references: [id])
+  trainingCentre        TrainingCentre?  @relation(fields: [trainingCentreId], references: [id])
+  institution           Institution?     @relation(fields: [institutionId], references: [id])
+  course                Course?          @relation(fields: [courseId], references: [id])
+  qualification         Qualification?   @relation(fields: [qualificationId], references: [id])
+  sector                Sector?          @relation(fields: [sectorId], references: [id])
+  jobRole               JobRole?         @relation(fields: [jobRoleId], references: [id])
+  skill                 Skill?           @relation(fields: [skillId], references: [id])
+
+  @@unique([districtId, trainingCentreId, courseId, jobRoleId, skillId, periodLabel, signalType])
+  @@index([districtId])
+  @@index([courseId])
+  @@index([jobRoleId])
+  @@index([skillId])
+  @@index([periodLabel])
+  @@map("training_supply_signals")
+}
+
+// ---------------------------------------------------------------------
+// Training Profile — aggregated training-intelligence object
+// ---------------------------------------------------------------------
+
+model TrainingProfile {
+  id              String   @id @default(cuid())
+  scope           String   // STATE | DISTRICT | SECTOR | CLUSTER | ROLE | SKILL
+  scopeId         String?  @map("scope_id")
+
+  activeCourses   Int      @default(0) @map("active_courses")
+  totalCourses    Int      @default(0) @map("total_courses")
+  institutions    Int      @default(0)
+  centres         Int      @default(0)
+  plannedCapacity Int      @default(0) @map("planned_capacity")
+  enrolledCount   Int      @default(0) @map("enrolled_count")
+  completedCount  Int      @default(0) @map("completed_count")
+  certifiedCount  Int      @default(0) @map("certified_count")
+
+  skillCoverage   String?  @map("skill_coverage")  // JSON
+  roleCoverage    String?  @map("role_coverage")   // JSON
+  proficiencyCoverage String? @map("proficiency_coverage") // JSON
+
+  avgConfidence   Float    @default(0) @map("avg_confidence")
+  dataFreshness   String?  @map("data_freshness")
+  dataStatus      String   @default("DEMO") @map("data_status")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@unique([scope, scopeId])
+  @@map("training_profiles")
 }

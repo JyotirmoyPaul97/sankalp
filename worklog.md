@@ -412,3 +412,30 @@ Work Log:
 
 Stage Summary:
 - Phase 4 COMPLETE and browser-verified. Full Pune→Cluster→Role→Skill demo works. All market intelligence is OBSERVED SIGNALS — no recommendations, no forecasting, no gap analysis.
+
+# =====================================================================
+# PHASE 5 — TRAINING ECOSYSTEM INTELLIGENCE + DEMAND–SUPPLY GAP
+# =====================================================================
+
+Part 1: Training Supply Intelligence Foundation.
+Goal: structured intelligence about what training capacity exists, where
+it's available, which roles/skills/competencies it supports, how many
+learners are being served, what outcomes are produced. NO gap scoring,
+NO recommendations (Part 2 / later phases).
+
+
+---
+Task ID: p5-1 to p5-5
+Agent: GLM (main)
+Task: Phase 5 Part 1 — Training Ecosystem Intelligence Foundation
+
+Work Log:
+- Schema: added TrainingProvider, TrainingCentre, CourseOffering, TrainingCertification, CourseRoleMapping, TrainingSupplySignal, TrainingProfile. Extended Institution (providerId), Course (providerId, institutionId, courseType, deliveryMode, durationWeeks, level, dataStatus), CourseSkill (expectedProficiency, coverageStrength, confidence, mappingSource, assessmentPresent, certificationPresent), District/JobRole/Skill/Sector/Qualification (back-relations). db:push succeeded.
+- Service lib (src/lib/intelligence/training.ts): computeTrainingSupplySignals() — scans CourseOffering → creates TrainingSupplySignal rows (course-level CAPACITY + skill-level ENROLLMENT + role-level ENROLLMENT signals). getTrainingSupply() — assembles the single Training Supply Object (catalogue ≠ active ≠ capacity ≠ enrollment ≠ completion ≠ certification — kept separate). getSupplyByRole/Skill/Competency() — aggregated views. computeTrainingConfidence() = f(signals, institutions, enrollment, completion). getTrainingProfile() — scope-based profiles.
+- APIs: /api/v1/training/{providers,institutions,centres,courses,qualifications,offerings,supply/{roles,skills,competencies,proficiency,districts,sectors,clusters},refresh} — 14 endpoints. Admin-only refresh.
+- Seed (seed-phase5.ts): 6 providers, 105 institutions, 160 centres, 205 courses, 52 qualifications, 1010 course-skill mappings (with proficiency/coverage/confidence), 542 course-role mappings, 2042 course offerings across 12 months, 2042 certifications. Then triggered supply-signal computation: 17544 training supply signals.
+- Phase 1-4 verified intact: 3031 market signals, 2088 demand snapshots, 978 job postings, 21 skill aliases all preserved.
+- Lint: 0 errors, 0 warnings.
+
+Stage Summary:
+- Phase 5 Part 1 COMPLETE. Training ecosystem intelligence layer operational. NO gap scoring, NO recommendations (Part 2 / later phases). STOP — waiting for Part 2.

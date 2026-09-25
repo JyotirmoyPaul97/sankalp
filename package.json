@@ -15,7 +15,8 @@
     "db:seed:phase2": "bun prisma/seed-phase2.ts",
     "db:seed:phase3": "bun prisma/seed-phase3.ts",
     "db:seed:phase4": "bun prisma/seed-phase4.ts",
-    "db:seed:all": "bun prisma/seed.ts && bun prisma/seed-phase2.ts && bun prisma/seed-phase3.ts && bun prisma/seed-phase4.ts"
+    "db:seed:phase5": "bun prisma/seed-phase5.ts",
+    "db:seed:all": "bun prisma/seed.ts && bun prisma/seed-phase2.ts && bun prisma/seed-phase3.ts && bun prisma/seed-phase4.ts && bun prisma/seed-phase5.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
