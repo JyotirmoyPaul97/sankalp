@@ -3,6 +3,8 @@
 ### Maharashtra Skill Intelligence & Policy Decision Platform
 
 > **From Labour-Market Evidence to Better Skill Decisions.**
+>
+> [Your Link Here](https://kaushaldrishti.space-z.ai/)
 
 KAUSHAL DRISHTI is a government decision-support platform designed to connect labour-market evidence with Maharashtra's skill-development ecosystem. This repository contains the Phase 1 build, establishing the foundational architecture and UX for future intelligence modules.
 
